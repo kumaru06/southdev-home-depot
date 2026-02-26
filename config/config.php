@@ -1,0 +1,82 @@
+<?php
+/**
+ * Application Configuration
+ */
+
+session_start();
+
+// Application settings
+define('APP_NAME', 'Southdev Home Depot');
+define('APP_TAGLINE', 'Davao City\'s Premier Hardware & Construction Supply');
+define('APP_URL', 'http://localhost/southdev-home-depot');
+define('APP_VERSION', '1.0.0');
+define('APP_LOCATION', 'Davao City, Philippines');
+
+// PayMongo Configuration
+// Get keys from: https://dashboard.paymongo.com/settings/api-keys
+define('PAYMONGO_ENABLED', true);  // Set to false to disable PayMongo
+define('PAYMONGO_SECRET_KEY', getenv('PAYMONGO_SECRET_KEY') ?: 'sk_test_xxxxxxxxxxxx');  // Replace with your secret key
+define('PAYMONGO_PUBLIC_KEY', getenv('PAYMONGO_PUBLIC_KEY') ?: 'pk_test_xxxxxxxxxxxx');  // Replace with your public key
+define('PAYMONGO_WEBHOOK_SECRET', getenv('PAYMONGO_WEBHOOK_SECRET') ?: 'whk_test_xxxxxxxxxxxx');  // Replace with your webhook secret
+
+// Mailer (PHPMailer) Configuration
+define('MAIL_HOST', getenv('MAIL_HOST') ?: 'smtp.gmail.com');
+define('MAIL_PORT', getenv('MAIL_PORT') ?: 587);
+// SMTP credentials (set via env or hardcoded below for convenience)
+define('MAIL_USERNAME', getenv('MAIL_USERNAME') ?: 'feakzume@gmail.com');
+define('MAIL_PASSWORD', getenv('MAIL_PASSWORD') ?: 'tnoe hibz prqh kwfs');
+define('MAIL_ENCRYPTION', getenv('MAIL_ENCRYPTION') ?: 'tls');
+define('MAIL_FROM_EMAIL', getenv('MAIL_FROM_EMAIL') ?: 'feakzume@gmail.com');
+define('MAIL_FROM_NAME', getenv('MAIL_FROM_NAME') ?: 'Kramdreyan');
+
+// Email verification settings
+define('OTP_EXPIRY_MINUTES', 5);
+define('OTP_MAX_ATTEMPTS', 5);
+define('OTP_LOCKOUT_MINUTES', 15);
+
+// Directory paths
+define('ROOT_PATH', dirname(__DIR__));
+define('CONFIG_PATH', ROOT_PATH . '/config');
+define('VIEWS_PATH', ROOT_PATH . '/views');
+define('MODELS_PATH', ROOT_PATH . '/models');
+define('CONTROLLERS_PATH', ROOT_PATH . '/controllers');
+define('INCLUDES_PATH', ROOT_PATH . '/includes');
+define('ASSETS_PATH', ROOT_PATH . '/assets');
+define('UPLOADS_PATH', ASSETS_PATH . '/uploads');
+
+// Error reporting
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// CSRF Token generation
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+function csrf_token() {
+    return $_SESSION['csrf_token'];
+}
+
+function csrf_field() {
+    return '<input type="hidden" name="csrf_token" value="' . csrf_token() . '">';
+}
+
+function verify_csrf($token = null) {
+    $token = $token ?? ($_POST['csrf_token'] ?? '');
+    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+}
+
+// Flash message helpers
+function flash($key, $message = null) {
+    if ($message) {
+        $_SESSION['flash_' . $key] = $message;
+    } else {
+        $msg = $_SESSION['flash_' . $key] ?? null;
+        unset($_SESSION['flash_' . $key]);
+        return $msg;
+    }
+}
+
+function has_flash($key) {
+    return isset($_SESSION['flash_' . $key]);
+}

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email</title>
+</head>
+<body style="margin:0;padding:0;background:#F4F4F4;font-family:Arial,Helvetica,sans-serif;color:#1C1C1C;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F4F4F4;padding:24px 0;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background:#FFFFFF;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.08);overflow:hidden;">
+                    <tr>
+                        <td style="background:#1C1C1C;color:#FFFFFF;padding:24px 28px;">
+                            <h1 style="margin:0;font-size:20px;letter-spacing:.3px;">{{app_name}}</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:28px;">
+                            <h2 style="margin:0 0 12px 0;font-size:18px;color:#1C1C1C;">Verify your email</h2>
+                            <p style="margin:0 0 16px 0;color:#4A4A4A;">Hi {{first_name}},</p>
+                            <p style="margin:0 0 16px 0;color:#4A4A4A;">Thanks for signing up. Please verify your email using one of the options below.</p>
+
+                            <div style="margin:18px 0;padding:16px;background:#FDEAEA;border-radius:8px;">
+                                <p style="margin:0 0 8px 0;color:#1C1C1C;font-weight:600;">Option 1: Verify by link</p>
+                                <p style="margin:0;color:#4A4A4A;">Click this button to verify:</p>
+                                <div style="margin-top:12px;">
+                                    <a href="{{verify_url}}" style="display:inline-block;padding:10px 16px;background:#C62828;color:#FFFFFF;text-decoration:none;border-radius:6px;font-weight:600;">Verify Email</a>
+                                </div>
+                            </div>
+
+                            <div style="margin:18px 0;padding:16px;background:#F4F4F4;border-radius:8px;">
+                                <p style="margin:0 0 8px 0;color:#1C1C1C;font-weight:600;">Option 2: Verify with OTP</p>
+                                <p style="margin:0;color:#4A4A4A;">Your OTP code is:</p>
+                                <p style="margin:8px 0 0 0;font-size:20px;font-weight:700;letter-spacing:2px;color:#1C1C1C;">{{otp_code}}</p>
+                                <p style="margin:8px 0 0 0;color:#6B6B6B;font-size:12px;">Expires in {{otp_expiry}} minutes.</p>
+                            </div>
+
+                            <p style="margin:16px 0 0 0;color:#6B6B6B;font-size:12px;">If you did not register, you can ignore this email.</p>
+                        </td>
+                    </tr>
+                </table>
+                <p style="margin:12px 0 0 0;color:#9E9E9E;font-size:12px;">{{app_name}} • Davao City, Philippines</p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

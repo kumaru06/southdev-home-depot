@@ -1,0 +1,53 @@
+<?php
+/**
+ * SouthDev Home Depot – Report Controller
+ */
+
+require_once __DIR__ . '/../models/Order.php';
+require_once __DIR__ . '/../models/OrderItem.php';
+require_once __DIR__ . '/../models/Product.php';
+require_once __DIR__ . '/../models/User.php';
+
+class ReportController {
+    private $orderModel;
+    private $orderItemModel;
+    private $productModel;
+    private $userModel;
+    private $pdo;
+
+    public function __construct($pdo) {
+        $this->pdo = $pdo;
+        $this->orderModel     = new Order($pdo);
+        $this->orderItemModel = new OrderItem($pdo);
+        $this->productModel   = new Product($pdo);
+        $this->userModel      = new User($pdo);
+    }
+
+    public function index() {
+        AuthMiddleware::adminOrStaff();
+
+        $totalSales  = $this->orderModel->getTotalSales();
+        $topProducts = $this->orderItemModel->getTopProducts(10);
+
+        // Monthly sales data
+        $stmt = $this->pdo->query("SELECT DATE_FORMAT(created_at, '%Y-%m') as month, SUM(total_amount) as total FROM orders WHERE status != 'cancelled' GROUP BY month ORDER BY month DESC LIMIT 12");
+        $monthlySales = $stmt->fetchAll();
+
+        // Order status counts
+        $stmt = $this->pdo->query("SELECT status, COUNT(*) as count FROM orders GROUP BY status");
+        $orderStatusCounts = $stmt->fetchAll();
+
+        // Total customers
+        $stmt = $this->pdo->query("SELECT COUNT(*) as count FROM users WHERE role_id = 3");
+        $totalCustomers = $stmt->fetch()['count'] ?? 0;
+
+        // Total orders
+        $stmt = $this->pdo->query("SELECT COUNT(*) as count FROM orders");
+        $totalOrders = $stmt->fetch()['count'] ?? 0;
+
+        $pageTitle = 'Reports';
+        $isAdmin   = true;
+        $extraCss  = ['admin.css', 'dashboard.css'];
+        require_once VIEWS_PATH . '/staff/reports.php';
+    }
+}
