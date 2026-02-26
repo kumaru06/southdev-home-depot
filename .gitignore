@@ -5,3 +5,8 @@ config/config.php
 CONVERSATION_RAW.txt
 CONVERSATION_LOG.md
 CONVERSATION_SAVED_*.txt
+
+# Ignore local conversation/log dumps
+CONVERSATION_RAW.txt
+CONVERSATION_LOG.md
+CONVERSATION_SAVED_*.txt
