@@ -62,6 +62,46 @@
                 this.value = this.value.replace(/[^\d+\-() ]/g, '');
             });
         }
+
+        /* Card inputs formatting and validation */
+        var cardNumberInput = document.getElementById('card_number');
+        var cardNameInput = document.getElementById('card_name');
+        var cardExpiryInput = document.getElementById('card_expiry');
+        var cardCvcInput = document.getElementById('card_cvc');
+
+        if (cardNumberInput) {
+            cardNumberInput.addEventListener('input', function () {
+                var digits = this.value.replace(/\D/g, '').slice(0,16);
+                var parts = digits.match(/.{1,4}/g);
+                this.value = parts ? parts.join(' ') : digits;
+            });
+        }
+
+        if (cardNameInput) {
+            cardNameInput.addEventListener('input', function () {
+                // allow letters, spaces, hyphen and apostrophe
+                this.value = this.value.replace(/[^A-Za-z\s\-\']/g, '');
+            });
+        }
+
+        if (cardExpiryInput) {
+            cardExpiryInput.addEventListener('input', function () {
+                var digits = this.value.replace(/\D/g, '').slice(0,4);
+                if (digits.length >= 3) {
+                    this.value = digits.slice(0,2) + ' / ' + digits.slice(2);
+                } else if (digits.length >= 1) {
+                    this.value = digits;
+                } else {
+                    this.value = '';
+                }
+            });
+        }
+
+        if (cardCvcInput) {
+            cardCvcInput.addEventListener('input', function () {
+                this.value = this.value.replace(/\D/g, '').slice(0,3);
+            });
+        }
     });
 
     function initProvinceCity() {
@@ -152,6 +192,19 @@
             });
     }
 
+    function markInvalid(el, message) {
+        if (!el) return;
+        el.classList.add('is-invalid');
+        // remove existing message if present
+        var existing = el.parentNode.querySelector('.field-error');
+        if (existing) existing.remove();
+        var err = document.createElement('span');
+        err.className = 'field-error';
+        err.style.cssText = 'color:var(--danger);font-size:12px;margin-top:4px;display:block;';
+        err.textContent = message || 'Invalid field';
+        el.parentNode.appendChild(err);
+    }
+
     function validateCheckout() {
         var required = ['shipping_address', 'shipping_state', 'shipping_city', 'contact_phone'];
         var valid = true;
@@ -180,6 +233,65 @@
         if (!checkedPayment) {
             showNotification('Please select a payment method', 'warning');
             valid = false;
+        }
+
+        // Additional validation when Card is selected
+        if (checkedPayment && checkedPayment.value === 'card') {
+            var cardNumber = document.getElementById('card_number');
+            var cardName = document.getElementById('card_name');
+            var cardExpiry = document.getElementById('card_expiry');
+            var cardCvc = document.getElementById('card_cvc');
+
+            if (cardNumber) {
+                var digits = (cardNumber.value || '').replace(/\D/g, '');
+                if (digits.length !== 16) {
+                    markInvalid(cardNumber, 'Card number must be 16 digits');
+                    valid = false;
+                }
+            }
+
+            if (cardName) {
+                var nameVal = (cardName.value || '').trim();
+                if (!/^[A-Za-z\s\-']+$/.test(nameVal)) {
+                    markInvalid(cardName, 'Name must contain only letters');
+                    valid = false;
+                }
+            }
+
+            if (cardExpiry) {
+                var expRaw = (cardExpiry.value || '').replace(/\D/g, '');
+                if (expRaw.length !== 4) {
+                    markInvalid(cardExpiry, 'Expiry must be MMYY');
+                    valid = false;
+                } else {
+                    var mm = parseInt(expRaw.slice(0,2), 10);
+                    var yy = parseInt(expRaw.slice(2), 10);
+                    if (isNaN(mm) || mm < 1 || mm > 12) {
+                        markInvalid(cardExpiry, 'Invalid expiry month');
+                        valid = false;
+                    } else {
+                        // simple future-date check (assume 2000+YY)
+                        var now = new Date();
+                        var year = 2000 + yy;
+                        var expDate = new Date(year, mm - 1, 1);
+                        // set to last day of month
+                        expDate.setMonth(expDate.getMonth() + 1);
+                        expDate.setDate(0);
+                        if (expDate < now) {
+                            markInvalid(cardExpiry, 'Card expired');
+                            valid = false;
+                        }
+                    }
+                }
+            }
+
+            if (cardCvc) {
+                var cvc = (cardCvc.value || '').replace(/\D/g, '');
+                if (cvc.length !== 3) {
+                    markInvalid(cardCvc, 'Security code must be 3 digits');
+                    valid = false;
+                }
+            }
         }
 
         if (!valid) {

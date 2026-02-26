@@ -74,15 +74,49 @@ require_once INCLUDES_PATH . '/navbar.php';
                             </div>
                         </label>
                         <label class="payment-option">
-                            <input type="radio" name="payment_method" value="bank">
+                            <input type="radio" name="payment_method" value="card">
                             <div class="payment-option-content">
-                                <i data-lucide="landmark"></i>
+                                <i data-lucide="credit-card"></i>
                                 <div>
-                                    <strong>Bank Transfer</strong>
-                                    <small>Direct bank deposit</small>
+                                    <strong>Card</strong>
+                                    <small>Pay with debit or credit card</small>
                                 </div>
                             </div>
                         </label>
+                    </div>
+                    
+                    <!-- Card details (hidden until card selected) -->
+                    <div id="card-details" class="payment-details" style="display:none; margin-top:16px;">
+                        <div class="card card--padded">
+                            <h4>Pay with Card</h4>
+                            <div class="card-icons" style="margin-bottom:8px;">
+                                <img src="<?= APP_URL ?>/assets/images/visa.png" alt="Visa" style="height:20px;margin-right:6px;"> 
+                                <img src="<?= APP_URL ?>/assets/images/mastercard.png" alt="Mastercard" style="height:20px;margin-right:6px;"> 
+                                <img src="<?= APP_URL ?>/assets/images/jcb.png" alt="JCB" style="height:20px;margin-right:6px;"> 
+                                <img src="<?= APP_URL ?>/assets/images/amex.png" alt="Amex" style="height:20px;"> 
+                            </div>
+
+                            <div class="form-group">
+                                <label for="card_number">Card number</label>
+                                <input type="text" id="card_number" name="card_number" class="form-control" placeholder="1234 5678 9012 3456">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="card_name">Name on card</label>
+                                <input type="text" id="card_name" name="card_name" class="form-control" placeholder="Ex. Mark Perez">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group form-col">
+                                    <label for="card_expiry">Expiry date</label>
+                                    <input type="text" id="card_expiry" name="card_expiry" class="form-control" placeholder="MM / YY">
+                                </div>
+                                <div class="form-group form-col">
+                                    <label for="card_cvc">Security code</label>
+                                    <input type="text" id="card_cvc" name="card_cvc" class="form-control" placeholder="CVC">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

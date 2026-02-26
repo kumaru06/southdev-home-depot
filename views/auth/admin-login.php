@@ -1,16 +1,13 @@
 <?php
-$pageTitle = 'Login';
+$pageTitle = 'Staff / Admin Login';
 require_once INCLUDES_PATH . '/header.php';
 
 $authImage = null;
-// Preferred image (user-provided)
 $preferredRel = 'assets/uploads/images/image.png';
 $preferredFull = ROOT_PATH . '/' . $preferredRel;
 if (file_exists($preferredFull)) {
     $authImage = APP_URL . '/' . $preferredRel;
 }
-
-// Fallbacks
 foreach (['jpg', 'jpeg', 'png'] as $ext) {
     if ($authImage) break;
     $rel = 'assets/uploads/auth/login-building.' . $ext;
@@ -32,9 +29,9 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
                     style="--auth-image: <?= $authImage ? "url('" . htmlspecialchars($authImage) . "')" : 'none' ?>;">
                     <div class="auth-media-overlay"></div>
                     <div class="auth-media-content">
-                        <div class="auth-media-badge">Welcome back</div>
+                        <div class="auth-media-badge">Staff Access</div>
                         <div class="auth-media-title"><?= APP_NAME ?></div>
-                        <div class="auth-media-subtitle"><?= APP_TAGLINE ?></div>
+                        <div class="auth-media-subtitle">Administrative login</div>
                     </div>
                 </div>
 
@@ -42,12 +39,12 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
                     <div class="auth-brand">
                         <i data-lucide="hard-hat" class="auth-icon"></i>
                         <div>
-                            <h2><?= APP_NAME ?></h2>
-                            <p class="auth-tagline">Sign in to your account</p>
+                            <h2><?= APP_NAME ?> — Staff</h2>
+                            <p class="auth-tagline">Sign in to staff/admin dashboard</p>
                         </div>
                     </div>
 
-                    <form action="<?= APP_URL ?>/index.php?url=login" method="POST" id="login-form">
+                    <form action="<?= APP_URL ?>/index.php?url=admin-login" method="POST" id="admin-login-form">
                         <?= csrf_field() ?>
 
                         <div class="form-group">
@@ -72,10 +69,8 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
                     </form>
 
                     <div class="auth-footer">
-                        <p>Don't have an account? <a href="<?= APP_URL ?>/index.php?url=register">Create one</a></p>
-                        <p>Need to verify your email? <a href="<?= APP_URL ?>/index.php?url=verify-email">Resend verification</a></p>
-                        <p><a href="<?= APP_URL ?>/index.php?url=forgot-password">Forgot password?</a></p>
-                        <p><a href="<?= APP_URL ?>/index.php?url=admin-login">Continue as administrator</a></p>
+                        <p>Need a staff account? Contact your administrator.</p>
+                        <p>Return to <a href="<?= APP_URL ?>/index.php?url=login">customer login</a></p>
                     </div>
                 </div>
             </div>

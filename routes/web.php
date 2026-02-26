@@ -26,6 +26,17 @@ switch ($urlParts[0]) {
         }
         break;
 
+    case 'admin-login':
+        require_once CONTROLLERS_PATH . '/AuthController.php';
+        $controller = new AuthController($pdo);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->adminLogin();
+        } else {
+            AuthMiddleware::guest();
+            $controller->showAdminLogin();
+        }
+        break;
+
     case 'register':
         require_once CONTROLLERS_PATH . '/AuthController.php';
         $controller = new AuthController($pdo);
@@ -63,6 +74,28 @@ switch ($urlParts[0]) {
         require_once CONTROLLERS_PATH . '/AuthController.php';
         $controller = new AuthController($pdo);
         $controller->resendVerification();
+        break;
+
+    case 'forgot-password':
+        require_once CONTROLLERS_PATH . '/AuthController.php';
+        $controller = new AuthController($pdo);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->sendPasswordReset();
+        } else {
+            AuthMiddleware::guest();
+            $controller->showForgotPassword();
+        }
+        break;
+
+    case 'reset-password':
+        require_once CONTROLLERS_PATH . '/AuthController.php';
+        $controller = new AuthController($pdo);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->resetPassword();
+        } else {
+            AuthMiddleware::guest();
+            $controller->showResetPassword();
+        }
         break;
 
     /* ================================================================

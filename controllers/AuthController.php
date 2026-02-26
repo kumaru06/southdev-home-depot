@@ -7,19 +7,27 @@
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Log.php';
 require_once __DIR__ . '/../includes/Mailer.php';
+require_once __DIR__ . '/../models/PasswordReset.php';
 
 class AuthController {
     private $userModel;
     private $logModel;
+    private $pdo;
 
     public function __construct($pdo) {
-        $this->userModel = new User($pdo);
-        $this->logModel  = new Log($pdo);
+        $this->pdo = $pdo;
+        $this->userModel = new User($this->pdo);
+        $this->logModel  = new Log($this->pdo);
     }
 
     public function showLogin() {
         $pageTitle = 'Login';
         require_once VIEWS_PATH . '/auth/login.php';
+    }
+
+    public function showAdminLogin() {
+        $pageTitle = 'Staff Login';
+        require_once VIEWS_PATH . '/auth/admin-login.php';
     }
 
     public function showRegister() {
@@ -112,6 +120,66 @@ class AuthController {
 
         flash('error', 'Invalid email or password.');
         header('Location: ' . APP_URL . '/index.php?url=login');
+        exit;
+    }
+
+    /**
+     * Admin / Staff login — only allow non-customer roles here.
+     */
+    public function adminLogin() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . APP_URL . '/index.php?url=admin-login');
+            exit;
+        }
+
+        AuthMiddleware::csrf();
+
+        $email    = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+
+        if (empty($email) || empty($password)) {
+            flash('error', 'Please fill in all fields.');
+            header('Location: ' . APP_URL . '/index.php?url=admin-login');
+            exit;
+        }
+
+        $user = $this->userModel->findByEmail($email);
+        if ($user && password_verify($password, $user['password'])) {
+            // Disallow customers from logging in here
+            if ($user['role_id'] == ROLE_CUSTOMER) {
+                flash('error', 'This login is for staff only. Use the customer login.');
+                header('Location: ' . APP_URL . '/index.php?url=login');
+                exit;
+            }
+
+            if (!$user['is_active']) {
+                flash('error', 'Your account has been deactivated. Contact support.');
+                header('Location: ' . APP_URL . '/index.php?url=admin-login');
+                exit;
+            }
+
+            if (empty($user['email_verified_at'])) {
+                $_SESSION['pending_verify_email'] = $user['email'];
+                flash('error', 'Please verify your email before logging in.');
+                header('Location: ' . APP_URL . '/index.php?url=verify-email');
+                exit;
+            }
+
+            $_SESSION['user_id']    = $user['id'];
+            $_SESSION['role_id']    = $user['role_id'];
+            $_SESSION['first_name'] = $user['first_name'];
+            $_SESSION['last_name']  = $user['last_name'];
+            $_SESSION['user_name']  = $user['first_name'] . ' ' . $user['last_name'];
+            $_SESSION['profile_image'] = $user['profile_image'] ?? null;
+
+            $this->logModel->create(LOG_LOGIN, 'Staff logged in: ' . $user['email'], $user['id']);
+
+            header('Location: ' . APP_URL . '/index.php?url=dashboard');
+            exit;
+        }
+
+        flash('error', 'Invalid email or password.');
+        header('Location: ' . APP_URL . '/index.php?url=admin-login');
         exit;
     }
 
@@ -247,6 +315,149 @@ class AuthController {
         $devVerifyUrl = null;
 
         require_once VIEWS_PATH . '/auth/verify-email.php';
+    }
+
+    public function showForgotPassword() {
+        $pageTitle = 'Forgot Password';
+        require_once VIEWS_PATH . '/auth/forgot-password.php';
+    }
+
+    public function sendPasswordReset() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . APP_URL . '/index.php?url=forgot-password');
+            exit;
+        }
+
+        AuthMiddleware::csrf();
+
+        $email = trim($_POST['email'] ?? '');
+        if (empty($email)) {
+            flash('error', 'Please provide your email.');
+            header('Location: ' . APP_URL . '/index.php?url=forgot-password');
+            exit;
+        }
+
+        $user = $this->userModel->findByEmail($email);
+        if (!$user) {
+            // For privacy, do not reveal that email is missing
+            flash('success', 'If that email exists in our system, a password reset link has been sent.');
+            header('Location: ' . APP_URL . '/index.php?url=forgot-password');
+            exit;
+        }
+
+        if (!$user['is_active']) {
+            flash('error', 'Account is deactivated. Contact support.');
+            header('Location: ' . APP_URL . '/index.php?url=forgot-password');
+            exit;
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $expiresAt = date('Y-m-d H:i:s', time() + (60 * 60)); // 1 hour
+
+        $prModel = new PasswordReset($this->userModel->pdo ?? $this->pdo);
+        // remove previous tokens for this email
+        $prModel->deleteByEmail($email);
+        $prModel->create($email, $token, $expiresAt);
+
+        // send reset email
+        $this->sendPasswordResetEmail($email, $user['first_name'], $token);
+
+        flash('success', 'If that email exists in our system, a password reset link has been sent.');
+        header('Location: ' . APP_URL . '/index.php?url=forgot-password');
+        exit;
+    }
+
+    public function showResetPassword() {
+        $pageTitle = 'Reset Password';
+        $token = $_GET['token'] ?? '';
+        require_once VIEWS_PATH . '/auth/reset-password.php';
+    }
+
+    public function resetPassword() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . APP_URL . '/index.php?url=forgot-password');
+            exit;
+        }
+
+        AuthMiddleware::csrf();
+
+        $token = $_POST['token'] ?? '';
+        $password = $_POST['password'] ?? '';
+        $passwordConfirm = $_POST['password_confirm'] ?? '';
+
+        if (empty($token) || empty($password) || empty($passwordConfirm)) {
+            flash('error', 'Please fill in all fields.');
+            header('Location: ' . APP_URL . '/index.php?url=reset-password&token=' . urlencode($token));
+            exit;
+        }
+
+        if ($password !== $passwordConfirm) {
+            flash('error', 'Passwords do not match.');
+            header('Location: ' . APP_URL . '/index.php?url=reset-password&token=' . urlencode($token));
+            exit;
+        }
+
+        if (strlen($password) < 8) {
+            flash('error', 'Password must be at least 8 characters.');
+            header('Location: ' . APP_URL . '/index.php?url=reset-password&token=' . urlencode($token));
+            exit;
+        }
+
+        $prModel = new PasswordReset($this->userModel->pdo ?? $this->pdo);
+        $row = $prModel->getByToken($token);
+        if (!$row) {
+            flash('error', 'Invalid or expired reset link.');
+            header('Location: ' . APP_URL . '/index.php?url=forgot-password');
+            exit;
+        }
+
+        if (strtotime($row['expires_at']) < time()) {
+            $prModel->deleteByToken($token);
+            flash('error', 'Reset link expired. Please request a new one.');
+            header('Location: ' . APP_URL . '/index.php?url=forgot-password');
+            exit;
+        }
+
+        // find user by email
+        $user = $this->userModel->findByEmail($row['email']);
+        if (!$user) {
+            flash('error', 'User not found.');
+            header('Location: ' . APP_URL . '/index.php?url=forgot-password');
+            exit;
+        }
+
+        // update password
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+        $this->userModel->updatePassword($user['id'], $hash);
+        $prModel->deleteByEmail($user['email']);
+
+        $this->logModel->create(LOG_USER_UPDATE, 'User password reset: ' . $user['email'], $user['id']);
+        flash('success', 'Password updated. You can now log in.');
+        header('Location: ' . APP_URL . '/index.php?url=login');
+        exit;
+    }
+
+    private function sendPasswordResetEmail($email, $firstName, $token) {
+        $resetUrl = APP_URL . '/index.php?url=reset-password&token=' . urlencode($token);
+        $subject = 'Reset your password - ' . APP_NAME;
+        $templatePath = ROOT_PATH . '/templates/email/verify-email.html';
+        if (file_exists($templatePath)) {
+            $html = "<p>Hi " . htmlspecialchars($firstName, ENT_QUOTES, 'UTF-8') . ",</p>" .
+                "<p>Click the link below to reset your password:</p>" .
+                "<p><a href=\"{$resetUrl}\">Reset password</a></p>" .
+                "<p>If you did not request this, ignore this email.</p>";
+        } else {
+            $html = "<p>Hi {$firstName},</p><p>Reset your password: <a href=\"{$resetUrl}\">{$resetUrl}</a></p>";
+        }
+        $text = "Reset your password: {$resetUrl}";
+        try {
+            $mailer = new Mailer();
+            $mailer->send($email, $firstName, $subject, $html, $text);
+            return ['sent' => true];
+        } catch (\Throwable $e) {
+            $this->logModel->create(LOG_USER_UPDATE, 'Password reset email failed for ' . $email . ': ' . $e->getMessage());
+            return ['sent' => false, 'error' => $e->getMessage()];
+        }
     }
 
     public function verifyEmailLink() {
