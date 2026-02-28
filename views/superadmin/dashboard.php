@@ -62,8 +62,12 @@ require_once INCLUDES_PATH . '/sidebar.php';
         <!-- Charts -->
         <div class="chart-grid">
             <div class="chart-container">
-                <div class="chart-header">
-                    <h3>Monthly Sales</h3>
+                <div class="chart-header" style="display:flex;align-items:center;justify-content:space-between;">
+                    <h3 style="margin:0">Sales</h3>
+                    <div>
+                        <button id="sales-view-monthly" class="btn btn-sm btn-outline" style="margin-right:6px;">Monthly</button>
+                        <button id="sales-view-daily" class="btn btn-sm btn-accent">Daily</button>
+                    </div>
                 </div>
                 <div class="chart-body">
                     <canvas id="salesChart"></canvas>
@@ -194,8 +198,17 @@ require_once INCLUDES_PATH . '/sidebar.php';
     window.DASHBOARD_CHARTS = {
         sales: {
             id: 'salesChart',
-            labels: <?= json_encode($chartLabels ?? []) ?>,
-            data: <?= json_encode($chartData ?? []) ?>
+            // monthly (default)
+            monthly: {
+                labels: <?= json_encode($chartLabels ?? []) ?>,
+                data: <?= json_encode($chartData ?? []) ?>
+            },
+            // daily (last 30 days)
+            daily: {
+                labels: <?= json_encode($dailyLabels ?? []) ?>,
+                data: <?= json_encode($dailyData ?? []) ?>,
+                rawDates: <?= json_encode($dailyRawDates ?? []) ?>
+            }
         },
         category: {
             id: 'categoryChart',
@@ -203,5 +216,48 @@ require_once INCLUDES_PATH . '/sidebar.php';
             data: <?= json_encode($catData ?? []) ?>
         }
     };
+
+    // After charts boot, wire the toggle buttons to swap datasets
+    document.addEventListener('DOMContentLoaded', function () {
+        function setView(view) {
+            // track current view for rollover logic
+            window._currentSalesView = view;
+            if (!window.DASHBOARD_CHARTS || !window.DASHBOARD_CHARTS.sales) return;
+            var payload = window.DASHBOARD_CHARTS.sales[view];
+            if (!payload) return;
+            if (typeof window.updateSalesChart === 'function') {
+                window.updateSalesChart(payload.labels, payload.data);
+            }
+            // update button styles (use outline for inactive, accent for active)
+            var monthlyBtn = document.getElementById('sales-view-monthly');
+            var dailyBtn = document.getElementById('sales-view-daily');
+            if (monthlyBtn && dailyBtn) {
+                monthlyBtn.classList.toggle('btn-accent', view === 'monthly');
+                monthlyBtn.classList.toggle('btn-outline', view !== 'monthly');
+                dailyBtn.classList.toggle('btn-accent', view === 'daily');
+                dailyBtn.classList.toggle('btn-outline', view !== 'daily');
+            }
+            // start/stop midnight rollover when viewing daily
+            if (view === 'daily') {
+                // ensure rawDates exist for the rollover logic
+                if (payload.rawDates && Array.isArray(payload.rawDates)) {
+                    window._salesDailyRawDates = payload.rawDates.slice();
+                }
+                if (typeof window.shiftDailyForMidnight === 'function') {
+                    window.shiftDailyForMidnight();
+                }
+                if (typeof window.startDailyMidnightTimer === 'function') {
+                    window.startDailyMidnightTimer();
+                }
+            } else if (typeof window.stopDailyMidnightTimer === 'function') {
+                window.stopDailyMidnightTimer();
+            }
+        }
+
+        document.getElementById('sales-view-monthly').addEventListener('click', function () { setView('monthly'); });
+        document.getElementById('sales-view-daily').addEventListener('click', function () { setView('daily'); });
+        // ensure initial view is monthly (matches previous default)
+        setView('monthly');
+    });
 </script>
 <?php require_once INCLUDES_PATH . '/footer.php'; ?>

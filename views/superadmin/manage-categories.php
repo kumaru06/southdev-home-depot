@@ -22,7 +22,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
                 <i data-lucide="folder-plus" style="width:20px;height:20px;color:var(--accent);"></i>
                 <h3 style="margin:0; font-size:1.05rem; font-weight:600;">Add New Category</h3>
             </div>
-            <form action="<?= APP_URL ?>/index.php?url=admin/categories/create" method="POST" enctype="multipart/form-data">
+            <form action="<?= APP_URL ?>/index.php?url=admin/categories/create" method="POST">
                 <?= csrf_field() ?>
                 <div class="form-row">
                     <div class="form-col">
@@ -37,12 +37,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
                             <input type="text" name="description" class="form-control" placeholder="Brief description...">
                         </div>
                     </div>
-                    <div class="form-col">
-                        <div class="form-group">
-                            <label class="form-label">Image</label>
-                            <input type="file" name="image" class="form-control" accept="image/*">
-                        </div>
-                    </div>
+                    <!-- image upload removed for categories per UI decision -->
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-accent">

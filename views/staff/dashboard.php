@@ -59,8 +59,12 @@ require_once INCLUDES_PATH . '/sidebar.php';
         <!-- Charts Row -->
         <div class="chart-grid">
             <div class="chart-container">
-                <div class="chart-header">
-                    <h3>Sales Overview</h3>
+                <div class="chart-header" style="display:flex;align-items:center;justify-content:space-between;">
+                    <h3 style="margin:0">Sales Overview</h3>
+                    <div>
+                        <button id="sales-view-monthly" class="btn btn-sm btn-outline" style="margin-right:6px;">Monthly</button>
+                        <button id="sales-view-daily" class="btn btn-sm btn-accent">Daily</button>
+                    </div>
                 </div>
                 <div class="chart-body">
                     <canvas id="salesChart"></canvas>
@@ -181,8 +185,15 @@ require_once INCLUDES_PATH . '/sidebar.php';
     window.DASHBOARD_CHARTS = {
         sales: {
             id: 'salesChart',
-            labels: <?= json_encode($chartLabels ?? []) ?>,
-            data: <?= json_encode($chartData ?? []) ?>
+            monthly: {
+                labels: <?= json_encode($chartLabels ?? []) ?>,
+                data: <?= json_encode($chartData ?? []) ?>
+            },
+            daily: {
+                labels: <?= json_encode($dailyLabels ?? []) ?>,
+                data: <?= json_encode($dailyData ?? []) ?>,
+                rawDates: <?= json_encode($dailyRawDates ?? []) ?>
+            }
         },
         category: {
             id: 'categoryChart',
@@ -190,6 +201,48 @@ require_once INCLUDES_PATH . '/sidebar.php';
             data: <?= json_encode($catData ?? []) ?>
         }
     };
+
+    // Wire Monthly/Daily toggle for staff dashboard (matches superadmin)
+    document.addEventListener('DOMContentLoaded', function () {
+        function setView(view) {
+            // track current view for rollover logic
+            window._currentSalesView = view;
+            if (!window.DASHBOARD_CHARTS || !window.DASHBOARD_CHARTS.sales) return;
+            var payload = window.DASHBOARD_CHARTS.sales[view];
+            if (!payload) return;
+            if (typeof window.updateSalesChart === 'function') {
+                window.updateSalesChart(payload.labels, payload.data);
+            }
+            var monthlyBtn = document.getElementById('sales-view-monthly');
+            var dailyBtn = document.getElementById('sales-view-daily');
+            if (monthlyBtn && dailyBtn) {
+                monthlyBtn.classList.toggle('btn-accent', view === 'monthly');
+                monthlyBtn.classList.toggle('btn-outline', view !== 'monthly');
+                dailyBtn.classList.toggle('btn-accent', view === 'daily');
+                dailyBtn.classList.toggle('btn-outline', view !== 'daily');
+            }
+            // start/stop midnight rollover when viewing daily
+            if (view === 'daily') {
+                if (payload.rawDates && Array.isArray(payload.rawDates)) {
+                    window._salesDailyRawDates = payload.rawDates.slice();
+                }
+                if (typeof window.shiftDailyForMidnight === 'function') {
+                    window.shiftDailyForMidnight();
+                }
+                if (typeof window.startDailyMidnightTimer === 'function') {
+                    window.startDailyMidnightTimer();
+                }
+            } else if (typeof window.stopDailyMidnightTimer === 'function') {
+                window.stopDailyMidnightTimer();
+            }
+        }
+
+        var m = document.getElementById('sales-view-monthly');
+        var d = document.getElementById('sales-view-daily');
+        if (m) m.addEventListener('click', function () { setView('monthly'); });
+        if (d) d.addEventListener('click', function () { setView('daily'); });
+        setView('monthly');
+    });
 </script>
 
 <?php require_once INCLUDES_PATH . '/footer.php'; ?>

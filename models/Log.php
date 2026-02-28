@@ -18,10 +18,30 @@ class Log {
         $userId = $userId ?? ($_SESSION['user_id'] ?? null);
         $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 
-        $stmt = $this->pdo->prepare(
-            "INSERT INTO logs (user_id, action, description, ip_address) VALUES (?, ?, ?, ?)"
-        );
-        return $stmt->execute([$userId, $action, $description, $ip]);
+        // If a userId was provided (from session or caller), ensure the user still exists.
+        if ($userId !== null) {
+            try {
+                $check = $this->pdo->prepare("SELECT id FROM users WHERE id = ? LIMIT 1");
+                $check->execute([$userId]);
+                if ($check->fetchColumn() === false) {
+                    // user no longer exists; clear userId so FK won't be violated
+                    $userId = null;
+                }
+            } catch (PDOException $e) {
+                // If check fails for any reason, fallback to null (do not block main flow)
+                $userId = null;
+            }
+        }
+
+        try {
+            $stmt = $this->pdo->prepare(
+                "INSERT INTO logs (user_id, action, description, ip_address) VALUES (?, ?, ?, ?)"
+            );
+            return $stmt->execute([$userId, $action, $description, $ip]);
+        } catch (PDOException $e) {
+            // swallow and return false to avoid fatal errors when logging fails
+            return false;
+        }
     }
 
     /**

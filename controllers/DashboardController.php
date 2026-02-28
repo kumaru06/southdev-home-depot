@@ -55,6 +55,28 @@ class DashboardController {
             $chartData[]   = floatval($row['total']);
         }
 
+        // Daily sales (last 30 days) - prefer daily view on dashboard
+        $stmt = $this->pdo->query("SELECT DATE(created_at) as day, SUM(total_amount) as total FROM orders WHERE status != 'cancelled' AND created_at >= DATE_SUB(CURDATE(), INTERVAL 29 DAY) GROUP BY day ORDER BY day ASC");
+        $dailySales = $stmt->fetchAll();
+        $dailyLabels = [];
+        $dailyData   = [];
+        $dailyRawDates = [];
+        // Build a full 30-day range to include empty days
+        $period = new DatePeriod(new DateTime('-29 days'), new DateInterval('P1D'), (new DateTime('+1 day')));
+        $dailyMap = [];
+        foreach ($dailySales as $r) { $dailyMap[$r['day']] = floatval($r['total']); }
+        foreach ($period as $dt) {
+            $d = $dt->format('Y-m-d');
+            $dailyRawDates[] = $d;
+            // Use full month+day labels for daily view to match monthly styling
+            $dailyLabels[] = $dt->format('M j');
+            $dailyData[] = isset($dailyMap[$d]) ? $dailyMap[$d] : 0.0;
+        }
+
+        // Keep Monthly as the default chart on the dashboard, but provide daily data as well
+        // $chartLabels/$chartData remain the monthly values computed earlier
+        // Daily arrays are available in $dailyLabels and $dailyData for toggling
+
         // Orders by status
         $stmt = $this->pdo->query("SELECT status, COUNT(*) as count FROM orders GROUP BY status");
         $orderStatusCounts = $stmt->fetchAll();
@@ -108,7 +130,7 @@ class DashboardController {
         $pageTitle = 'Dashboard';
         $isAdmin   = true;
         $extraCss  = ['admin.css', 'dashboard.css'];
-        $extraJs   = ['charts.js'];
+            $extraJs   = ['charts.js'];
 
         if ($_SESSION['role_id'] == ROLE_SUPER_ADMIN) {
             require_once VIEWS_PATH . '/superadmin/dashboard.php';

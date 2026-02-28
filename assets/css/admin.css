@@ -25,7 +25,7 @@
     transition: width .3s cubic-bezier(.4,0,.2,1), min-width .3s cubic-bezier(.4,0,.2,1);
     overflow: hidden;
 }
-.sidebar.collapsed { width: 68px; min-width: 68px; }
+.sidebar.collapsed { width: 68px; min-width: 68px; transform: none; }
 
 .sidebar .brand {
     padding: 20px 22px;
@@ -317,6 +317,12 @@
     position: relative;
 }
 
+/* Hide the floating/top hamburger toggle when not needed — keeps layout static */
+.top-bar .sidebar-toggle-btn,
+.top-bar .sidebar-toggle {
+    display: none !important;
+}
+
 /* Reliable hamburger icon (works even if Lucide fails to load) */
 .top-bar .sidebar-toggle i,
 .top-bar .sidebar-toggle svg,
@@ -398,6 +404,52 @@
     gap: 14px;
     padding: 10px 0;
     border-bottom: 1px dashed var(--border);
+}
+
+/* Neutral admin footer - remove any left accent and ensure full text visibility */
+.admin-footer {
+    background: var(--white);
+    color: var(--text-muted);
+    padding: 12px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-top: 1px solid var(--border);
+    position: relative;
+}
+.admin-footer span {
+    background: transparent;
+    color: var(--text-muted);
+    padding: 6px 10px;
+    border-radius: 8px;
+    display: inline-block;
+    border: 1px solid transparent;
+}
+.admin-footer span::before { display: none !important; }
+
+/* Ensure admin footer does not sit under the fixed sidebar and text is visible */
+.admin-footer {
+    margin-left: 260px; /* align with main content */
+    padding: 12px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    border-top: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    z-index: 10;
+}
+
+/* When sidebar is collapsed, reduce left offset */
+.sidebar.collapsed ~ .admin-footer {
+    margin-left: 68px;
+}
+
+/* Mobile: full-width footer */
+@media (max-width: 992px) {
+    .admin-footer { margin-left: 0; padding: 12px 16px; justify-content: center; }
 }
 .detail-row:last-child { border-bottom: none; }
 
@@ -505,12 +557,8 @@
     transform: translateY(-2px);
 }
 .stat-card::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 4px;
-    background: var(--accent);
-    border-radius: 0 4px 4px 0;
+    /* removed left accent - keep card plain white */
+    display: none;
 }
 .stat-card .stat-label {
     font-size: 12px;
@@ -711,6 +759,9 @@
     display: flex;
     justify-content: space-between;
 }
+
+/* Stack the right-side footer items vertically and align to the end */
+/* (reverted stacking styles) */
 
 /* ---------- Logs Table ---------- */
 .log-action { font-family: var(--font-mono); font-size: 12px; }

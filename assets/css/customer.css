@@ -171,8 +171,14 @@
 
 /* ---------- Search ---------- */
 .search-bar {
-    max-width: 920px;
+    /* reduce default width so search input isn't excessively long */
+    max-width: 760px;
     margin: 18px auto 12px;
+}
+
+@media (min-width: 1200px) {
+    /* allow a slightly larger search on very wide screens without spanning full width */
+    .search-bar { max-width: 920px; }
 }
 .search-form {
     display: flex;
