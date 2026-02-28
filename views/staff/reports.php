@@ -118,5 +118,17 @@ require_once INCLUDES_PATH . '/sidebar.php';
         }
     };
 </script>
+<script>
+    // If CDN fails, load local Chart.js fallback from assets/vendor
+    (function () {
+        if (typeof Chart === 'undefined') {
+            var s = document.createElement('script');
+            s.src = '/assets/vendor/chartjs/chart.min.js';
+            s.defer = true;
+            s.onload = function () { try { console.info('Loaded local Chart.js fallback'); } catch (e) {} };
+            document.head.appendChild(s);
+        }
+    })();
+</script>
 
 <?php require_once INCLUDES_PATH . '/footer.php'; ?>

@@ -79,6 +79,18 @@ require_once INCLUDES_PATH . '/sidebar.php';
                 </div>
                 <div class="chart-body">
                     <canvas id="categoryChart"></canvas>
+                    <div class="category-fallback" style="display:none;padding:12px;color:var(--steel);">
+                        <strong>Category totals</strong>
+                        <ul style="margin:8px 0 0;padding-left:18px;">
+                            <?php if (!empty($catLabels) && !empty($catData) && count($catLabels) === count($catData)): ?>
+                                <?php for ($i = 0; $i < count($catLabels); $i++): ?>
+                                    <li><?= htmlspecialchars($catLabels[$i]) ?> — ₱<?= number_format($catData[$i], 2) ?></li>
+                                <?php endfor; ?>
+                            <?php else: ?>
+                                <li>No category data available.</li>
+                            <?php endif; ?>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -259,5 +271,30 @@ require_once INCLUDES_PATH . '/sidebar.php';
         // ensure initial view is monthly (matches previous default)
         setView('monthly');
     });
+</script>
+    <script>
+        // If Chart.js isn't available, reveal the textual fallback so users see category totals.
+        (function () {
+            try {
+                if (typeof Chart === 'undefined') {
+                    var fb = document.querySelector('.category-fallback');
+                    var cvs = document.getElementById('categoryChart');
+                    if (fb) fb.style.display = 'block';
+                    if (cvs) cvs.style.display = 'none';
+                }
+            } catch (e) {}
+        })();
+    </script>
+<script>
+    // If CDN fails, load local Chart.js fallback from assets/vendor
+    (function () {
+        if (typeof Chart === 'undefined') {
+            var s = document.createElement('script');
+            s.src = '/assets/vendor/chartjs/chart.min.js';
+            s.defer = true;
+            s.onload = function () { try { console.info('Loaded local Chart.js fallback'); } catch (e) {} };
+            document.head.appendChild(s);
+        }
+    })();
 </script>
 <?php require_once INCLUDES_PATH . '/footer.php'; ?>
