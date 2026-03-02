@@ -35,6 +35,9 @@
             document.body.style.transition = 'opacity .35s ease';
             document.body.style.opacity = '1';
         });
+
+        /* ========== Dark Mode Toggle ========== */
+        initThemeToggle();
     });
 
     /* ========== Sidebar Toggle ========== */
@@ -80,7 +83,30 @@
             });
         }
 
-        /* ========== Alert Auto-Dismiss ========== */
+        /* ========== Toast Auto-Dismiss ========== */
+        document.querySelectorAll('.toast[data-auto-dismiss]').forEach(function (toast) {
+            var duration = parseInt(toast.getAttribute('data-auto-dismiss')) || 5000;
+            // Set progress bar animation duration
+            var bar = toast.querySelector('.toast-progress-bar');
+            if (bar) bar.style.animationDuration = duration + 'ms';
+            // Close button
+            var closeBtn = toast.querySelector('.toast-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function () {
+                    dismissToast(toast);
+                });
+            }
+            // Auto dismiss
+            setTimeout(function () { dismissToast(toast); }, duration);
+        });
+
+        function dismissToast(el) {
+            if (!el || el.classList.contains('toast--leaving')) return;
+            el.classList.add('toast--leaving');
+            setTimeout(function () { if (el.parentNode) el.remove(); }, 300);
+        }
+
+        /* Legacy .alert auto-dismiss (for inline alerts) */
         document.querySelectorAll('.alert').forEach(function (alert) {
             setTimeout(function () {
                 alert.style.transition = 'opacity .3s, transform .3s';
@@ -260,10 +286,14 @@
             var dialog = document.createElement('div');
             dialog.className = 'confirm-dialog';
 
+            var iconClass = confirmVariant === 'danger' ? 'confirm-header-icon--danger' : 'confirm-header-icon--info';
+            var iconName = confirmVariant === 'danger' ? 'alert-triangle' : 'help-circle';
+
             dialog.innerHTML =
                 '<div class="confirm-header">' +
+                    '<div class="confirm-header-icon ' + iconClass + '"><i data-lucide="' + iconName + '"></i></div>' +
                     '<div class="confirm-title">' + escapeHtml(title) + '</div>' +
-                    '<button type="button" class="confirm-close" aria-label="Close">&times;</button>' +
+                    '<button type="button" class="confirm-close" aria-label="Close"><i data-lucide="x"></i></button>' +
                 '</div>' +
                 '<div class="confirm-body">' + escapeHtml(message) + '</div>' +
                 '<div class="confirm-actions">' +
@@ -273,6 +303,9 @@
 
             overlay.appendChild(dialog);
             document.body.appendChild(overlay);
+
+            // Render Lucide icons inside the dialog
+            if (window.lucide) lucide.createIcons({ nodes: [dialog] });
 
             // Prevent background scroll
             var prevOverflow = document.body.style.overflow;
@@ -417,74 +450,72 @@
     };
 
     /* Toast Notification */
-        /* Toast Notification: single reusable toast that replaces previous one */
+        /* Toast Notification: modern toast that stacks in top-right container */
         window.showNotification = function (message, type) {
             type = type || 'info';
-            const typeClass = type === 'success' ? 'alert-success'
-                : type === 'error' ? 'alert-danger'
-                    : type === 'warning' ? 'alert-warning' : 'alert-info';
+            var typeMap = {
+                success: { cls: 'toast--success', icon: 'check-circle', title: 'Success' },
+                error:   { cls: 'toast--error',   icon: 'alert-circle', title: 'Error' },
+                warning: { cls: 'toast--warning',  icon: 'alert-triangle', title: 'Warning' },
+                info:    { cls: 'toast--info',     icon: 'info',         title: 'Info' }
+            };
+            var t = typeMap[type] || typeMap.info;
+            var duration = type === 'error' ? 6000 : 4000;
 
-            var toast = document.getElementById('site-toast');
-            var isNew = false;
-            if (!toast) {
-                toast = document.createElement('div');
-                toast.id = 'site-toast';
-                isNew = true;
+            // Ensure container exists
+            var container = document.querySelector('.toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'toast-container';
+                document.body.appendChild(container);
             }
 
-            toast.className = 'alert ' + typeClass;
-            toast.textContent = message;
+            // Remove previous JS toast if any
+            var prev = document.getElementById('site-toast');
+            if (prev && prev.parentNode) prev.remove();
 
-            // Position toast centered below the navbar if present, otherwise top center
-            const nav = document.querySelector('.navbar');
-            var topPos = 20;
-            if (nav) {
-                var rect = nav.getBoundingClientRect();
-                topPos = Math.max(12, rect.bottom + 12 + window.scrollY);
+            // Build toast element
+            var toast = document.createElement('div');
+            toast.id = 'site-toast';
+            toast.className = 'toast ' + t.cls;
+            toast.setAttribute('data-auto-dismiss', duration);
+            toast.innerHTML =
+                '<div class="toast-icon"><i data-lucide="' + t.icon + '"></i></div>' +
+                '<div class="toast-body">' +
+                    '<span class="toast-title">' + t.title + '</span>' +
+                    '<span class="toast-message">' + message + '</span>' +
+                '</div>' +
+                '<button class="toast-close" aria-label="Close"><i data-lucide="x"></i></button>' +
+                '<div class="toast-progress"><div class="toast-progress-bar" style="animation-duration:' + duration + 'ms"></div></div>';
+
+            container.appendChild(toast);
+
+            // Render Lucide icons inside the new toast
+            if (window.lucide) lucide.createIcons({ nodes: [toast] });
+
+            // Close button
+            var closeBtn = toast.querySelector('.toast-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function () {
+                    dismissJsToast(toast);
+                });
             }
 
-            toast.style.position = 'fixed';
-            toast.style.left = '50%';
-            toast.style.top = topPos + 'px';
-            toast.style.right = 'auto';
-            toast.style.zIndex = '9999';
-            toast.style.minWidth = '280px';
-            toast.style.maxWidth = '90%';
-            toast.style.padding = '10px 14px';
-            toast.style.borderRadius = '8px';
-            toast.style.boxShadow = '0 10px 30px rgba(0,0,0,.12)';
-
-            // Use inline transition for opacity & translateY so translateX(-50%) remains applied
-            toast.style.animation = 'none';
-            toast.style.transition = 'opacity .25s ease, transform .25s ease';
-            // start slightly up and transparent
-            toast.style.transform = 'translateX(-50%) translateY(-8px)';
-            toast.style.opacity = '0';
-
-            if (isNew) document.body.appendChild(toast);
-
-            // trigger enter transition on next frame so transition animates
-            requestAnimationFrame(function () {
-                toast.style.transform = 'translateX(-50%) translateY(0)';
-                toast.style.opacity = '1';
-            });
-
-            // Reset any existing removal timer and set a new one
-            if (window._siteToastTimeout) {
-                clearTimeout(window._siteToastTimeout);
-                window._siteToastTimeout = null;
-            }
-
+            // Auto dismiss
+            if (window._siteToastTimeout) clearTimeout(window._siteToastTimeout);
             window._siteToastTimeout = setTimeout(function () {
-                if (!toast) return;
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(-50%) translateY(-8px)';
-                setTimeout(function () {
-                    if (toast && toast.parentNode) toast.parentNode.removeChild(toast);
-                    window._siteToastTimeout = null;
-                }, 300);
-            }, 3500);
-    };
+                dismissJsToast(toast);
+            }, duration);
+        };
+
+        function dismissJsToast(el) {
+            if (!el || el.classList.contains('toast--leaving')) return;
+            el.classList.add('toast--leaving');
+            setTimeout(function () {
+                if (el && el.parentNode) el.remove();
+            }, 300);
+            window._siteToastTimeout = null;
+        }
 
     /* ========== Dropdown Menus ========== */
     document.addEventListener('click', function (e) {
@@ -497,5 +528,25 @@
             document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
         }
     });
+
+    /* ========== Dark Mode Toggle ========== */
+    function initThemeToggle() {
+        // Bind all toggle buttons (navbar + sidebar)
+        document.querySelectorAll('#themeToggle, .theme-toggle, .sidebar-theme-toggle').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var current = document.documentElement.getAttribute('data-theme');
+                var next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('shd-theme', next);
+
+                // Re-render Lucide icons so the toggle icons update
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    setTimeout(function() { window.lucide.createIcons(); }, 50);
+                }
+            });
+        });
+    }
 
 })();

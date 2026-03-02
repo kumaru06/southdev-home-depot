@@ -150,6 +150,12 @@ $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($
             <span class="logout-emoji" aria-hidden="true">➜]</span>
             <span class="logout-text">Logout</span>
         </a>
+
+        <button type="button" class="sidebar-theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+            <i data-lucide="moon" class="theme-icon-dark"></i>
+            <i data-lucide="sun" class="theme-icon-light"></i>
+            <span class="theme-toggle-text">Dark Mode</span>
+        </button>
     </div>
 </aside>
 

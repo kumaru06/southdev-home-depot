@@ -19,51 +19,43 @@ require_once INCLUDES_PATH . '/sidebar.php';
         <!-- Stat Cards -->
         <div class="stat-cards">
             <div class="stat-card">
-                <div class="stat-card-body">
-                    <div class="stat-info">
-                        <span class="stat-label">Total Sales</span>
-                        <span class="stat-value">₱<?= number_format($totalSales ?? 0, 2) ?></span>
-                    </div>
-                    <div class="stat-icon"><i data-lucide="trending-up"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">Total Sales</span>
+                    <span class="stat-value">₱<?= number_format($totalSales ?? 0, 2) ?></span>
                 </div>
+                <div class="stat-icon"><i data-lucide="trending-up"></i></div>
             </div>
             <div class="stat-card">
-                <div class="stat-card-body">
-                    <div class="stat-info">
-                        <span class="stat-label">Total Orders</span>
-                        <span class="stat-value animated-counter" data-target="<?= $totalOrders ?? 0 ?>"><?= $totalOrders ?? 0 ?></span>
-                    </div>
-                    <div class="stat-icon"><i data-lucide="shopping-bag"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">Total Orders</span>
+                    <span class="stat-value"><?= $totalOrders ?? 0 ?></span>
                 </div>
+                <div class="stat-icon"><i data-lucide="shopping-bag"></i></div>
             </div>
             <div class="stat-card">
-                <div class="stat-card-body">
-                    <div class="stat-info">
-                        <span class="stat-label">Pending Orders</span>
-                        <span class="stat-value animated-counter" data-target="<?= $pendingOrders ?? 0 ?>"><?= $pendingOrders ?? 0 ?></span>
-                    </div>
-                    <div class="stat-icon"><i data-lucide="clock"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">Pending Orders</span>
+                    <span class="stat-value"><?= $pendingOrders ?? 0 ?></span>
                 </div>
+                <div class="stat-icon"><i data-lucide="clock"></i></div>
             </div>
             <div class="stat-card">
-                <div class="stat-card-body">
-                    <div class="stat-info">
-                        <span class="stat-label">Cancel Requests</span>
-                        <span class="stat-value animated-counter" data-target="<?= $pendingCancels ?? 0 ?>"><?= $pendingCancels ?? 0 ?></span>
-                    </div>
-                    <div class="stat-icon"><i data-lucide="alert-triangle"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">Cancel Requests</span>
+                    <span class="stat-value"><?= $pendingCancels ?? 0 ?></span>
                 </div>
+                <div class="stat-icon"><i data-lucide="alert-triangle"></i></div>
             </div>
         </div>
 
         <!-- Charts Row -->
         <div class="chart-grid">
             <div class="chart-container">
-                <div class="chart-header" style="display:flex;align-items:center;justify-content:space-between;">
-                    <h3 style="margin:0">Sales Overview</h3>
+                <div class="chart-header">
+                    <h3>Sales</h3>
                     <div>
-                        <button id="sales-view-monthly" class="btn btn-sm btn-outline" style="margin-right:6px;">Monthly</button>
-                        <button id="sales-view-daily" class="btn btn-sm btn-accent">Daily</button>
+                        <button id="sales-view-monthly" class="btn btn-sm btn-outline">MONTHLY</button>
+                        <button id="sales-view-daily" class="btn btn-sm btn-accent">DAILY</button>
                     </div>
                 </div>
                 <div class="chart-body">
@@ -214,16 +206,12 @@ require_once INCLUDES_PATH . '/sidebar.php';
         }
     };
 
-    // Wire Monthly/Daily toggle for staff dashboard (matches superadmin)
+    // Wire Monthly/Daily toggle for staff dashboard
     document.addEventListener('DOMContentLoaded', function () {
         function setView(view) {
-            // track current view for rollover logic
             window._currentSalesView = view;
-            if (!window.DASHBOARD_CHARTS || !window.DASHBOARD_CHARTS.sales) return;
-            var payload = window.DASHBOARD_CHARTS.sales[view];
-            if (!payload) return;
-            if (typeof window.updateSalesChart === 'function') {
-                window.updateSalesChart(payload.labels, payload.data);
+            if (typeof window.switchSalesView === 'function') {
+                window.switchSalesView(view);
             }
             var monthlyBtn = document.getElementById('sales-view-monthly');
             var dailyBtn = document.getElementById('sales-view-daily');
@@ -232,20 +220,6 @@ require_once INCLUDES_PATH . '/sidebar.php';
                 monthlyBtn.classList.toggle('btn-outline', view !== 'monthly');
                 dailyBtn.classList.toggle('btn-accent', view === 'daily');
                 dailyBtn.classList.toggle('btn-outline', view !== 'daily');
-            }
-            // start/stop midnight rollover when viewing daily
-            if (view === 'daily') {
-                if (payload.rawDates && Array.isArray(payload.rawDates)) {
-                    window._salesDailyRawDates = payload.rawDates.slice();
-                }
-                if (typeof window.shiftDailyForMidnight === 'function') {
-                    window.shiftDailyForMidnight();
-                }
-                if (typeof window.startDailyMidnightTimer === 'function') {
-                    window.startDailyMidnightTimer();
-                }
-            } else if (typeof window.stopDailyMidnightTimer === 'function') {
-                window.stopDailyMidnightTimer();
             }
         }
 

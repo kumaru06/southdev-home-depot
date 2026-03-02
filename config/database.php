@@ -19,6 +19,8 @@ try {
             PDO::ATTR_EMULATE_PREPARES => false
         ]
     );
+    // Align MySQL session timezone with PHP (Asia/Manila = UTC+8)
+    $pdo->exec("SET time_zone = '+08:00'");
 } catch (PDOException $e) {
     die("Database connection failed: " . $e->getMessage());
 }

@@ -20,11 +20,11 @@ require_once INCLUDES_PATH . '/header.php';
                 <div class="form-row">
                     <div class="form-group form-col">
                         <label for="first_name">First Name <span class="required">*</span></label>
-                        <input type="text" id="first_name" name="first_name" class="form-control" placeholder="Juan" required>
+                        <input type="text" id="first_name" name="first_name" class="form-control" placeholder="E.g. Christian John" required>
                     </div>
                     <div class="form-group form-col">
                         <label for="last_name">Last Name <span class="required">*</span></label>
-                        <input type="text" id="last_name" name="last_name" class="form-control" placeholder="Dela Cruz" required>
+                        <input type="text" id="last_name" name="last_name" class="form-control" placeholder="E.g. Millanes" required>
                     </div>
                 </div>
 

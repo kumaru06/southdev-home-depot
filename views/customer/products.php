@@ -9,20 +9,27 @@ require_once INCLUDES_PATH . '/navbar.php';
         <!-- Left Sidebar -->
         <aside class="storefront-sidebar" aria-label="Browse categories">
             <div class="sidebar-card">
-                <div class="sidebar-title">Explore</div>
+                <div class="sidebar-title">
+                    <i data-lucide="layout-grid" style="width:16px;height:16px;opacity:.5"></i>
+                    Explore
+                </div>
                 <nav class="sidebar-nav">
                     <a href="<?= APP_URL ?>/index.php?url=products" class="<?= !isset($_GET['category']) ? 'active' : '' ?>">
-                        <span>All Products</span>
+                        <span><i data-lucide="layers" style="width:15px;height:15px"></i> All Products</span>
+                        <?php if (!empty($products) && !isset($_GET['category'])): ?>
+                            <span class="sidebar-count"><?= count($products) ?></span>
+                        <?php endif; ?>
                     </a>
                     <?php if (isset($categories)): foreach ($categories as $cat): ?>
                         <a href="<?= APP_URL ?>/index.php?url=products&category=<?= $cat['id'] ?>" class="<?= (isset($_GET['category']) && $_GET['category'] == $cat['id']) ? 'active' : '' ?>">
-                            <span><?= htmlspecialchars($cat['name']) ?></span>
+                            <span><i data-lucide="tag" style="width:14px;height:14px"></i> <?= htmlspecialchars($cat['name']) ?></span>
                         </a>
                     <?php endforeach; endif; ?>
                 </nav>
             </div>
 
             <div class="sidebar-footer-link">
+                <i data-lucide="help-circle" style="width:13px;height:13px"></i>
                 <a href="<?= APP_URL ?>/index.php?url=profile">Help Center</a>
             </div>
         </aside>
@@ -41,7 +48,9 @@ require_once INCLUDES_PATH . '/navbar.php';
             </div>
 
             <div class="category-bar storefront-chips">
-                <a href="<?= APP_URL ?>/index.php?url=products" class="<?= !isset($_GET['category']) ? 'active' : '' ?>">All</a>
+                <a href="<?= APP_URL ?>/index.php?url=products" class="<?= !isset($_GET['category']) ? 'active' : '' ?>">
+                    <i data-lucide="grid-3x3" style="width:13px;height:13px"></i> All
+                </a>
                 <?php if (isset($categories)): foreach ($categories as $cat): ?>
                     <a href="<?= APP_URL ?>/index.php?url=products&category=<?= $cat['id'] ?>" class="<?= (isset($_GET['category']) && $_GET['category'] == $cat['id']) ? 'active' : '' ?>">
                         <?= htmlspecialchars($cat['name']) ?>
@@ -56,11 +65,18 @@ require_once INCLUDES_PATH . '/navbar.php';
                 <div class="product-card">
                     <a href="<?= APP_URL ?>/index.php?url=products/<?= $product['id'] ?>">
                         <div class="product-img-wrap">
-                            <img src="<?= APP_URL ?>/assets/uploads/<?= $product['image'] ?: 'placeholder.svg' ?>" alt="<?= htmlspecialchars($product['name']) ?>" loading="lazy">
+                            <?php if (!empty($product['image']) && file_exists(ROOT_PATH . '/assets/uploads/' . $product['image'])): ?>
+                                <img src="<?= APP_URL ?>/assets/uploads/<?= $product['image'] ?>" alt="<?= htmlspecialchars($product['name']) ?>" loading="lazy">
+                            <?php else: ?>
+                                <div class="product-no-image">
+                                    <i data-lucide="image" class="no-img-icon"></i>
+                                    <span>No Image</span>
+                                </div>
+                            <?php endif; ?>
                             <?php if (isset($product['stock']) && $product['stock'] <= 0): ?>
-                                <span class="product-badge badge-danger">Out of Stock</span>
+                                <span class="product-badge badge-danger"><i data-lucide="alert-circle" style="width:11px;height:11px"></i> Out of Stock</span>
                             <?php elseif (isset($product['stock']) && $product['stock'] <= 5): ?>
-                                <span class="product-badge badge-warning">Low Stock</span>
+                                <span class="product-badge badge-warning"><i data-lucide="alert-triangle" style="width:11px;height:11px"></i> Low Stock</span>
                             <?php endif; ?>
                         </div>
                         <div class="product-info">
@@ -72,6 +88,10 @@ require_once INCLUDES_PATH . '/navbar.php';
                     <?php if (isset($_SESSION['user_id']) && $_SESSION['role_id'] == ROLE_CUSTOMER && ($product['stock'] ?? 0) > 0): ?>
                         <button class="btn btn-accent btn-sm btn-add-cart" onclick="addToCart(<?= $product['id'] ?>, 1)">
                             <i data-lucide="shopping-cart"></i> Add to Cart
+                        </button>
+                    <?php elseif (isset($product['stock']) && $product['stock'] <= 0): ?>
+                        <button class="btn btn-sm btn-add-cart btn-out-of-stock" disabled>
+                            <i data-lucide="x-circle"></i> Out of Stock
                         </button>
                     <?php endif; ?>
                 </div>

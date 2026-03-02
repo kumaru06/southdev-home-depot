@@ -17,31 +17,25 @@ require_once INCLUDES_PATH . '/sidebar.php';
         <!-- Stat Row -->
         <div class="stat-cards">
             <div class="stat-card">
-                <div class="stat-card-body">
-                    <div class="stat-info">
-                        <span class="stat-label">Total Sales</span>
-                        <span class="stat-value">₱<?= number_format($totalSales ?? 0, 2) ?></span>
-                    </div>
-                    <div class="stat-icon"><i data-lucide="trending-up"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">Total Sales</span>
+                    <span class="stat-value">₱<?= number_format($totalSales ?? 0, 2) ?></span>
                 </div>
+                <div class="stat-icon"><i data-lucide="trending-up"></i></div>
             </div>
             <div class="stat-card">
-                <div class="stat-card-body">
-                    <div class="stat-info">
-                        <span class="stat-label">Total Orders</span>
-                        <span class="stat-value"><?= $totalOrders ?? 0 ?></span>
-                    </div>
-                    <div class="stat-icon"><i data-lucide="shopping-bag"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">Total Orders</span>
+                    <span class="stat-value"><?= $totalOrders ?? 0 ?></span>
                 </div>
+                <div class="stat-icon"><i data-lucide="shopping-bag"></i></div>
             </div>
             <div class="stat-card">
-                <div class="stat-card-body">
-                    <div class="stat-info">
-                        <span class="stat-label">Customers</span>
-                        <span class="stat-value"><?= $totalCustomers ?? 0 ?></span>
-                    </div>
-                    <div class="stat-icon"><i data-lucide="users"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">Customers</span>
+                    <span class="stat-value"><?= $totalCustomers ?? 0 ?></span>
                 </div>
+                <div class="stat-icon"><i data-lucide="users"></i></div>
             </div>
         </div>
 

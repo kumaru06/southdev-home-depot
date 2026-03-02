@@ -3,6 +3,9 @@
  * Application Configuration
  */
 
+// Set timezone to Philippine Time (UTC+8)
+date_default_timezone_set('Asia/Manila');
+
 session_start();
 
 // Application settings

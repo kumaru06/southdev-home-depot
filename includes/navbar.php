@@ -67,12 +67,24 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['role_id']) && $_SESSION['rol
                 </li>
                 <li>
                     <a href="<?= APP_URL ?>/index.php?url=logout" class="nav-logout">
-                        <i class="lucide-log-out"></i> ➜] Logout
+                        <i class="lucide-log-out"></i> Logout
                     </a>
+                </li>
+                <li>
+                    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                        <i data-lucide="moon" class="theme-icon-dark"></i>
+                        <i data-lucide="sun" class="theme-icon-light"></i>
+                    </button>
                 </li>
             <?php else: ?>
                 <li><a href="<?= APP_URL ?>/index.php?url=login" class="<?= $currentUrl == 'login' ? 'active' : '' ?>">Login</a></li>
                 <li><a href="<?= APP_URL ?>/index.php?url=register" class="btn btn-accent btn-sm">Register</a></li>
+                <li>
+                    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                        <i data-lucide="moon" class="theme-icon-dark"></i>
+                        <i data-lucide="sun" class="theme-icon-light"></i>
+                    </button>
+                </li>
             <?php endif; ?>
         </ul>
 

@@ -118,9 +118,11 @@
         });
 
         provinceSelect.addEventListener('change', function () {
-            var code = provinceSelect.value;
-            setOptions(citySelect, [{ value: '', label: code ? 'Loading…' : 'Select City' }], true);
-            citySelect.disabled = !code;
+            var selectedOption = provinceSelect.options[provinceSelect.selectedIndex];
+            var code = selectedOption ? selectedOption.getAttribute('data-code') : '';
+            var hasSelection = !!provinceSelect.value;
+            setOptions(citySelect, [{ value: '', label: hasSelection ? 'Loading…' : 'Select City' }], true);
+            citySelect.disabled = !hasSelection;
             if (!code) return;
 
             loadCitiesForProvince(code, citySelect);
@@ -134,14 +136,14 @@
                 provinces.sort(function (a, b) {
                     return String(a.name).localeCompare(String(b.name));
                 });
-                var options = [{ value: '', label: 'Select Province' }].concat(
-                    provinces.map(function (p) { return { value: p.code, label: p.name }; })
+                var options = [{ value: '', label: 'Select Province', dataCode: '' }].concat(
+                    provinces.map(function (p) { return { value: p.name, label: p.name, dataCode: p.code }; })
                 );
                 setOptions(selectEl, options, true);
             })
             .catch(function () {
-                var options = [{ value: '', label: 'Select Province' }].concat(
-                    FALLBACK.provinces.map(function (p) { return { value: p.code, label: p.name }; })
+                var options = [{ value: '', label: 'Select Province', dataCode: '' }].concat(
+                    FALLBACK.provinces.map(function (p) { return { value: p.name, label: p.name, dataCode: p.code }; })
                 );
                 setOptions(selectEl, options, true);
             });
@@ -177,6 +179,7 @@
             var o = document.createElement('option');
             o.value = opt.value;
             o.textContent = opt.label;
+            if (opt.dataCode) o.setAttribute('data-code', opt.dataCode);
             selectEl.appendChild(o);
         });
         if (keepValueIfPossible && prev) {

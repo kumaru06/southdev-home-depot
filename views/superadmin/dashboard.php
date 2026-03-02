@@ -16,57 +16,57 @@ require_once INCLUDES_PATH . '/sidebar.php';
         <!-- Stat Cards -->
         <div class="stat-cards">
             <div class="stat-card">
-                <div class="stat-icon"><i data-lucide="peso-sign"></i></div>
                 <div class="stat-info">
-                    <span class="stat-value" data-count="<?= $totalSales ?? 0 ?>">₱<?= number_format($totalSales ?? 0, 2) ?></span>
                     <span class="stat-label">Total Revenue</span>
+                    <span class="stat-value">₱<?= number_format($totalSales ?? 0, 2) ?></span>
                 </div>
+                <div class="stat-icon"><i data-lucide="trending-up"></i></div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon"><i data-lucide="shopping-cart"></i></div>
                 <div class="stat-info">
-                    <span class="stat-value" data-count="<?= $totalOrders ?? 0 ?>"><?= $totalOrders ?? 0 ?></span>
                     <span class="stat-label">Total Orders</span>
+                    <span class="stat-value"><?= $totalOrders ?? 0 ?></span>
                 </div>
+                <div class="stat-icon"><i data-lucide="shopping-cart"></i></div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon"><i data-lucide="clock"></i></div>
                 <div class="stat-info">
-                    <span class="stat-value" data-count="<?= $pendingOrders ?? 0 ?>"><?= $pendingOrders ?? 0 ?></span>
                     <span class="stat-label">Pending Orders</span>
+                    <span class="stat-value"><?= $pendingOrders ?? 0 ?></span>
                 </div>
+                <div class="stat-icon"><i data-lucide="clock"></i></div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon"><i data-lucide="users"></i></div>
                 <div class="stat-info">
-                    <span class="stat-value" data-count="<?= $totalCustomers ?? 0 ?>"><?= $totalCustomers ?? 0 ?></span>
                     <span class="stat-label">Total Customers</span>
+                    <span class="stat-value"><?= $totalCustomers ?? 0 ?></span>
                 </div>
+                <div class="stat-icon"><i data-lucide="users"></i></div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon"><i data-lucide="package"></i></div>
                 <div class="stat-info">
-                    <span class="stat-value" data-count="<?= $totalProducts ?? 0 ?>"><?= $totalProducts ?? 0 ?></span>
                     <span class="stat-label">Products</span>
+                    <span class="stat-value"><?= $totalProducts ?? 0 ?></span>
                 </div>
+                <div class="stat-icon"><i data-lucide="package"></i></div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon"><i data-lucide="x-circle"></i></div>
                 <div class="stat-info">
-                    <span class="stat-value" data-count="<?= $pendingCancels ?? 0 ?>"><?= $pendingCancels ?? 0 ?></span>
                     <span class="stat-label">Pending Cancellations</span>
+                    <span class="stat-value"><?= $pendingCancels ?? 0 ?></span>
                 </div>
+                <div class="stat-icon"><i data-lucide="x-circle"></i></div>
             </div>
         </div>
 
         <!-- Charts -->
         <div class="chart-grid">
             <div class="chart-container">
-                <div class="chart-header" style="display:flex;align-items:center;justify-content:space-between;">
-                    <h3 style="margin:0">Sales</h3>
+                <div class="chart-header">
+                    <h3>Sales</h3>
                     <div>
-                        <button id="sales-view-monthly" class="btn btn-sm btn-outline" style="margin-right:6px;">Monthly</button>
-                        <button id="sales-view-daily" class="btn btn-sm btn-accent">Daily</button>
+                        <button id="sales-view-monthly" class="btn btn-sm btn-outline">MONTHLY</button>
+                        <button id="sales-view-daily" class="btn btn-sm btn-accent">DAILY</button>
                     </div>
                 </div>
                 <div class="chart-body">
@@ -229,18 +229,15 @@ require_once INCLUDES_PATH . '/sidebar.php';
         }
     };
 
-    // After charts boot, wire the toggle buttons to swap datasets
+    // Wire Monthly/Daily toggle buttons
     document.addEventListener('DOMContentLoaded', function () {
         function setView(view) {
-            // track current view for rollover logic
             window._currentSalesView = view;
-            if (!window.DASHBOARD_CHARTS || !window.DASHBOARD_CHARTS.sales) return;
-            var payload = window.DASHBOARD_CHARTS.sales[view];
-            if (!payload) return;
-            if (typeof window.updateSalesChart === 'function') {
-                window.updateSalesChart(payload.labels, payload.data);
+            // Use the new switchSalesView which properly handles daily vs monthly
+            if (typeof window.switchSalesView === 'function') {
+                window.switchSalesView(view);
             }
-            // update button styles (use outline for inactive, accent for active)
+            // Toggle button styles
             var monthlyBtn = document.getElementById('sales-view-monthly');
             var dailyBtn = document.getElementById('sales-view-daily');
             if (monthlyBtn && dailyBtn) {
@@ -249,26 +246,11 @@ require_once INCLUDES_PATH . '/sidebar.php';
                 dailyBtn.classList.toggle('btn-accent', view === 'daily');
                 dailyBtn.classList.toggle('btn-outline', view !== 'daily');
             }
-            // start/stop midnight rollover when viewing daily
-            if (view === 'daily') {
-                // ensure rawDates exist for the rollover logic
-                if (payload.rawDates && Array.isArray(payload.rawDates)) {
-                    window._salesDailyRawDates = payload.rawDates.slice();
-                }
-                if (typeof window.shiftDailyForMidnight === 'function') {
-                    window.shiftDailyForMidnight();
-                }
-                if (typeof window.startDailyMidnightTimer === 'function') {
-                    window.startDailyMidnightTimer();
-                }
-            } else if (typeof window.stopDailyMidnightTimer === 'function') {
-                window.stopDailyMidnightTimer();
-            }
         }
 
         document.getElementById('sales-view-monthly').addEventListener('click', function () { setView('monthly'); });
         document.getElementById('sales-view-daily').addEventListener('click', function () { setView('daily'); });
-        // ensure initial view is monthly (matches previous default)
+        // Default to monthly
         setView('monthly');
     });
 </script>

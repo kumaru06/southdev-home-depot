@@ -6,7 +6,12 @@ require_once INCLUDES_PATH . '/navbar.php';
 ?>
 
 <div class="container">
-    <h1 class="page-heading"><i data-lucide="shopping-cart"></i> Shopping Cart</h1>
+    <div class="page-heading-row">
+        <h1 class="page-heading"><i data-lucide="shopping-cart"></i> Shopping Cart</h1>
+        <?php if (!empty($cartItems)): ?>
+            <span class="page-heading-badge"><?= count($cartItems) ?> item<?= count($cartItems) > 1 ? 's' : '' ?></span>
+        <?php endif; ?>
+    </div>
 
     <?php if (!empty($cartItems)): ?>
         <div class="cart-layout">
@@ -22,15 +27,22 @@ require_once INCLUDES_PATH . '/navbar.php';
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($cartItems as $item): ?>
-                            <tr>
+                        <?php foreach ($cartItems as $idx => $item): ?>
+                            <tr class="cart-row" style="animation-delay: <?= $idx * 0.04 ?>s">
                                 <td data-label="Product">
                                     <div class="cart-product">
-                                        <img src="<?= APP_URL ?>/assets/uploads/<?= $item['image'] ?: 'placeholder.svg' ?>" alt="<?= htmlspecialchars($item['product_name']) ?>" class="cart-thumb">
-                                        <span><?= htmlspecialchars($item['product_name']) ?></span>
+                                        <?php if ($item['image']): ?>
+                                            <img src="<?= APP_URL ?>/assets/uploads/<?= $item['image'] ?>" alt="<?= htmlspecialchars($item['product_name']) ?>" class="cart-thumb">
+                                        <?php else: ?>
+                                            <div class="cart-thumb cart-thumb-placeholder"><i data-lucide="package"></i></div>
+                                        <?php endif; ?>
+                                        <div class="cart-product-info">
+                                            <span class="cart-product-name"><?= htmlspecialchars($item['product_name']) ?></span>
+                                            <span class="cart-product-unit">₱<?= number_format($item['price'], 2) ?> each</span>
+                                        </div>
                                     </div>
                                 </td>
-                                <td data-label="Price">₱<?= number_format($item['price'], 2) ?></td>
+                                <td data-label="Price"><span class="cart-price">₱<?= number_format($item['price'], 2) ?></span></td>
                                 <td data-label="Quantity">
                                     <div class="qty-stepper" data-cart-id="<?= $item['id'] ?>">
                                         <button class="qty-btn qty-minus">−</button>
@@ -38,9 +50,9 @@ require_once INCLUDES_PATH . '/navbar.php';
                                         <button class="qty-btn qty-plus">+</button>
                                     </div>
                                 </td>
-                                <td data-label="Subtotal"><strong>₱<?= number_format($item['price'] * $item['quantity'], 2) ?></strong></td>
+                                <td data-label="Subtotal"><strong class="cart-subtotal">₱<?= number_format($item['price'] * $item['quantity'], 2) ?></strong></td>
                                 <td>
-                                    <button class="btn btn-danger btn-sm" onclick="removeFromCart(<?= $item['id'] ?>)" title="Remove">
+                                    <button class="btn btn-danger btn-sm cart-remove-btn" onclick="removeFromCart(<?= $item['id'] ?>)" title="Remove item">
                                         <i data-lucide="trash-2"></i>
                                     </button>
                                 </td>
@@ -50,30 +62,49 @@ require_once INCLUDES_PATH . '/navbar.php';
                 </table>
             </div>
 
-            <div class="cart-summary card">
-                <h3>Order Summary</h3>
-                <div class="summary-row">
-                    <span>Items (<?= count($cartItems) ?>)</span>
-                    <span>₱<?= number_format($cartTotal, 2) ?></span>
+            <div class="cart-summary">
+                <div class="cart-summary-header">
+                    <i data-lucide="receipt"></i>
+                    <h3>Order Summary</h3>
                 </div>
-                <div class="summary-row summary-total">
-                    <span>Total</span>
-                    <span>₱<?= number_format($cartTotal, 2) ?></span>
+                <div class="cart-summary-body">
+                    <div class="summary-row">
+                        <span>Subtotal (<?= count($cartItems) ?> item<?= count($cartItems) > 1 ? 's' : '' ?>)</span>
+                        <span>₱<?= number_format($cartTotal, 2) ?></span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Shipping</span>
+                        <span class="text-success">Free</span>
+                    </div>
+                    <div class="summary-row summary-total">
+                        <span>Total</span>
+                        <span>₱<?= number_format($cartTotal, 2) ?></span>
+                    </div>
                 </div>
-                <a href="<?= APP_URL ?>/index.php?url=checkout" class="btn btn-accent btn-block">
-                    <i data-lucide="credit-card"></i> Proceed to Checkout
-                </a>
-                <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-outline btn-block">
-                    <i data-lucide="arrow-left"></i> Continue Shopping
-                </a>
+                <div class="cart-summary-actions">
+                    <a href="<?= APP_URL ?>/index.php?url=checkout" class="btn btn-accent btn-lg btn-block">
+                        <i data-lucide="credit-card"></i> Proceed to Checkout
+                    </a>
+                    <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-outline btn-block">
+                        <i data-lucide="arrow-left"></i> Continue Shopping
+                    </a>
+                </div>
+                <div class="cart-summary-secure">
+                    <i data-lucide="shield-check"></i>
+                    <span>Secure checkout guaranteed</span>
+                </div>
             </div>
         </div>
     <?php else: ?>
-        <div class="empty-state">
-            <i data-lucide="shopping-bag" class="empty-icon"></i>
+        <div class="empty-state empty-state--cart">
+            <div class="empty-state-icon-wrap">
+                <i data-lucide="shopping-cart"></i>
+            </div>
             <h3>Your cart is empty</h3>
-            <p>Browse our products and add items to get started.</p>
-            <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-accent">Browse Products</a>
+            <p>Looks like you haven't added anything to your cart yet. Browse our products and find something you'll love!</p>
+            <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-accent btn-lg">
+                <i data-lucide="store"></i> Browse Products
+            </a>
         </div>
     <?php endif; ?>
 </div>

@@ -1,0 +1,15 @@
+﻿RewriteEngine On
+
+# Redirect to index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+
+# Prevent directory listing
+Options -Indexes
+
+# Protect sensitive files
+<FilesMatch "\.(sql|md|gitignore)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>

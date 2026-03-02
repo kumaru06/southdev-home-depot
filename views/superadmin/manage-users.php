@@ -105,7 +105,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                     <td data-label="ID"><?= $user['id'] ?></td>
                                     <td data-label="Name">
                                         <div style="display:flex; align-items:center; gap:.5rem;">
-                                            <div style="width:32px;height:32px;border-radius:50%;background:var(--charcoal);color:var(--white);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;">
+                                            <div style="width:32px;height:32px;min-width:32px;flex-shrink:0;border-radius:50%;background:var(--charcoal);color:var(--white);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;aspect-ratio:1;">
                                                 <?= strtoupper(substr($user['first_name'],0,1) . substr($user['last_name'],0,1)) ?>
                                             </div>
                                             <?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) ?>

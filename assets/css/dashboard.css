@@ -42,52 +42,67 @@
     border-radius: var(--radius-md);
     border: 1px solid var(--border);
     overflow: hidden;
-    transition: var(--transition);
+    transition: box-shadow .25s ease;
 }
-.chart-container:hover { box-shadow: var(--shadow-md); }
+.chart-container:hover { box-shadow: 0 8px 30px rgba(0,0,0,.07); }
+
 .chart-header {
-    padding: 18px 24px;
+    padding: 16px 24px;
     border-bottom: 1px solid var(--border);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: linear-gradient(to bottom, rgba(244,246,249,.6), transparent);
 }
 .chart-header h3 {
     font-size: 15px;
     font-weight: 700;
     color: var(--charcoal);
+    letter-spacing: -.2px;
 }
-.chart-header .chart-filter {
+
+/* Toggle pill buttons (MONTHLY / DAILY) */
+.chart-header div {
     display: flex;
-    gap: 4px;
+    gap: 0;
+    background: var(--neutral);
+    border-radius: 8px;
+    padding: 3px;
 }
-.chart-header .chart-filter button {
-    padding: 4px 12px;
-    border: 1px solid var(--border);
-    background: var(--white);
-    border-radius: 4px;
+.chart-header div .btn {
     font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    color: var(--text-muted);
+    letter-spacing: .4px;
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: none;
+    font-weight: 700;
+    transition: all .2s ease;
+    box-shadow: none;
 }
-.chart-header .chart-filter button:hover,
-.chart-header .chart-filter button.active {
-    background: var(--charcoal);
+.chart-header div .btn.btn-outline {
+    background: transparent;
+    color: var(--steel);
+}
+.chart-header div .btn.btn-outline:hover {
+    color: var(--charcoal);
+    background: rgba(0,0,0,.04);
+}
+.chart-header div .btn.btn-accent {
+    background: var(--accent);
     color: var(--white);
-    border-color: var(--charcoal);
+    box-shadow: 0 2px 8px rgba(255,87,51,.25);
 }
+
 .chart-body {
-    padding: 24px;
+    padding: 20px 24px 24px;
     min-height: 280px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start; /* left-align canvas so left-most ticks are visible */
-    overflow-x: auto; /* allow horizontal scroll when canvas is wider than container */
-    padding-bottom: 28px; /* larger space for rotated labels + scrollbar */
+    position: relative;
 }
-.chart-body canvas { max-width: none; display: block; }
+.chart-body canvas {
+    max-width: 100%;
+    display: block;
+    width: 100% !important;
+}
 
 /* ---------- Recent Orders Widget ---------- */
 .recent-orders {
@@ -149,9 +164,9 @@
     font-size: 15px;
     flex-shrink: 0;
 }
-.activity-icon.order { background: rgba(255,107,0,.12); color: var(--accent); }
+.activity-icon.order { background: rgba(255,87,51,.12); color: var(--accent); }
 .activity-icon.user { background: rgba(46,125,50,.1); color: var(--success); }
-.activity-icon.product { background: rgba(245,124,0,.1); color: var(--warning); }
+.activity-icon.product { background: rgba(255,87,51,.10); color: var(--warning); }
 .activity-icon.payment { background: rgba(21,101,192,.1); color: var(--info); }
 
 .activity-details { flex: 1; min-width: 0; }
@@ -239,4 +254,35 @@
     grid-template-columns: 1fr 1fr 1fr;
     gap: 20px;
     margin-bottom: 24px;
+}
+
+/* ========================================================
+   DARK MODE – Dashboard Overrides
+   ======================================================== */
+[data-theme="dark"] .dashboard-header h1 { color: var(--text-primary); }
+[data-theme="dark"] .chart-container { background: var(--white); border-color: var(--border); }
+[data-theme="dark"] .chart-container:hover { box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+[data-theme="dark"] .chart-header {
+    border-bottom-color: var(--border);
+    background: linear-gradient(to bottom, rgba(255,255,255,.02), transparent);
+}
+[data-theme="dark"] .chart-header h3 { color: var(--text-primary); }
+[data-theme="dark"] .chart-header div { background: rgba(255,255,255,.05); }
+[data-theme="dark"] .chart-header div .btn.btn-outline { color: var(--text-muted); }
+[data-theme="dark"] .chart-header div .btn.btn-outline:hover { color: var(--text-primary); background: rgba(255,255,255,.06); }
+
+[data-theme="dark"] .recent-orders { background: var(--white); border-color: var(--border); }
+[data-theme="dark"] .recent-orders .widget-header { border-bottom-color: var(--border); }
+
+[data-theme="dark"] .activity-feed { background: var(--white); border-color: var(--border); }
+[data-theme="dark"] .activity-feed .widget-header { border-bottom-color: var(--border); }
+[data-theme="dark"] .activity-item { border-bottom-color: var(--border); }
+[data-theme="dark"] .activity-item:hover { background: rgba(255,255,255,.02); }
+
+[data-theme="dark"] .top-product-row { border-bottom-color: var(--border); }
+[data-theme="dark"] .top-product-rank { background: rgba(255,255,255,.06); }
+
+[data-theme="dark"] .low-stock-alert {
+    background: rgba(251,191,36,.08);
+    border-color: rgba(251,191,36,.15);
 }

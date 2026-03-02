@@ -5,13 +5,21 @@
  */
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
     <meta name="description" content="<?= APP_TAGLINE ?>">
     <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle) . ' – ' : '' ?><?= APP_NAME ?></title>
+
+    <!-- Prevent flash: apply saved theme before any paint -->
+    <script>
+        (function(){
+            var t = localStorage.getItem('shd-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
 
     <!-- Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,15 +55,39 @@
 </div>
 
 <?php if (has_flash('success') || has_flash('error') || has_flash('warning')): ?>
-    <div class="flash-container" role="status" aria-live="polite">
+    <div class="toast-container" role="status" aria-live="polite">
         <?php if (has_flash('success')): ?>
-            <div class="alert alert-success"><?= htmlspecialchars($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?></div>
+            <div class="toast toast--success" data-auto-dismiss="5000">
+                <div class="toast-icon"><i data-lucide="check-circle"></i></div>
+                <div class="toast-body">
+                    <span class="toast-title">Success</span>
+                    <span class="toast-message"><?= htmlspecialchars($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?></span>
+                </div>
+                <button class="toast-close" aria-label="Close"><i data-lucide="x"></i></button>
+                <div class="toast-progress"><div class="toast-progress-bar"></div></div>
+            </div>
         <?php endif; ?>
         <?php if (has_flash('error')): ?>
-            <div class="alert alert-danger"><?= htmlspecialchars($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?></div>
+            <div class="toast toast--error" data-auto-dismiss="6000">
+                <div class="toast-icon"><i data-lucide="alert-circle"></i></div>
+                <div class="toast-body">
+                    <span class="toast-title">Error</span>
+                    <span class="toast-message"><?= htmlspecialchars($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?></span>
+                </div>
+                <button class="toast-close" aria-label="Close"><i data-lucide="x"></i></button>
+                <div class="toast-progress"><div class="toast-progress-bar"></div></div>
+            </div>
         <?php endif; ?>
         <?php if (has_flash('warning')): ?>
-            <div class="alert alert-warning"><?= htmlspecialchars($_SESSION['flash_warning']); unset($_SESSION['flash_warning']); ?></div>
+            <div class="toast toast--warning" data-auto-dismiss="5000">
+                <div class="toast-icon"><i data-lucide="alert-triangle"></i></div>
+                <div class="toast-body">
+                    <span class="toast-title">Warning</span>
+                    <span class="toast-message"><?= htmlspecialchars($_SESSION['flash_warning']); unset($_SESSION['flash_warning']); ?></span>
+                </div>
+                <button class="toast-close" aria-label="Close"><i data-lucide="x"></i></button>
+                <div class="toast-progress"><div class="toast-progress-bar"></div></div>
+            </div>
         <?php endif; ?>
     </div>
 <?php endif; ?>
