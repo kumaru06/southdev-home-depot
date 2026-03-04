@@ -29,7 +29,7 @@ class InventoryController {
     }
 
     public function update() {
-        AuthMiddleware::adminOrStaff();
+        AuthMiddleware::superAdmin();
         AuthMiddleware::csrf();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
 

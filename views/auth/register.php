@@ -9,7 +9,7 @@ require_once INCLUDES_PATH . '/header.php';
     <div class="auth-wrapper">
         <div class="auth-card card">
             <div class="auth-brand">
-                <i data-lucide="hard-hat" class="auth-icon"></i>
+                <i data-lucide="grid-3x3" class="auth-icon"></i>
                 <h2>Create Account</h2>
                 <p class="auth-tagline">Join <?= APP_NAME ?> today</p>
             </div>

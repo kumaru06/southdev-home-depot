@@ -3,9 +3,66 @@ $pageTitle = 'My Account';
 $extraCss = ['customer.css'];
 require_once INCLUDES_PATH . '/header.php';
 require_once INCLUDES_PATH . '/navbar.php';
+
+// Fetch featured tile products for the hero carousel
+$featuredTiles = [];
+try {
+    $pdo = $GLOBALS['pdo'] ?? null;
+    if ($pdo) {
+        $ftStmt = $pdo->query("SELECT p.*, c.name as category_name, COALESCE(i.quantity, 0) as stock 
+            FROM products p 
+            LEFT JOIN categories c ON p.category_id = c.id 
+            LEFT JOIN inventory i ON i.product_id = p.id 
+            WHERE p.category_id = 7 AND p.is_active = 1 
+            ORDER BY p.created_at DESC LIMIT 4");
+        $featuredTiles = $ftStmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+} catch (Throwable $e) { $featuredTiles = []; }
 ?>
 
 <div class="container">
+
+    <!-- Hero Banner — Tiles -->
+    <section class="hero-banner">
+        <div class="hero-banner-bg">
+            <div class="hero-tile-pattern"></div>
+        </div>
+        <div class="hero-banner-content">
+            <div class="hero-text">
+                <span class="hero-badge"><i data-lucide="star" style="width:12px;height:12px"></i> Main Product</span>
+                <h1 class="hero-title">Premium Tiles Collection</h1>
+                <p class="hero-subtitle">Transform your spaces with our curated selection of porcelain, ceramic, mosaic, and granite tiles — Davao City's finest.</p>
+                <div class="hero-actions">
+                    <a href="<?= APP_URL ?>/index.php?url=products&category=7" class="btn btn-accent btn-lg">
+                        <i data-lucide="grid-3x3" style="width:18px;height:18px"></i> Browse Tiles
+                    </a>
+                    <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-outline btn-lg hero-btn-outline">
+                        <i data-lucide="layers" style="width:16px;height:16px"></i> All Products
+                    </a>
+                </div>
+            </div>
+            <?php if (!empty($featuredTiles)): ?>
+            <div class="hero-featured-grid">
+                <?php foreach (array_slice($featuredTiles, 0, 4) as $idx => $ft): ?>
+                <a href="<?= APP_URL ?>/index.php?url=products/<?= $ft['id'] ?>" class="hero-tile-card" style="animation-delay: <?= $idx * 0.1 ?>s">
+                    <div class="hero-tile-img">
+                        <?php if (!empty($ft['image']) && file_exists(ROOT_PATH . '/assets/uploads/' . $ft['image'])): ?>
+                            <img src="<?= APP_URL ?>/assets/uploads/<?= $ft['image'] ?>" alt="<?= htmlspecialchars($ft['name']) ?>" loading="lazy">
+                        <?php else: ?>
+                            <div class="hero-tile-placeholder"><i data-lucide="grid-3x3"></i></div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="hero-tile-info">
+                        <span class="hero-tile-name"><?= htmlspecialchars($ft['name']) ?></span>
+                        <span class="hero-tile-price">₱<?= number_format($ft['price'], 2) ?></span>
+                    </div>
+                </a>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+    </section>
+
     <div class="page-heading">
         <h1>Welcome back, <?= htmlspecialchars($_SESSION['first_name'] ?? 'Customer') ?>!</h1>
         <p style="color:var(--steel); margin-top:.25rem;">Here's a summary of your account activity.</p>

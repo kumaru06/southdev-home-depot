@@ -40,7 +40,7 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
 
                 <div class="auth-panel">
                     <div class="auth-brand">
-                        <i data-lucide="hard-hat" class="auth-icon"></i>
+                        <i data-lucide="grid-3x3" class="auth-icon"></i>
                         <div>
                             <h2><?= APP_NAME ?></h2>
                             <p class="auth-tagline">Sign in to your account</p>

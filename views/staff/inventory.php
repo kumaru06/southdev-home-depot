@@ -29,7 +29,9 @@ require_once INCLUDES_PATH . '/sidebar.php';
                         <th>Price</th>
                         <th>Quantity</th>
                         <th>Reorder Level</th>
+                        <?php if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == ROLE_SUPER_ADMIN): ?>
                         <th>Update Stock</th>
+                        <?php endif; ?>
                     </tr>
                 </thead>
                 <tbody>
@@ -47,6 +49,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                     <?php endif; ?>
                                 </td>
                                 <td><?= $item['reorder_level'] ?? 10 ?></td>
+                                <?php if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == ROLE_SUPER_ADMIN): ?>
                                 <td>
                                     <form action="<?= APP_URL ?>/index.php?url=staff/inventory/update" method="POST" class="inline-form">
                                         <?= csrf_field() ?>
@@ -57,10 +60,11 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                         </div>
                                     </form>
                                 </td>
+                                <?php endif; ?>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr><td colspan="6" class="text-center">No inventory records found.</td></tr>
+                        <tr><td colspan="<?= (isset($_SESSION['role_id']) && $_SESSION['role_id'] == ROLE_SUPER_ADMIN) ? 6 : 5 ?>" class="text-center">No inventory records found.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>

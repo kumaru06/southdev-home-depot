@@ -206,8 +206,8 @@
     .checkout-grid { grid-template-columns: 1fr !important; gap: 18px !important; }
     .checkout-sidebar { order: 2; width: 100%; }
     .checkout-main { order: 1; width: 100%; }
-    .cart-summary { position: static !important; max-width: 100% !important; margin-left: 0 !important; }
-    .cart-summary .btn-block { width: 100% !important; }
+    .cart-summary, .co-summary { position: static !important; max-width: 100% !important; margin-left: 0 !important; }
+    .cart-summary .btn-block, .co-summary-actions .btn { width: 100% !important; }
 }
 
 @media (max-width: 430px) {

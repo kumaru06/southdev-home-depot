@@ -38,6 +38,19 @@ class Product {
         return $stmt->fetchAll();
     }
 
+    public function skuExists($sku, $excludeId = null) {
+        if (empty($sku)) return false;
+        $sql = "SELECT COUNT(*) FROM products WHERE sku = ?";
+        $params = [$sku];
+        if ($excludeId) {
+            $sql .= " AND id != ?";
+            $params[] = $excludeId;
+        }
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchColumn() > 0;
+    }
+
     public function create($data) {
         $stmt = $this->pdo->prepare("INSERT INTO products (category_id, name, description, price, image, sku) VALUES (?, ?, ?, ?, ?, ?)");
         $stmt->execute([

@@ -36,6 +36,20 @@ require_once INCLUDES_PATH . '/navbar.php';
 
         <!-- Main Content -->
         <main class="storefront-main">
+            <!-- Featured Tiles Banner -->
+            <?php if (!isset($_GET['category']) && !isset($_GET['q'])): ?>
+            <div class="featured-strip">
+                <div class="featured-strip-icon"><i data-lucide="grid-3x3"></i></div>
+                <div class="featured-strip-text">
+                    <strong>Tiles — Our Main Product</strong>
+                    <span>Explore our premium collection of porcelain, ceramic, mosaic &amp; granite tiles</span>
+                </div>
+                <a href="<?= APP_URL ?>/index.php?url=products&category=7" class="btn btn-accent btn-sm">
+                    Browse Tiles <i data-lucide="arrow-right" style="width:14px;height:14px"></i>
+                </a>
+            </div>
+            <?php endif; ?>
+
             <div class="storefront-toolbar">
                 <form action="<?= APP_URL ?>/index.php" method="GET" class="search-form storefront-search">
                     <input type="hidden" name="url" value="products/search">

@@ -538,8 +538,18 @@
                 e.stopPropagation();
                 var current = document.documentElement.getAttribute('data-theme');
                 var next = current === 'dark' ? 'light' : 'dark';
+
+                // Kill all transitions so theme switch is instant
+                document.documentElement.classList.add('no-transition');
                 document.documentElement.setAttribute('data-theme', next);
                 localStorage.setItem('shd-theme', next);
+
+                // Re-enable transitions after the repaint
+                requestAnimationFrame(function () {
+                    requestAnimationFrame(function () {
+                        document.documentElement.classList.remove('no-transition');
+                    });
+                });
 
                 // Re-render Lucide icons so the toggle icons update
                 if (window.lucide && typeof window.lucide.createIcons === 'function') {

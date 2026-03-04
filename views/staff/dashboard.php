@@ -118,27 +118,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
                 <?php endif; ?>
             </div>
 
-            <!-- Activity Feed -->
-            <div class="card">
-                <h3><i data-lucide="activity"></i> Recent Activity</h3>
-                <?php if (!empty($recentLogs)): ?>
-                    <div class="activity-feed">
-                        <?php foreach ($recentLogs as $log): ?>
-                            <div class="activity-item">
-                                <div class="activity-icon activity-icon-<?= strpos($log['action'], 'ORDER') !== false ? 'order' : (strpos($log['action'], 'USER') !== false ? 'user' : (strpos($log['action'], 'PRODUCT') !== false ? 'product' : 'payment')) ?>">
-                                    <i data-lucide="<?= strpos($log['action'], 'ORDER') !== false ? 'package' : (strpos($log['action'], 'USER') !== false ? 'user' : (strpos($log['action'], 'PRODUCT') !== false ? 'box' : 'activity')) ?>"></i>
-                                </div>
-                                <div class="activity-content">
-                                    <p><?= htmlspecialchars($log['description']) ?></p>
-                                    <span class="activity-time"><?= date('M d, h:i A', strtotime($log['created_at'])) ?></span>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php else: ?>
-                    <p class="text-muted">No recent activity.</p>
-                <?php endif; ?>
-            </div>
+            <!-- Activity Feed (super admin only) -->
         </div>
 
         <!-- Low Stock & Top Products -->

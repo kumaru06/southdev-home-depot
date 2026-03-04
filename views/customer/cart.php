@@ -85,7 +85,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                     <a href="<?= APP_URL ?>/index.php?url=checkout" class="btn btn-accent btn-lg btn-block">
                         <i data-lucide="credit-card"></i> Proceed to Checkout
                     </a>
-                    <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-outline btn-block">
+                    <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-outline btn-lg btn-block">
                         <i data-lucide="arrow-left"></i> Continue Shopping
                     </a>
                 </div>

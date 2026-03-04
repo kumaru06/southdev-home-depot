@@ -39,8 +39,8 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
                     <div class="auth-brand">
                         <i data-lucide="hard-hat" class="auth-icon"></i>
                         <div>
-                            <h2><?= APP_NAME ?> — Staff</h2>
-                            <p class="auth-tagline">Sign in to staff/admin dashboard</p>
+                            <h2><?= APP_NAME ?> Admin/Staff</h2>
+                            <p class="auth-tagline">Sign in to admin/staff</p>
                         </div>
                     </div>
 

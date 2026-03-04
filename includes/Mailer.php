@@ -51,6 +51,12 @@ class Mailer {
 
         $this->mailer->CharSet = 'UTF-8';
 
+        // Improve deliverability for Yahoo/Outlook
+        $this->mailer->XMailer = 'SouthDev Home Depot Mailer';
+        $this->mailer->MessageID = '<' . bin2hex(random_bytes(16)) . '@southdev-home-depot>';
+        // Avoid spam triggers: set proper Sender header
+        $this->mailer->Sender = MAIL_FROM_EMAIL;
+
         $this->mailer->setFrom(MAIL_FROM_EMAIL, MAIL_FROM_NAME);
         $this->mailer->addReplyTo(MAIL_FROM_EMAIL, MAIL_FROM_NAME);
     }

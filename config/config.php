@@ -10,7 +10,7 @@ session_start();
 
 // Application settings
 define('APP_NAME', 'Southdev Home Depot');
-define('APP_TAGLINE', 'Davao City\'s Premier Hardware & Construction Supply');
+define('APP_TAGLINE', 'Davao City\'s Premier Tiles & Construction Supply');
 define('APP_URL', 'http://localhost/southdev-home-depot');
 define('APP_VERSION', '1.0.0');
 define('APP_LOCATION', 'Davao City, Philippines');
@@ -30,7 +30,7 @@ define('MAIL_USERNAME', getenv('MAIL_USERNAME') ?: 'feakzume@gmail.com');
 define('MAIL_PASSWORD', getenv('MAIL_PASSWORD') ?: 'tnoe hibz prqh kwfs');
 define('MAIL_ENCRYPTION', getenv('MAIL_ENCRYPTION') ?: 'tls');
 define('MAIL_FROM_EMAIL', getenv('MAIL_FROM_EMAIL') ?: 'feakzume@gmail.com');
-define('MAIL_FROM_NAME', getenv('MAIL_FROM_NAME') ?: 'Kramdreyan');
+define('MAIL_FROM_NAME', getenv('MAIL_FROM_NAME') ?: 'Southdev Home Depot');
 
 // Email verification settings
 define('OTP_EXPIRY_MINUTES', 5);

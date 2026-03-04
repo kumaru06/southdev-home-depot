@@ -95,12 +95,18 @@ html { scroll-behavior: smooth; }
     background: linear-gradient(135deg, var(--accent) 0%, #FF9A76 100%);
 }
 [data-theme="dark"] .nav-links a {
-    color: var(--text-secondary);
+    color: rgba(255,255,255,.55);
 }
-[data-theme="dark"] .nav-links a:hover,
-[data-theme="dark"] .nav-links a.active {
-    color: var(--white);
+[data-theme="dark"] .nav-links a:hover {
+    color: rgba(255,255,255,.9);
     background: rgba(255,255,255,.06);
+}
+[data-theme="dark"] .nav-links a.active {
+    color: #fff;
+    background: rgba(255,107,64,.1);
+}
+[data-theme="dark"] .nav-links a.active::after {
+    background: var(--accent);
 }
 
 /* Dark mode: cards */
@@ -144,18 +150,21 @@ html { scroll-behavior: smooth; }
 
 /* Dark mode: buttons */
 [data-theme="dark"] .btn-outline {
-    border-color: var(--border);
-    color: var(--text-secondary);
+    border-color: rgba(255,255,255,.18);
+    color: rgba(255,255,255,.75);
+    background: rgba(255,255,255,.04);
 }
 [data-theme="dark"] .btn-outline:hover {
     border-color: var(--accent);
     color: var(--accent);
+    background: rgba(255,107,64,.08);
 }
 [data-theme="dark"] .btn-primary {
     background: var(--primary);
     box-shadow: 0 10px 22px rgba(74,144,217,.20);
 }
 [data-theme="dark"] .btn-accent {
+    color: #fff;
     box-shadow: 0 12px 26px rgba(255,107,64,.22);
 }
 
@@ -552,6 +561,24 @@ p { color: var(--text-secondary); }
     gap: 8px;
 }
 
+/* Disable transitions during theme switch */
+.no-transition,
+.no-transition *,
+.no-transition *::before,
+.no-transition *::after {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* ---------- Form Actions ---------- */
+.form-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
 /* ---------- Buttons ---------- */
 .btn {
     display: inline-flex;
@@ -559,7 +586,7 @@ p { color: var(--text-secondary); }
     justify-content: center;
     gap: 8px;
     padding: 10px 22px;
-    border: none;
+    border: 1.5px solid transparent;
     border-radius: var(--radius-sm);
     cursor: pointer;
     font-family: var(--font);
@@ -610,7 +637,7 @@ p { color: var(--text-secondary); }
 
 .btn-primary {
     background: var(--primary);
-    color: var(--white);
+    color: #fff;
     box-shadow: 0 10px 22px rgba(11,61,145,.18);
 }
 .btn-primary:hover {
@@ -621,7 +648,7 @@ p { color: var(--text-secondary); }
 
 .btn-secondary {
     background: var(--steel);
-    color: var(--white);
+    color: #fff;
 }
 .btn-secondary:hover {
     background: var(--graphite);
@@ -640,7 +667,7 @@ p { color: var(--text-secondary); }
 
 .btn-danger {
     background: var(--danger);
-    color: var(--white);
+    color: #fff;
 }
 .btn-danger:hover { background: #C62828; transform: translateY(-1px); }
 
@@ -652,13 +679,13 @@ p { color: var(--text-secondary); }
 
 .btn-success {
     background: var(--success);
-    color: var(--white);
+    color: #fff;
 }
 .btn-success:hover { background: #1B5E20; transform: translateY(-1px); }
 
 .btn-sm { padding: 6px 14px; font-size: 12px; }
 .btn-lg { padding: 14px 32px; font-size: 15px; }
-.btn-block { width: 100%; }
+.btn-block { width: 100%; display: flex; justify-content: center; text-align: center; }
 .btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
 
 /* ---------- Toast Notifications ---------- */
@@ -1283,9 +1310,7 @@ select.form-control { cursor: pointer; }
 .btn-accent {
     background-color: var(--accent);
     background: linear-gradient(180deg, var(--accent) 0%, var(--accent-hover) 100%);
-    color: var(--white);
-    border-radius: 8px;
-    font-weight: 700;
+    color: #fff;
     box-shadow: 0 12px 26px rgba(255,107,0,.18);
 }
 .btn-accent:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }

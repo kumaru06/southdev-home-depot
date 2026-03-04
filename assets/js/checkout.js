@@ -1,50 +1,81 @@
 /**
  * SouthDev Home Depot – Checkout JavaScript
- * Form validation, payment method toggle, CSRF
+ * Davao City barangay selector, form validation, payment toggle
  */
 
 (function () {
     'use strict';
 
-    var PSGC = {
-        provincesUrl: 'https://psgc.gitlab.io/api/provinces.json',
-        citiesByProvince: function (provinceCode) {
-            return 'https://psgc.gitlab.io/api/provinces/' + encodeURIComponent(provinceCode) + '/cities-municipalities.json';
-        }
-    };
-
-    // Minimal fallback list (in case API is blocked/offline)
-    var FALLBACK = {
-        provinces: [
-            { code: 'PH-FB-CARAGA', name: 'Caraga' }
-        ],
-        cities: {
-            'PH-FB-CARAGA': [
-                { code: 'PH-FB-BUTUAN', name: 'Butuan City' },
-                { code: 'PH-FB-BISLIG', name: 'Bislig City' },
-                { code: 'PH-FB-SURIGAO', name: 'Surigao City' }
-            ]
-        }
-    };
+    /* ── Davao City Barangays (sorted alphabetically) ── */
+    var DAVAO_BARANGAYS = [
+        'Acacia', 'Agdao', 'Alambre', 'Alejandro Navarro (Linoan)',
+        'Alfonso Angliongto Sr.', 'Angalan', 'Atan-Awe',
+        'Baganihan', 'Bago Aplaya', 'Bago Gallera', 'Bago Oshiro',
+        'Baguio', 'Balengaeng', 'Baliok', 'Bangkal', 'Bangkas Heights',
+        'Bantol', 'Baracatan', 'Bato', 'Bayabas',
+        'Biao Escuela', 'Biao Guianga', 'Biao Joaquin',
+        'Bucana', 'Buhangin', 'Bunawan',
+        'Cabantian', 'Calinan', 'Callawa', 'Camansi', 'Carmen',
+        'Catalunan Grande', 'Catalunan Pequeño', 'Catigan', 'Cawayan',
+        'Centro (Poblacion)', 'Colosas', 'Communal', 'Crossing Bayabas',
+        'Dacudao', 'Dalag', 'Daliao', 'Daliaon Plantation', 'Datu Salumay',
+        'Dominga', 'Dumoy',
+        'Eden',
+        'Fatima (Benedicto)',
+        'Gov. Paciano Bangoy', 'Gov. Vicente Duterte',
+        'Guadalupe', 'Gumalang', 'Gumitan',
+        'Ilang', 'Indangan',
+        'Kap. Tomas Monteverde Sr.', 'Kilate',
+        'Lacson', 'Lamanan', 'Langub', 'Lapu-Lapu', 'Lasang',
+        'Leon Garcia Sr.', 'Lizada', 'Los Amigos', 'Lubogan', 'Lumiad',
+        'Ma-a', 'Mabuhay', 'Magsaysay', 'Magtuod', 'Mahayag',
+        'Malabog', 'Malagos', 'Malaguli', 'Mandug', 'Mapula',
+        'Marapangi', 'Marilog', 'Matina Aplaya', 'Matina Biao',
+        'Matina Crossing', 'Matina Pangi', 'Megkawayan', 'Mintal',
+        'Mudiang', 'Mulig',
+        'New Carmen', 'New Valencia',
+        'Pampanga', 'Panacan', 'Pangyan', 'Paradise Embak',
+        'Rafael Castillo', 'Riverside',
+        'Saban', 'Salapawan', 'Salmonan', 'Saloy',
+        'San Antonio', 'San Isidro (Bajada)', 'San Rafael', 'Sasa',
+        'Sibulan', 'Sirawan', 'Sirib', 'Sto. Niño', 'Subasta', 'Sumimao',
+        'Tacunan', 'Tagakpan', 'Tagluno', 'Talandang', 'Talisay',
+        'Talomo', 'Tamayong', 'Tamugan', 'Tawan-Tawan',
+        'Tibuloy', 'Tibungco', 'Tigatto', 'Tikalon', 'Toril',
+        'Tugbok', 'Tungakalan',
+        'Ulas',
+        'Vicente Hizon Sr.',
+        'Waan', 'Wangan', 'Wines'
+    ];
 
     document.addEventListener('DOMContentLoaded', function () {
         var form = document.getElementById('checkout-form');
 
-        // Province → City dropdowns
-        initProvinceCity();
+        /* Populate barangay dropdown */
+        initBarangays();
 
         if (form) {
             form.addEventListener('submit', function (e) {
                 if (!validateCheckout()) {
                     e.preventDefault();
+                    return;
                 }
+                /* Combine street + barangay into hidden shipping_address */
+                combineAddress();
             });
         }
 
         /* Payment Method Toggle */
         document.querySelectorAll('input[name="payment_method"]').forEach(function (radio) {
             radio.addEventListener('change', function () {
-                document.querySelectorAll('.payment-details').forEach(function (el) {
+                /* Toggle active class on options */
+                document.querySelectorAll('.co-pay-opt').forEach(function (opt) {
+                    opt.classList.remove('active');
+                });
+                this.closest('.co-pay-opt').classList.add('active');
+
+                /* Show/hide card details */
+                document.querySelectorAll('.co-card-expand').forEach(function (el) {
                     el.style.display = 'none';
                 });
                 var target = document.getElementById(this.value + '-details');
@@ -63,15 +94,15 @@
             });
         }
 
-        /* Card inputs formatting and validation */
+        /* Card inputs formatting */
         var cardNumberInput = document.getElementById('card_number');
-        var cardNameInput = document.getElementById('card_name');
+        var cardNameInput   = document.getElementById('card_name');
         var cardExpiryInput = document.getElementById('card_expiry');
-        var cardCvcInput = document.getElementById('card_cvc');
+        var cardCvcInput    = document.getElementById('card_cvc');
 
         if (cardNumberInput) {
             cardNumberInput.addEventListener('input', function () {
-                var digits = this.value.replace(/\D/g, '').slice(0,16);
+                var digits = this.value.replace(/\D/g, '').slice(0, 16);
                 var parts = digits.match(/.{1,4}/g);
                 this.value = parts ? parts.join(' ') : digits;
             });
@@ -79,126 +110,59 @@
 
         if (cardNameInput) {
             cardNameInput.addEventListener('input', function () {
-                // allow letters, spaces, hyphen and apostrophe
                 this.value = this.value.replace(/[^A-Za-z\s\-\']/g, '');
             });
         }
 
         if (cardExpiryInput) {
             cardExpiryInput.addEventListener('input', function () {
-                var digits = this.value.replace(/\D/g, '').slice(0,4);
+                var digits = this.value.replace(/\D/g, '').slice(0, 4);
                 if (digits.length >= 3) {
-                    this.value = digits.slice(0,2) + ' / ' + digits.slice(2);
-                } else if (digits.length >= 1) {
-                    this.value = digits;
+                    this.value = digits.slice(0, 2) + ' / ' + digits.slice(2);
                 } else {
-                    this.value = '';
+                    this.value = digits;
                 }
             });
         }
 
         if (cardCvcInput) {
             cardCvcInput.addEventListener('input', function () {
-                this.value = this.value.replace(/\D/g, '').slice(0,3);
+                this.value = this.value.replace(/\D/g, '').slice(0, 3);
             });
         }
     });
 
-    function initProvinceCity() {
-        var provinceSelect = document.getElementById('shipping_state');
-        var citySelect = document.getElementById('shipping_city');
-        if (!provinceSelect || !citySelect) return;
+    /* ── Barangay Dropdown ── */
+    function initBarangays() {
+        var select = document.getElementById('shipping_barangay');
+        if (!select) return;
 
-        setOptions(provinceSelect, [{ value: '', label: 'Select Province' }], true);
-        setOptions(citySelect, [{ value: '', label: 'Select City' }], true);
-        citySelect.disabled = true;
-
-        loadProvinces(provinceSelect).then(function () {
-            // no-op
+        var html = '<option value="">Select Barangay</option>';
+        DAVAO_BARANGAYS.forEach(function (b) {
+            html += '<option value="' + b + '">' + b + '</option>';
         });
-
-        provinceSelect.addEventListener('change', function () {
-            var selectedOption = provinceSelect.options[provinceSelect.selectedIndex];
-            var code = selectedOption ? selectedOption.getAttribute('data-code') : '';
-            var hasSelection = !!provinceSelect.value;
-            setOptions(citySelect, [{ value: '', label: hasSelection ? 'Loading…' : 'Select City' }], true);
-            citySelect.disabled = !hasSelection;
-            if (!code) return;
-
-            loadCitiesForProvince(code, citySelect);
-        });
+        select.innerHTML = html;
     }
 
-    function loadProvinces(selectEl) {
-        return fetchJson(PSGC.provincesUrl)
-            .then(function (provinces) {
-                if (!Array.isArray(provinces) || !provinces.length) throw new Error('No provinces');
-                provinces.sort(function (a, b) {
-                    return String(a.name).localeCompare(String(b.name));
-                });
-                var options = [{ value: '', label: 'Select Province', dataCode: '' }].concat(
-                    provinces.map(function (p) { return { value: p.name, label: p.name, dataCode: p.code }; })
-                );
-                setOptions(selectEl, options, true);
-            })
-            .catch(function () {
-                var options = [{ value: '', label: 'Select Province', dataCode: '' }].concat(
-                    FALLBACK.provinces.map(function (p) { return { value: p.name, label: p.name, dataCode: p.code }; })
-                );
-                setOptions(selectEl, options, true);
-            });
+    /* ── Combine address fields before submit ── */
+    function combineAddress() {
+        var brgy   = (document.getElementById('shipping_barangay') || {}).value || '';
+        var street = (document.getElementById('street_address') || {}).value || '';
+        var hidden = document.getElementById('shipping_address_hidden');
+        if (!hidden) return;
+
+        var parts = [];
+        if (street.trim()) parts.push(street.trim());
+        if (brgy) parts.push('Brgy. ' + brgy);
+        parts.push('Davao City');
+
+        hidden.value = parts.join(', ');
     }
 
-    function loadCitiesForProvince(provinceCode, citySelect) {
-        fetchJson(PSGC.citiesByProvince(provinceCode))
-            .then(function (cities) {
-                if (!Array.isArray(cities) || !cities.length) throw new Error('No cities');
-                cities.sort(function (a, b) {
-                    return String(a.name).localeCompare(String(b.name));
-                });
-                var options = [{ value: '', label: 'Select City' }].concat(
-                    cities.map(function (c) { return { value: c.name, label: c.name }; })
-                );
-                setOptions(citySelect, options, true);
-                citySelect.disabled = false;
-            })
-            .catch(function () {
-                var fallbackCities = FALLBACK.cities[provinceCode] || [];
-                var options = [{ value: '', label: 'Select City' }].concat(
-                    fallbackCities.map(function (c) { return { value: c.name, label: c.name }; })
-                );
-                setOptions(citySelect, options, true);
-                citySelect.disabled = false;
-            });
-    }
-
-    function setOptions(selectEl, options, keepValueIfPossible) {
-        var prev = keepValueIfPossible ? selectEl.value : '';
-        selectEl.innerHTML = '';
-        options.forEach(function (opt) {
-            var o = document.createElement('option');
-            o.value = opt.value;
-            o.textContent = opt.label;
-            if (opt.dataCode) o.setAttribute('data-code', opt.dataCode);
-            selectEl.appendChild(o);
-        });
-        if (keepValueIfPossible && prev) {
-            selectEl.value = prev;
-        }
-    }
-
-    function fetchJson(url) {
-        return fetch(url, { method: 'GET' })
-            .then(function (r) {
-                if (!r.ok) throw new Error('HTTP ' + r.status);
-                return r.json();
-            });
-    }
-
+    /* ── Validation helpers ── */
     function markInvalid(el, message) {
         if (!el) return;
         el.classList.add('is-invalid');
-        // remove existing message if present
         var existing = el.parentNode.querySelector('.field-error');
         if (existing) existing.remove();
         var err = document.createElement('span');
@@ -209,7 +173,7 @@
     }
 
     function validateCheckout() {
-        var required = ['shipping_address', 'shipping_state', 'shipping_city', 'contact_phone'];
+        var required = ['shipping_barangay', 'street_address', 'contact_phone'];
         var valid = true;
 
         /* Clear previous errors */
@@ -221,33 +185,38 @@
         required.forEach(function (fieldName) {
             var input = document.getElementById(fieldName);
             if (input && !input.value.trim()) {
-                input.classList.add('is-invalid');
-                var err = document.createElement('span');
-                err.className = 'field-error';
-                err.style.cssText = 'color:var(--danger);font-size:12px;margin-top:4px;display:block;';
-                err.textContent = 'This field is required';
-                input.parentNode.appendChild(err);
+                markInvalid(input, 'This field is required');
                 valid = false;
             }
         });
 
+        /* Phone format check */
+        var phone = document.getElementById('contact_phone');
+        if (phone && phone.value.trim()) {
+            var digits = phone.value.replace(/\D/g, '');
+            if (digits.length < 10 || digits.length > 13) {
+                markInvalid(phone, 'Enter a valid phone number');
+                valid = false;
+            }
+        }
+
         /* Check payment method selected */
         var checkedPayment = document.querySelector('input[name="payment_method"]:checked');
         if (!checkedPayment) {
-            showNotification('Please select a payment method', 'warning');
+            if (typeof showNotification === 'function') showNotification('Please select a payment method', 'warning');
             valid = false;
         }
 
-        // Additional validation when Card is selected
+        /* Card validation when Card is selected */
         if (checkedPayment && checkedPayment.value === 'card') {
             var cardNumber = document.getElementById('card_number');
-            var cardName = document.getElementById('card_name');
+            var cardName   = document.getElementById('card_name');
             var cardExpiry = document.getElementById('card_expiry');
-            var cardCvc = document.getElementById('card_cvc');
+            var cardCvc    = document.getElementById('card_cvc');
 
             if (cardNumber) {
-                var digits = (cardNumber.value || '').replace(/\D/g, '');
-                if (digits.length !== 16) {
+                var cDigits = (cardNumber.value || '').replace(/\D/g, '');
+                if (cDigits.length !== 16) {
                     markInvalid(cardNumber, 'Card number must be 16 digits');
                     valid = false;
                 }
@@ -255,8 +224,8 @@
 
             if (cardName) {
                 var nameVal = (cardName.value || '').trim();
-                if (!/^[A-Za-z\s\-']+$/.test(nameVal)) {
-                    markInvalid(cardName, 'Name must contain only letters');
+                if (!nameVal || !/^[A-Za-z\s\-']+$/.test(nameVal)) {
+                    markInvalid(cardName, 'Enter cardholder name (letters only)');
                     valid = false;
                 }
             }
@@ -264,24 +233,20 @@
             if (cardExpiry) {
                 var expRaw = (cardExpiry.value || '').replace(/\D/g, '');
                 if (expRaw.length !== 4) {
-                    markInvalid(cardExpiry, 'Expiry must be MMYY');
+                    markInvalid(cardExpiry, 'Expiry must be MM/YY');
                     valid = false;
                 } else {
-                    var mm = parseInt(expRaw.slice(0,2), 10);
+                    var mm = parseInt(expRaw.slice(0, 2), 10);
                     var yy = parseInt(expRaw.slice(2), 10);
                     if (isNaN(mm) || mm < 1 || mm > 12) {
                         markInvalid(cardExpiry, 'Invalid expiry month');
                         valid = false;
                     } else {
-                        // simple future-date check (assume 2000+YY)
                         var now = new Date();
                         var year = 2000 + yy;
-                        var expDate = new Date(year, mm - 1, 1);
-                        // set to last day of month
-                        expDate.setMonth(expDate.getMonth() + 1);
-                        expDate.setDate(0);
+                        var expDate = new Date(year, mm, 0); // last day of month
                         if (expDate < now) {
-                            markInvalid(cardExpiry, 'Card expired');
+                            markInvalid(cardExpiry, 'Card has expired');
                             valid = false;
                         }
                     }
@@ -290,16 +255,15 @@
 
             if (cardCvc) {
                 var cvc = (cardCvc.value || '').replace(/\D/g, '');
-                if (cvc.length !== 3) {
-                    markInvalid(cardCvc, 'Security code must be 3 digits');
+                if (cvc.length < 3 || cvc.length > 4) {
+                    markInvalid(cardCvc, 'CVC must be 3 or 4 digits');
                     valid = false;
                 }
             }
         }
 
         if (!valid) {
-            showNotification('Please complete all required fields', 'error');
-            /* Scroll to first error */
+            if (typeof showNotification === 'function') showNotification('Please complete all required fields', 'error');
             var firstErr = document.querySelector('.is-invalid');
             if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }

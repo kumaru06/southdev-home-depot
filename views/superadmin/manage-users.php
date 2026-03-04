@@ -61,9 +61,9 @@ require_once INCLUDES_PATH . '/sidebar.php';
                         <div class="form-group">
                             <label class="form-label">Role <span class="required">*</span></label>
                             <select name="role_id" class="form-control" required>
-                                <option value="3">Customer</option>
+                                <option value="1">Customer</option>
                                 <option value="2">Staff</option>
-                                <option value="1">Super Admin</option>
+                                <option value="3">Super Admin</option>
                             </select>
                         </div>
                     </div>
@@ -105,13 +105,13 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                     <td data-label="ID"><?= $user['id'] ?></td>
                                     <td data-label="Name">
                                         <div style="display:flex; align-items:center; gap:.5rem;">
-                                            <div style="width:32px;height:32px;min-width:32px;flex-shrink:0;border-radius:50%;background:var(--charcoal);color:var(--white);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;aspect-ratio:1;">
+                                            <div class="user-avatar-circle">
                                                 <?= strtoupper(substr($user['first_name'],0,1) . substr($user['last_name'],0,1)) ?>
                                             </div>
-                                            <?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) ?>
+                                            <span class="user-name-text"><?= htmlspecialchars(trim($user['first_name'] . ' ' . $user['last_name'])) ?: '<em style="opacity:.4">No name</em>' ?></span>
                                         </div>
                                     </td>
-                                    <td data-label="Email"><?= htmlspecialchars($user['email']) ?></td>
+                                    <td data-label="Email"><span class="user-email-text"><?= htmlspecialchars($user['email']) ?></span></td>
                                     <td data-label="Role">
                                         <span class="badge <?= $user['role_name'] === 'super_admin' ? 'badge-processing' : ($user['role_name'] === 'staff' ? 'badge-pending' : 'badge-delivered') ?>">
                                             <?= ucfirst(str_replace('_', ' ', $user['role_name'])) ?>

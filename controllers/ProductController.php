@@ -83,6 +83,12 @@ class ProductController {
             }
         }
 
+        if ($data['sku'] && $this->productModel->skuExists($data['sku'])) {
+            flash('error', 'SKU "' . htmlspecialchars($data['sku']) . '" already exists. Please use a unique SKU.');
+            header('Location: ' . APP_URL . '/index.php?url=admin/products/create');
+            exit;
+        }
+
         $productId = $this->productModel->create($data);
         if ($productId) {
             $inv = new Inventory($this->pdo);
@@ -121,6 +127,12 @@ class ProductController {
                     $data['image'] = $fileName;
                 }
             }
+        }
+
+        if ($data['sku'] && $this->productModel->skuExists($data['sku'], $id)) {
+            flash('error', 'SKU "' . htmlspecialchars($data['sku']) . '" already exists. Please use a unique SKU.');
+            header('Location: ' . APP_URL . '/index.php?url=admin/products/edit/' . $id);
+            exit;
         }
 
         $this->productModel->update($id, $data);
