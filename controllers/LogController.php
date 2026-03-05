@@ -29,6 +29,7 @@ class LogController {
         $logs        = $this->logModel->getAll($filters, $perPage, $offset);
         $totalLogs   = $this->logModel->count($filters);
         $totalPages  = ceil($totalLogs / $perPage);
+        $currentPage = $page;
         $actionTypes = $this->logModel->getActionTypes();
 
         $pageTitle = 'System Logs';

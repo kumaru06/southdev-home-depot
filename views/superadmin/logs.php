@@ -20,32 +20,24 @@ require_once INCLUDES_PATH . '/sidebar.php';
         <div class="card" style="margin-bottom: 1.5rem;">
             <form method="GET" action="<?= APP_URL ?>/index.php" class="filter-bar">
                 <input type="hidden" name="url" value="admin/logs">
-                <div class="form-group" style="margin:0; flex:1; min-width:150px;">
-                    <select name="action" class="form-control">
-                        <option value="">All Actions</option>
-                        <?php if (!empty($actionTypes)): ?>
-                            <?php foreach ($actionTypes as $type): ?>
-                                <option value="<?= htmlspecialchars($type['action']) ?>" <?= (isset($_GET['action']) && $_GET['action'] === $type['action']) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($type['action']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </select>
-                </div>
-                <div class="form-group" style="margin:0; min-width:140px;">
-                    <input type="date" name="date_from" class="form-control" value="<?= htmlspecialchars($_GET['date_from'] ?? '') ?>" placeholder="From">
-                </div>
-                <div class="form-group" style="margin:0; min-width:140px;">
-                    <input type="date" name="date_to" class="form-control" value="<?= htmlspecialchars($_GET['date_to'] ?? '') ?>" placeholder="To">
-                </div>
-                <div class="form-group" style="margin:0; flex:1; min-width:180px;">
-                    <input type="text" name="search" class="form-control" value="<?= htmlspecialchars($_GET['search'] ?? '') ?>" placeholder="Search details...">
-                </div>
-                <button type="submit" class="btn btn-accent" style="height:42px;">
+                <select name="action" class="form-control" style="width:180px; height:40px;">
+                    <option value="">All Actions</option>
+                    <?php if (!empty($actionTypes)): ?>
+                        <?php foreach ($actionTypes as $type): ?>
+                            <option value="<?= htmlspecialchars($type) ?>" <?= (isset($_GET['action']) && $_GET['action'] === $type) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars(ucwords(str_replace('_', ' ', $type))) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+                <input type="date" name="date_from" class="form-control" style="width:150px; height:40px;" value="<?= htmlspecialchars($_GET['date_from'] ?? '') ?>" min="2020-01-01" max="<?= date('Y-m-d') ?>" placeholder="From">
+                <input type="date" name="date_to" class="form-control" style="width:150px; height:40px;" value="<?= htmlspecialchars($_GET['date_to'] ?? '') ?>" min="2020-01-01" max="<?= date('Y-m-d') ?>" placeholder="To">
+                <input type="text" name="search" class="form-control" style="flex:1; min-width:140px; height:40px;" value="<?= htmlspecialchars($_GET['search'] ?? '') ?>" placeholder="Search details...">
+                <button type="submit" class="btn btn-accent" style="height:40px; padding:0 16px;">
                     <i data-lucide="search" style="width:16px;height:16px;"></i> Filter
                 </button>
                 <?php if (!empty($_GET['action']) || !empty($_GET['date_from']) || !empty($_GET['date_to']) || !empty($_GET['search'])): ?>
-                    <a href="<?= APP_URL ?>/index.php?url=admin/logs" class="btn btn-outline" style="height:42px;">Clear</a>
+                    <a href="<?= APP_URL ?>/index.php?url=admin/logs" class="btn btn-outline" style="height:40px; padding:0 16px;">Clear</a>
                 <?php endif; ?>
             </form>
         </div>
@@ -79,8 +71,8 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                     <td data-label="Action">
                                         <span class="badge badge-processing" style="font-size:.75rem;"><?= htmlspecialchars($log['action']) ?></span>
                                     </td>
-                                    <td data-label="Details" title="<?= htmlspecialchars($log['details'] ?? '') ?>" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                                        <?= htmlspecialchars($log['details'] ?? '—') ?>
+                                    <td data-label="Details" title="<?= htmlspecialchars($log['description'] ?? '') ?>" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                        <?= htmlspecialchars($log['description'] ?? '—') ?>
                                     </td>
                                     <td data-label="User">
                                         <?php if (!empty($log['first_name'])): ?>

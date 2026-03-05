@@ -499,6 +499,10 @@
 
 /* ---------- Filters (Orders/Returns/Logs) ---------- */
 .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
     padding: 16px;
 }
 .filter-form {
