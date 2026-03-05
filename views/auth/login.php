@@ -72,7 +72,6 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
                     </form>
 
                     <div class="auth-footer">
-                        <p>Don't have an account? <a href="<?= APP_URL ?>/index.php?url=register">Create one</a></p>
                         <p>Need to verify your email? <a href="<?= APP_URL ?>/index.php?url=verify-email">Resend verification</a></p>
                         <p><a href="<?= APP_URL ?>/index.php?url=forgot-password">Forgot password?</a></p>
                         <p><a href="<?= APP_URL ?>/index.php?url=admin-login">Continue as administrator</a></p>
