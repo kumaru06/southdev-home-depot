@@ -1,0 +1,419 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="7427c63f63d7af1136c4aa70d1cf656081395859f865928ee486cf922e3ed829">
+    <meta name="description" content="Davao City's Premier Tiles & Construction Supply">
+    <title>Products – Southdev Home Depot</title>
+
+    <!-- Prevent flash: apply saved theme before any paint -->
+    <script>
+        (function(){
+            var t = localStorage.getItem('shd-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css">
+
+    <!-- Stylesheets -->
+        <link rel="stylesheet" href="http://localhost/southdev-home-depot/assets/css/style.css?v=1772936894">
+    <link rel="stylesheet" href="http://localhost/southdev-home-depot/assets/css/responsive.css?v=1772638558">
+                        <link rel="stylesheet" href="http://localhost/southdev-home-depot/assets/css/customer.css?v=1772937091">
+            
+    <script>var APP_URL = 'http://localhost/southdev-home-depot';</script>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(28,28,28,.7);align-items:center;justify-content:center;">
+    <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:#C62828;border-radius:50%;animation:spin .6s linear infinite;"></div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+</div>
+
+<nav class="navbar">
+    <div class="container">
+        <a href="http://localhost/southdev-home-depot/index.php?url=products" class="logo">
+                            <span class="logo-icon"><img src="http://localhost/southdev-home-depot/assets/uploads/images/image2.png" alt="Southdev Home Depot logo"></span>
+                        <span class="logo-text">Southdev Home Depot</span>
+        </a>
+
+        <ul class="nav-links">
+                            <li><a href="http://localhost/southdev-home-depot/index.php?url=login" class="">Login</a></li>
+                <li><a href="http://localhost/southdev-home-depot/index.php?url=register" class="btn btn-accent btn-sm">Register</a></li>
+                <li>
+                    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                        <i data-lucide="moon" class="theme-icon-dark"></i>
+                        <i data-lucide="sun" class="theme-icon-light"></i>
+                    </button>
+                </li>
+                    </ul>
+
+        <button class="mobile-toggle" aria-label="Toggle menu">
+            <i class="lucide-menu"></i>
+        </button>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="storefront-shell">
+        <!-- Left Sidebar -->
+        <aside class="storefront-sidebar" aria-label="Browse categories">
+            <div class="sidebar-card">
+                <div class="sidebar-title">
+                    <i data-lucide="layout-grid" style="width:16px;height:16px;opacity:.5"></i>
+                    Explore
+                </div>
+                <nav class="sidebar-nav">
+                    <a href="http://localhost/southdev-home-depot/index.php?url=products" class="active">
+                        <span><i data-lucide="layers" style="width:15px;height:15px"></i> All Products</span>
+                                                    <span class="sidebar-count">12</span>
+                                            </a>
+                                            <a href="http://localhost/southdev-home-depot/index.php?url=products&category=2" class="">
+                            <span><i data-lucide="tag" style="width:14px;height:14px"></i> Construction Materials</span>
+                        </a>
+                                            <a href="http://localhost/southdev-home-depot/index.php?url=products&category=5" class="">
+                            <span><i data-lucide="tag" style="width:14px;height:14px"></i> Electrical Supplies</span>
+                        </a>
+                                            <a href="http://localhost/southdev-home-depot/index.php?url=products&category=1" class="">
+                            <span><i data-lucide="tag" style="width:14px;height:14px"></i> Hardware</span>
+                        </a>
+                                            <a href="http://localhost/southdev-home-depot/index.php?url=products&category=4" class="">
+                            <span><i data-lucide="tag" style="width:14px;height:14px"></i> Plumbing</span>
+                        </a>
+                                            <a href="http://localhost/southdev-home-depot/index.php?url=products&category=7" class="">
+                            <span><i data-lucide="tag" style="width:14px;height:14px"></i> Tiles</span>
+                        </a>
+                                            <a href="http://localhost/southdev-home-depot/index.php?url=products&category=3" class="">
+                            <span><i data-lucide="tag" style="width:14px;height:14px"></i> Tools</span>
+                        </a>
+                                    </nav>
+            </div>
+
+            <div class="sidebar-footer-link">
+                <i data-lucide="help-circle" style="width:13px;height:13px"></i>
+                <a href="http://localhost/southdev-home-depot/index.php?url=profile">Help Center</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="storefront-main">
+            <!-- Featured Tiles Banner -->
+                        <div class="featured-strip">
+                <div class="featured-strip-icon"><i data-lucide="grid-3x3"></i></div>
+                <div class="featured-strip-text">
+                    <strong>Tiles — Our Main Product</strong>
+                    <span>Explore our premium collection of porcelain, ceramic, mosaic &amp; granite tiles</span>
+                </div>
+                <a href="http://localhost/southdev-home-depot/index.php?url=products&category=7" class="btn btn-accent btn-sm">
+                    Browse Tiles <i data-lucide="arrow-right" style="width:14px;height:14px"></i>
+                </a>
+            </div>
+            
+            <!-- Hero / Intro (uses image.png) -->
+            <section class="products-hero" style="background-image: url('http://localhost/southdev-home-depot/assets/uploads/images/image.png'); background-size: cover; background-position: center; padding: 4rem 1rem; border-radius:8px; color: #fff; margin-bottom:1.5rem;">
+                <div style="max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+                    <div style="flex:1;">
+                        <h1 style="font-size:2.2rem;line-height:1.05;margin:0 0 .5rem">Build Your Dream Space With Us</h1>
+                        <p style="opacity:.9;max-width:640px;margin:0 0 1rem">From flooring to structural materials, bathroom fixtures to interior finishes — everything you need to create stunning spaces, all in one place.</p>
+                        <button class="btn btn-accent btn-explore">Explore Products <i data-lucide="arrow-right" style="width:14px;height:14px"></i></button>
+                    </div>
+                </div>
+            </section>
+
+            <div class="storefront-toolbar">
+                <form action="http://localhost/southdev-home-depot/index.php" method="GET" class="search-form storefront-search">
+                    <input type="hidden" name="url" value="products/search">
+                    <div class="input-icon-wrap">
+                        <i data-lucide="search" class="input-icon"></i>
+                        <input type="text" name="q" class="form-control" placeholder="Search for items, brands, materials…" value="">
+                    </div>
+                    <button type="submit" class="btn btn-accent">Search</button>
+                </form>
+            </div>
+
+            <div class="category-bar storefront-chips">
+                <a href="http://localhost/southdev-home-depot/index.php?url=products" class="active">
+                    <i data-lucide="grid-3x3" style="width:13px;height:13px"></i> All
+                </a>
+                                    <a href="http://localhost/southdev-home-depot/index.php?url=products&category=2" class="">
+                        Construction Materials                    </a>
+                                    <a href="http://localhost/southdev-home-depot/index.php?url=products&category=5" class="">
+                        Electrical Supplies                    </a>
+                                    <a href="http://localhost/southdev-home-depot/index.php?url=products&category=1" class="">
+                        Hardware                    </a>
+                                    <a href="http://localhost/southdev-home-depot/index.php?url=products&category=4" class="">
+                        Plumbing                    </a>
+                                    <a href="http://localhost/southdev-home-depot/index.php?url=products&category=7" class="">
+                        Tiles                    </a>
+                                    <a href="http://localhost/southdev-home-depot/index.php?url=products&category=3" class="">
+                        Tools                    </a>
+                            </div>
+
+            <!-- Product Grid -->
+                    <div id="product-list" class="product-grid">
+                            <div class="product-card">
+                    <a href="http://localhost/southdev-home-depot/index.php?url=products/28">
+                        <div class="product-img-wrap">
+                                                            <img src="http://localhost/southdev-home-depot/assets/uploads/1772636995_tiles.jpg" alt="Ceramic Tiles" loading="lazy">
+                                                                                </div>
+                        <div class="product-info">
+                            <span class="product-category">Tiles</span>
+                            <h3 class="product-name">Ceramic Tiles</h3>
+                            <div class="product-price">₱850.00</div>
+                        </div>
+                    </a>
+                                    </div>
+                            <div class="product-card">
+                    <a href="http://localhost/southdev-home-depot/index.php?url=products/19">
+                        <div class="product-img-wrap">
+                                                            <div class="product-no-image">
+                                    <i data-lucide="image" class="no-img-icon"></i>
+                                    <span>No Image</span>
+                                </div>
+                                                                                </div>
+                        <div class="product-info">
+                            <span class="product-category">Tiles</span>
+                            <h3 class="product-name">Porcelain Floor Tile 60x60cm</h3>
+                            <div class="product-price">₱850.00</div>
+                        </div>
+                    </a>
+                                    </div>
+                            <div class="product-card">
+                    <a href="http://localhost/southdev-home-depot/index.php?url=products/20">
+                        <div class="product-img-wrap">
+                                                            <div class="product-no-image">
+                                    <i data-lucide="image" class="no-img-icon"></i>
+                                    <span>No Image</span>
+                                </div>
+                                                                                </div>
+                        <div class="product-info">
+                            <span class="product-category">Tiles</span>
+                            <h3 class="product-name">Ceramic Wall Tile 30x60cm</h3>
+                            <div class="product-price">₱520.00</div>
+                        </div>
+                    </a>
+                                    </div>
+                            <div class="product-card">
+                    <a href="http://localhost/southdev-home-depot/index.php?url=products/21">
+                        <div class="product-img-wrap">
+                                                            <div class="product-no-image">
+                                    <i data-lucide="image" class="no-img-icon"></i>
+                                    <span>No Image</span>
+                                </div>
+                                                                                </div>
+                        <div class="product-info">
+                            <span class="product-category">Tiles</span>
+                            <h3 class="product-name">Mosaic Glass Tile Sheet</h3>
+                            <div class="product-price">₱380.00</div>
+                        </div>
+                    </a>
+                                    </div>
+                            <div class="product-card">
+                    <a href="http://localhost/southdev-home-depot/index.php?url=products/22">
+                        <div class="product-img-wrap">
+                                                            <div class="product-no-image">
+                                    <i data-lucide="image" class="no-img-icon"></i>
+                                    <span>No Image</span>
+                                </div>
+                                                                                </div>
+                        <div class="product-info">
+                            <span class="product-category">Tiles</span>
+                            <h3 class="product-name">Granite Floor Tile 80x80cm</h3>
+                            <div class="product-price">₱1,250.00</div>
+                        </div>
+                    </a>
+                                    </div>
+                            <div class="product-card">
+                    <a href="http://localhost/southdev-home-depot/index.php?url=products/23">
+                        <div class="product-img-wrap">
+                                                            <div class="product-no-image">
+                                    <i data-lucide="image" class="no-img-icon"></i>
+                                    <span>No Image</span>
+                                </div>
+                                                                                </div>
+                        <div class="product-info">
+                            <span class="product-category">Tiles</span>
+                            <h3 class="product-name">Subway Tile 10x30cm (Box of 20)</h3>
+                            <div class="product-price">₱450.00</div>
+                        </div>
+                    </a>
+                                    </div>
+                            <div class="product-card">
+                    <a href="http://localhost/southdev-home-depot/index.php?url=products/24">
+                        <div class="product-img-wrap">
+                                                            <div class="product-no-image">
+                                    <i data-lucide="image" class="no-img-icon"></i>
+                                    <span>No Image</span>
+                                </div>
+                                                                                </div>
+                        <div class="product-info">
+                            <span class="product-category">Tiles</span>
+                            <h3 class="product-name">Outdoor Non-Slip Tile 40x40cm</h3>
+                            <div class="product-price">₱680.00</div>
+                        </div>
+                    </a>
+                                    </div>
+                            <div class="product-card">
+                    <a href="http://localhost/southdev-home-depot/index.php?url=products/25">
+                        <div class="product-img-wrap">
+                                                            <div class="product-no-image">
+                                    <i data-lucide="image" class="no-img-icon"></i>
+                                    <span>No Image</span>
+                                </div>
+                                                                                </div>
+                        <div class="product-info">
+                            <span class="product-category">Tiles</span>
+                            <h3 class="product-name">Vinyl Plank Tile 15x90cm</h3>
+                            <div class="product-price">₱720.00</div>
+                        </div>
+                    </a>
+                                    </div>
+                            <div class="product-card">
+                    <a href="http://localhost/southdev-home-depot/index.php?url=products/26">
+                        <div class="product-img-wrap">
+                                                            <div class="product-no-image">
+                                    <i data-lucide="image" class="no-img-icon"></i>
+                                    <span>No Image</span>
+                                </div>
+                                                                                </div>
+                        <div class="product-info">
+                            <span class="product-category">Tiles</span>
+                            <h3 class="product-name">Hexagonal Cement Tile</h3>
+                            <div class="product-price">₱195.00</div>
+                        </div>
+                    </a>
+                                    </div>
+                            <div class="product-card">
+                    <a href="http://localhost/southdev-home-depot/index.php?url=products/16">
+                        <div class="product-img-wrap">
+                                                            <div class="product-no-image">
+                                    <i data-lucide="image" class="no-img-icon"></i>
+                                    <span>No Image</span>
+                                </div>
+                                                                                </div>
+                        <div class="product-info">
+                            <span class="product-category">Construction Materials</span>
+                            <h3 class="product-name">Stainless Steel Bolt Set (100pc)</h3>
+                            <div class="product-price">₱3,000.00</div>
+                        </div>
+                    </a>
+                                    </div>
+                            <div class="product-card">
+                    <a href="http://localhost/southdev-home-depot/index.php?url=products/1">
+                        <div class="product-img-wrap">
+                                                            <div class="product-no-image">
+                                    <i data-lucide="image" class="no-img-icon"></i>
+                                    <span>No Image</span>
+                                </div>
+                                                                                </div>
+                        <div class="product-info">
+                            <span class="product-category">Hardware</span>
+                            <h3 class="product-name">Stainless Steel Bolt Set (100pc)</h3>
+                            <div class="product-price">₱450.00</div>
+                        </div>
+                    </a>
+                                    </div>
+                            <div class="product-card">
+                    <a href="http://localhost/southdev-home-depot/index.php?url=products/2">
+                        <div class="product-img-wrap">
+                                                            <div class="product-no-image">
+                                    <i data-lucide="image" class="no-img-icon"></i>
+                                    <span>No Image</span>
+                                </div>
+                                                                                </div>
+                        <div class="product-info">
+                            <span class="product-category">Hardware</span>
+                            <h3 class="product-name">Cabinet Door Hinges (Pair)</h3>
+                            <div class="product-price">₱185.00</div>
+                        </div>
+                    </a>
+                                    </div>
+                    </div>
+
+            <!-- Pagination -->
+                    <div class="pagination">
+                                                    <a href="http://localhost/southdev-home-depot/index.php?url=products&page=1" class="btn btn-accent">1</a>
+                                    <a href="http://localhost/southdev-home-depot/index.php?url=products&page=2" class="btn btn-outline">2</a>
+                                    <a href="http://localhost/southdev-home-depot/index.php?url=products&page=3" class="btn btn-outline">3</a>
+                                                    <a href="http://localhost/southdev-home-depot/index.php?url=products&page=2" class="btn btn-outline">Next &raquo;</a>
+                        </div>
+                                </main>
+    </div>
+</div>
+
+<script>
+// Smooth scroll when clicking Explore Products buttons
+document.addEventListener('DOMContentLoaded', function(){
+    function scrollToProducts(e){
+        e.preventDefault();
+        var target = document.getElementById('product-list');
+        if(target){
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+    var btns = document.querySelectorAll('.btn-explore');
+    btns.forEach(function(b){ b.addEventListener('click', scrollToProducts); });
+});
+</script>
+
+    <!-- Customer Footer (shown on storefront pages) -->
+        <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>Southdev Home Depot</h4>
+                    <p class="footer-tagline">Davao City's Premier Tiles & Construction Supply</p>
+                    <p class="footer-location">
+                        <i class="lucide-map-pin"></i> Davao City, Philippines                    </p>
+                </div>
+                <div class="footer-col">
+                    <h5>Quick Links</h5>
+                    <ul>
+                        <li><a href="http://localhost/southdev-home-depot/index.php?url=products">Shop Products</a></li>
+                        <li><a href="http://localhost/southdev-home-depot/index.php?url=orders">My Orders</a></li>
+                        <li><a href="http://localhost/southdev-home-depot/index.php?url=cart">Shopping Cart</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Categories</h5>
+                    <ul>
+                        <li><a href="#">Hardware</a></li>
+                        <li><a href="#">Construction Materials</a></li>
+                        <li><a href="#">Tools</a></li>
+                        <li><a href="#">Plumbing</a></li>
+                        <li><a href="#">Electrical Supplies</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Southdev Home Depot. All rights reserved.</p>
+                <p class="footer-credit">Powered by SouthDev Solutions</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Admin Footer (shown on admin/staff pages) -->
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    </script>
+
+    <!-- Scripts -->
+        <script src="http://localhost/southdev-home-depot/assets/js/main.js?v=1772641529"></script>
+    <script src="http://localhost/southdev-home-depot/assets/js/validation.js?v=1770868772"></script>
+                        <script src="http://localhost/southdev-home-depot/assets/js/cart.js?v=1771082284"></script>
+            </body>
+</html>
+

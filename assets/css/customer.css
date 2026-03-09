@@ -11,6 +11,26 @@
     background: linear-gradient(135deg, #0B3D91 0%, #1a5dc7 40%, rgb(255,87,51) 100%);
     min-height: 280px;
 }
+/* ---------- Products page hero (image.png background) ---------- */
+.products-hero {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    min-height: 260px; /* adjust this value to change visible height */
+    display: flex;
+    align-items: center;
+    color: #fff;
+}
+.products-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(10,10,10,.38); /* dark overlay for text readability */
+}
+.products-hero > div { position: relative; z-index: 1; }
+@media (max-width: 840px) {
+    .products-hero { min-height: 180px; padding: 1.5rem 1rem; }
+}
 .hero-banner-bg {
     position: absolute; inset: 0;
     opacity: .08;

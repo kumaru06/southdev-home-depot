@@ -50,6 +50,17 @@ require_once INCLUDES_PATH . '/navbar.php';
             </div>
             <?php endif; ?>
 
+            <!-- Hero / Intro (uses image.png) -->
+            <section class="products-hero" style="background-image: url('<?= APP_URL ?>/assets/uploads/images/image.png'); background-size: cover; background-position: center; padding: 4rem 1rem; border-radius:8px; color: #fff; margin-bottom:1.5rem;">
+                <div style="max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+                    <div style="flex:1;">
+                        <h1 style="font-size:2.2rem;line-height:1.05;margin:0 0 .5rem">Build Your Dream Space With Us</h1>
+                        <p style="opacity:.9;max-width:640px;margin:0 0 1rem">From flooring to structural materials, bathroom fixtures to interior finishes — everything you need to create stunning spaces, all in one place.</p>
+                        <button class="btn btn-accent btn-explore">Explore Products <i data-lucide="arrow-right" style="width:14px;height:14px"></i></button>
+                    </div>
+                </div>
+            </section>
+
             <div class="storefront-toolbar">
                 <form action="<?= APP_URL ?>/index.php" method="GET" class="search-form storefront-search">
                     <input type="hidden" name="url" value="products/search">
@@ -74,7 +85,7 @@ require_once INCLUDES_PATH . '/navbar.php';
 
             <!-- Product Grid -->
             <?php if (!empty($products)): ?>
-        <div class="product-grid">
+        <div id="product-list" class="product-grid">
             <?php foreach ($products as $product): ?>
                 <div class="product-card">
                     <a href="<?= APP_URL ?>/index.php?url=products/<?= $product['id'] ?>">
@@ -139,4 +150,18 @@ require_once INCLUDES_PATH . '/navbar.php';
 </div>
 
 <?php $extraJs = ['cart.js']; ?>
+<script>
+// Smooth scroll when clicking Explore Products buttons
+document.addEventListener('DOMContentLoaded', function(){
+    function scrollToProducts(e){
+        e.preventDefault();
+        var target = document.getElementById('product-list');
+        if(target){
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+    var btns = document.querySelectorAll('.btn-explore');
+    btns.forEach(function(b){ b.addEventListener('click', scrollToProducts); });
+});
+</script>
 <?php require_once INCLUDES_PATH . '/footer.php'; ?>

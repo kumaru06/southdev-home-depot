@@ -453,15 +453,8 @@ switch ($urlParts[0]) {
      * HOME / DEFAULT
      * ============================================================= */
     case '':
-        if (isLoggedIn()) {
-            if ($_SESSION['role_id'] == ROLE_CUSTOMER) {
-                header('Location: ' . APP_URL . '/index.php?url=products');
-            } else {
-                header('Location: ' . APP_URL . '/index.php?url=dashboard');
-            }
-        } else {
-            header('Location: ' . APP_URL . '/index.php?url=login');
-        }
+        // Make the products listing the main public entry page for all visitors
+        header('Location: ' . APP_URL . '/index.php?url=products');
         exit;
         break;
 

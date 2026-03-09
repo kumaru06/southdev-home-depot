@@ -396,6 +396,14 @@ p { color: var(--text-secondary); }
     letter-spacing: .5px;
     box-shadow: 0 2px 8px rgba(11,61,145,.20);
 }
+/* If logo uses an image, ensure it fits the square */
+.logo-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: inherit;
+}
 .logo-text { font-size: 15px; font-weight: 800; letter-spacing: -.2px; }
 
 .nav-links {

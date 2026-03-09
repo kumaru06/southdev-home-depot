@@ -23,8 +23,18 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['role_id']) && $_SESSION['rol
 ?>
 <nav class="navbar">
     <div class="container">
-        <a href="<?= APP_URL ?>" class="logo">
-            <span class="logo-icon">SHD</span>
+        <a href="<?= APP_URL ?>/index.php?url=products" class="logo">
+            <?php
+                // Prefer an uploaded square logo `image2.png` if available
+                $logoRel = 'assets/uploads/images/image2.png';
+                $logoFull = ROOT_PATH . '/' . $logoRel;
+                if (file_exists($logoFull)):
+                    $logoUrl = APP_URL . '/' . $logoRel;
+            ?>
+                <span class="logo-icon"><img src="<?= htmlspecialchars($logoUrl) ?>" alt="<?= htmlspecialchars(APP_NAME) ?> logo"></span>
+            <?php else: ?>
+                <span class="logo-icon">SHD</span>
+            <?php endif; ?>
             <span class="logo-text"><?= APP_NAME ?></span>
         </a>
 
