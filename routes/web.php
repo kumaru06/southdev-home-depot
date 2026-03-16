@@ -107,6 +107,11 @@ switch ($urlParts[0]) {
             // Customers redirect to products
             header('Location: ' . APP_URL . '/index.php?url=products');
             exit;
+        } elseif ($_SESSION['role_id'] == ROLE_INVENTORY) {
+            // Inventory in-charge gets redirected to inventory management
+            require_once CONTROLLERS_PATH . '/DashboardController.php';
+            $controller = new DashboardController($pdo);
+            $controller->index();
         } else {
             require_once CONTROLLERS_PATH . '/DashboardController.php';
             $controller = new DashboardController($pdo);
@@ -239,6 +244,45 @@ switch ($urlParts[0]) {
         break;
 
     /* ================================================================
+     * INVENTORY ROLE ROUTES
+     * ============================================================= */
+    case 'inventory':
+        if (isset($urlParts[1])) {
+            switch ($urlParts[1]) {
+                case 'stock':
+                    require_once CONTROLLERS_PATH . '/InventoryController.php';
+                    $controller = new InventoryController($pdo);
+                    if (isset($urlParts[2]) && $urlParts[2] === 'update') {
+                        $controller->update();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'add-stock') {
+                        $controller->addStock();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'request-supplier') {
+                        $controller->requestSupplier();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'movements') {
+                        $controller->movements();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'price-history') {
+                        $controller->priceHistory();
+                    } else {
+                        $controller->index();
+                    }
+                    break;
+
+                case 'reports':
+                    require_once CONTROLLERS_PATH . '/ReportController.php';
+                    $controller = new ReportController($pdo);
+                    $controller->index();
+                    break;
+
+                default:
+                    require_once VIEWS_PATH . '/errors/404.php';
+            }
+        } else {
+            header('Location: ' . APP_URL . '/index.php?url=dashboard');
+            exit;
+        }
+        break;
+
+    /* ================================================================
      * STAFF ROUTES
      * ============================================================= */
     case 'staff':
@@ -275,6 +319,14 @@ switch ($urlParts[0]) {
                     $controller = new InventoryController($pdo);
                     if (isset($urlParts[2]) && $urlParts[2] === 'update') {
                         $controller->update();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'add-stock') {
+                        $controller->addStock();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'request-supplier') {
+                        $controller->requestSupplier();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'movements') {
+                        $controller->movements();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'price-history') {
+                        $controller->priceHistory();
                     } else {
                         $controller->index();
                     }
@@ -405,6 +457,14 @@ switch ($urlParts[0]) {
                     $controller = new InventoryController($pdo);
                     if (isset($urlParts[2]) && $urlParts[2] === 'update') {
                         $controller->update();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'add-stock') {
+                        $controller->addStock();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'request-supplier') {
+                        $controller->requestSupplier();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'movements') {
+                        $controller->movements();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'price-history') {
+                        $controller->priceHistory();
                     } else {
                         $controller->index();
                     }

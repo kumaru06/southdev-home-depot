@@ -632,7 +632,7 @@
     background: var(--white);
     border-radius: var(--radius-md);
     border: 1px solid var(--border);
-    overflow: hidden;
+    overflow-x: auto;
 }
 .data-table-header {
     padding: 18px 24px;
@@ -649,20 +649,22 @@
 
 .data-table {
     width: 100%;
+    min-width: 860px;
     border-collapse: collapse;
 }
 .data-table thead { background: var(--charcoal); }
 .data-table th {
-    padding: 13px 20px;
+    padding: 13px 16px;
     text-align: left;
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .6px;
     color: rgba(255,255,255,.85);
+    white-space: nowrap;
 }
 .data-table td {
-    padding: 14px 20px;
+    padding: 14px 16px;
     border-bottom: 1px solid var(--border);
     font-size: 13px;
     color: var(--text-primary);
@@ -673,7 +675,7 @@
 
 /* ---------- Action Buttons ---------- */
 .action-group { display: flex; gap: 6px; align-items: center; }
-.action-btn-group { display: inline-flex; gap: 8px; align-items: center; }
+.action-btn-group { display: inline-flex; gap: 8px; align-items: center; white-space: nowrap; }
 .inline-form { display: inline; }
 
 .action-btn-group .form-control-sm {
@@ -775,83 +777,6 @@
     gap: 8px;
 }
 
-/* ========================================================
-   DARK MODE – Admin Panel Overrides
-   ======================================================== */
-[data-theme="dark"] .admin-wrapper { background: #13151A; }
-[data-theme="dark"] .sidebar {
-    background: #161821;
-    border-right: 1px solid var(--border);
-}
-[data-theme="dark"] .sidebar .brand {
-    border-bottom-color: rgba(255,255,255,.06);
-}
-[data-theme="dark"] .sidebar .brand-text {
-    color: #fff;
-}
-[data-theme="dark"] .sidebar .sidebar-footer .user-name {
-    color: #fff;
-}
-[data-theme="dark"] .sidebar .sidebar-footer .user-role {
-    color: rgba(255,255,255,.4);
-}
-[data-theme="dark"] .sidebar .nav-label {
-    color: rgba(255,255,255,.25);
-}
-[data-theme="dark"] .sidebar .nav-menu a {
-    color: rgba(255,255,255,.5);
-}
-[data-theme="dark"] .sidebar .nav-menu a:hover {
-    background: rgba(255,255,255,.04);
-    color: rgba(255,255,255,.85);
-}
-[data-theme="dark"] .sidebar .nav-menu a.active {
-    background: rgba(255,107,64,.12);
-    color: #fff;
-    font-weight: 700;
-}
-[data-theme="dark"] .sidebar .sidebar-footer {
-    border-top-color: rgba(255,255,255,.06);
-}
-[data-theme="dark"] .sidebar .sidebar-logout {
-    border-color: rgba(255,255,255,.08);
-    background: rgba(255,255,255,.03);
-}
-[data-theme="dark"] .sidebar .sidebar-logout:hover {
-    background: rgba(255,107,64,.12);
-    border-color: rgba(255,107,64,.25);
-}
-
-[data-theme="dark"] .top-bar {
-    background: rgba(22,25,33,.92);
-    border-bottom-color: var(--border);
-    backdrop-filter: blur(10px);
-}
-[data-theme="dark"] .top-bar .sidebar-toggle,
-[data-theme="dark"] .top-bar .sidebar-toggle-btn {
-    border-color: var(--border);
-    color: var(--text-secondary);
-}
-[data-theme="dark"] .top-bar .notif-btn {
-    background: transparent;
-    border-color: var(--border);
-}
-
-[data-theme="dark"] .main-content { background: #13151A; }
-
-[data-theme="dark"] .stat-card {
-    background: var(--white);
-    border-color: var(--border);
-}
-[data-theme="dark"] .stat-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.3); }
-[data-theme="dark"] .stat-card .stat-icon { background: rgba(255,255,255,.05); color: var(--text-muted); }
-
-[data-theme="dark"] .data-table-wrap { background: var(--white); border-color: var(--border); }
-[data-theme="dark"] .data-table-header { border-bottom-color: var(--border); }
-[data-theme="dark"] .data-table thead { background: #22252D; }
-[data-theme="dark"] .data-table th { color: var(--text-secondary); }
-[data-theme="dark"] .data-table td { border-bottom-color: var(--border); color: rgba(255,255,255,.75); }
-
 /* User avatar circle in tables */
 .user-avatar-circle {
     width: 32px;
@@ -875,86 +800,6 @@
 .user-email-text {
     color: var(--text-secondary);
 }
-[data-theme="dark"] .user-avatar-circle {
-    background: rgba(255,107,64,.15);
-    color: var(--accent);
-}
-[data-theme="dark"] .user-name-text {
-    color: #fff;
-}
-[data-theme="dark"] .user-email-text {
-    color: rgba(255,255,255,.7);
-}
-[data-theme="dark"] .data-table tbody tr:hover { background: rgba(255,255,255,.02); }
-
-[data-theme="dark"] .filter-bar { background: var(--white); }
-
-[data-theme="dark"] .action-btn {
-    border-color: var(--border);
-    background: transparent;
-    color: var(--text-secondary);
-}
-
-[data-theme="dark"] .modal-box { background: var(--white); }
-[data-theme="dark"] .modal-header { border-bottom-color: var(--border); }
-[data-theme="dark"] .modal-close { background: rgba(255,255,255,.06); }
-[data-theme="dark"] .modal-footer { border-top-color: var(--border); }
-
-[data-theme="dark"] .admin-footer {
-    background: transparent;
-    border-top-color: var(--border);
-    color: var(--text-muted);
-}
-[data-theme="dark"] .admin-footer span { color: var(--text-muted); }
-
-[data-theme="dark"] .order-detail-grid .card { background: var(--white); border-color: var(--border); }
-[data-theme="dark"] .detail-row { border-bottom-color: var(--border); }
-
-[data-theme="dark"] .page-header h1 { color: var(--text-primary); }
-
-/* Sidebar theme toggle button */
-.sidebar-theme-toggle {
-    margin-top: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    padding: 10px 12px;
-    border-radius: var(--radius-sm);
-    border: 1px solid rgba(255,255,255,.12);
-    background: rgba(255,255,255,.04);
-    color: rgba(255,255,255,.85);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-}
-.sidebar-theme-toggle:hover {
-    background: rgba(255,87,51,.12);
-    border-color: rgba(255,87,51,.25);
-    color: var(--white);
-}
-.sidebar-theme-toggle i,
-.sidebar-theme-toggle svg {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-}
-.theme-toggle-text {
-    overflow: hidden;
-    opacity: 1;
-    transition: opacity .2s;
-}
-.sidebar.collapsed .theme-toggle-text { opacity: 0; width: 0; }
-.sidebar.collapsed .sidebar-theme-toggle { gap: 0; }
-/* Toggle icon visibility */
-.sidebar-theme-toggle .theme-icon-light { display: none; }
-.sidebar-theme-toggle .theme-icon-dark { display: inline-flex; }
-[data-theme="dark"] .sidebar-theme-toggle .theme-icon-dark { display: none; }
-[data-theme="dark"] .sidebar-theme-toggle .theme-icon-light { display: inline-flex; }
-[data-theme="dark"] .theme-toggle-text::after { content: ''; }
-[data-theme="dark"] .sidebar-theme-toggle { color: rgba(255,255,255,.85); }
 
 /* ---------- Admin Footer ---------- */
 .admin-footer {

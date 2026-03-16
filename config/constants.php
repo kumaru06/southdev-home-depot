@@ -7,6 +7,7 @@
 define('ROLE_CUSTOMER', 1);
 define('ROLE_STAFF', 2);
 define('ROLE_SUPER_ADMIN', 3);
+define('ROLE_INVENTORY', 4);
 
 // Order statuses
 define('ORDER_PENDING', 'pending');
@@ -57,3 +58,7 @@ define('LOG_CATEGORY_CREATE', 'category_created');
 define('LOG_CATEGORY_DELETE', 'category_deleted');
 define('LOG_PAYMENT', 'payment_processed');
 define('LOG_PAYMENT_FAIL', 'payment_failed');
+define('LOG_PRICE_UPDATE', 'price_updated');
+define('LOG_STOCK_ADD', 'stock_added');
+define('LOG_STOCK_MOVEMENT', 'stock_movement');
+define('LOG_SUPPLIER_REQUEST', 'supplier_request');

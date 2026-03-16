@@ -5,7 +5,8 @@ USE `southdev`;
 INSERT INTO `roles` (`id`, `name`) VALUES
 (1, 'customer'),
 (2, 'staff'),
-(3, 'super_admin');
+(3, 'super_admin'),
+(4, 'inventory_incharge');
 
 -- Insert default super admin
 INSERT INTO `users` (`role_id`, `first_name`, `last_name`, `email`, `password`, `phone`) VALUES

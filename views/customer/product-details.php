@@ -17,7 +17,17 @@ $inStock = ($product['stock'] ?? 0) > 0;
 
     <div class="product-detail">
         <div class="product-detail-img">
+            <?php if ($inStock): ?>
             <img src="<?= APP_URL ?>/assets/uploads/<?= $product['image'] ?: 'placeholder.svg' ?>" alt="<?= htmlspecialchars($product['name']) ?>">
+            <?php else: ?>
+            <div style="position:relative;">
+                <img src="<?= APP_URL ?>/assets/uploads/<?= $product['image'] ?: 'placeholder.svg' ?>" alt="<?= htmlspecialchars($product['name']) ?>" style="opacity:.4;">
+                <div class="product-detail-unavailable-badge">
+                    <i data-lucide="x-circle" style="width:32px;height:32px;margin-bottom:6px;"></i>
+                    <span>Not Available</span>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
         <div class="product-detail-info">
             <span class="product-category"><?= htmlspecialchars($product['category_name'] ?? '') ?></span>
@@ -32,11 +42,15 @@ $inStock = ($product['stock'] ?? 0) > 0;
                     <span>SKU: <?= htmlspecialchars($product['sku'] ?? 'N/A') ?></span>
                 </div>
                 <div class="meta-item">
+                    <i data-lucide="layers"></i>
+                    <span>Category: <?= htmlspecialchars($product['category_name'] ?? 'Uncategorized') ?></span>
+                </div>
+                <div class="meta-item">
                     <i data-lucide="package"></i>
                     <?php if ($inStock): ?>
                         <span class="text-success"><?= $product['stock'] ?> in stock</span>
                     <?php else: ?>
-                        <span class="text-danger">Out of stock</span>
+                        <span class="text-danger">Out of stock — Not Available</span>
                     <?php endif; ?>
                 </div>
             </div>

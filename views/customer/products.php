@@ -37,29 +37,35 @@ require_once INCLUDES_PATH . '/navbar.php';
         <!-- Main Content -->
         <main class="storefront-main">
             <!-- Featured Tiles Banner -->
-            <?php if (!isset($_GET['category']) && !isset($_GET['q'])): ?>
-            <div class="featured-strip">
-                <div class="featured-strip-icon"><i data-lucide="grid-3x3"></i></div>
-                <div class="featured-strip-text">
-                    <strong>Tiles — Our Main Product</strong>
-                    <span>Explore our premium collection of porcelain, ceramic, mosaic &amp; granite tiles</span>
-                </div>
-                <a href="<?= APP_URL ?>/index.php?url=products&category=7" class="btn btn-accent btn-sm">
-                    Browse Tiles <i data-lucide="arrow-right" style="width:14px;height:14px"></i>
-                </a>
-            </div>
-            <?php endif; ?>
-
             <!-- Hero / Intro (uses image.png) -->
-            <section class="products-hero" style="background-image: url('<?= APP_URL ?>/assets/uploads/images/image.png'); background-size: cover; background-position: center; padding: 4rem 1rem; border-radius:8px; color: #fff; margin-bottom:1.5rem;">
-                <div style="max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem;">
-                    <div style="flex:1;">
-                        <h1 style="font-size:2.2rem;line-height:1.05;margin:0 0 .5rem">Build Your Dream Space With Us</h1>
-                        <p style="opacity:.9;max-width:640px;margin:0 0 1rem">From flooring to structural materials, bathroom fixtures to interior finishes — everything you need to create stunning spaces, all in one place.</p>
-                        <button class="btn btn-accent btn-explore">Explore Products <i data-lucide="arrow-right" style="width:14px;height:14px"></i></button>
+            <section class="products-hero" style="background-image: url('<?= APP_URL ?>/assets/uploads/images/image.png'); background-size: cover; background-position: center;">
+                <div style="max-width:1100px;margin:0 auto;padding:3.5rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:2rem;width:100%;">
+                    <div style="flex:1;max-width:600px;">
+                        <span class="hero-badge"><span style="color:var(--accent);font-size:10px;">&#9632;</span> PREMIUM BUILDING MATERIALS</span>
+                        <h1>Build Your<br><span class="accent-text">Dream Space</span><br>With Us</h1>
+                        <p style="margin:0 0 1.5rem;">From flooring to structural materials, bathroom fixtures to interior finishes — everything you need to create stunning spaces, all in one place.</p>
+                        <button class="btn btn-accent btn-lg btn-explore" style="padding:.75rem 2rem;font-size:.95rem;border-radius:999px;display:inline-flex;align-items:center;gap:8px;">
+                            Explore Products <i data-lucide="arrow-right" style="width:16px;height:16px"></i>
+                        </button>
                     </div>
                 </div>
             </section>
+
+            <!-- Stats strip -->
+            <div class="stats-strip">
+                <div class="stat-item">
+                    <span class="stat-number"><?= isset($products) ? count($products) : '500' ?>+</span>
+                    <span class="stat-label">PRODUCTS</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number"><?= isset($categories) ? count($categories) : '5' ?></span>
+                    <span class="stat-label">CATEGORIES</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">100%</span>
+                    <span class="stat-label">QUALITY</span>
+                </div>
+            </div>
 
             <div class="storefront-toolbar">
                 <form action="<?= APP_URL ?>/index.php" method="GET" class="search-form storefront-search">
@@ -72,9 +78,16 @@ require_once INCLUDES_PATH . '/navbar.php';
                 </form>
             </div>
 
+            <!-- Section heading -->
+            <div class="section-heading">
+                <span class="section-badge"><i data-lucide="package" style="width:13px;height:13px;"></i> OUR PRODUCTS</span>
+                <h2 class="section-title">Everything You Need in <span class="accent-text">One Place</span></h2>
+                <p class="section-subtitle">Browse our complete range of premium building materials, fixtures, and finishes.</p>
+            </div>
+
             <div class="category-bar storefront-chips">
                 <a href="<?= APP_URL ?>/index.php?url=products" class="<?= !isset($_GET['category']) ? 'active' : '' ?>">
-                    <i data-lucide="grid-3x3" style="width:13px;height:13px"></i> All
+                    <i data-lucide="grid-3x3" style="width:14px;height:14px"></i> All Products
                 </a>
                 <?php if (isset($categories)): foreach ($categories as $cat): ?>
                     <a href="<?= APP_URL ?>/index.php?url=products&category=<?= $cat['id'] ?>" class="<?= (isset($_GET['category']) && $_GET['category'] == $cat['id']) ? 'active' : '' ?>">
@@ -87,7 +100,8 @@ require_once INCLUDES_PATH . '/navbar.php';
             <?php if (!empty($products)): ?>
         <div id="product-list" class="product-grid">
             <?php foreach ($products as $product): ?>
-                <div class="product-card">
+                <?php $isOutOfStock = isset($product['stock']) && $product['stock'] <= 0; ?>
+                <div class="product-card <?= $isOutOfStock ? 'product-card--unavailable' : '' ?>">
                     <a href="<?= APP_URL ?>/index.php?url=products/<?= $product['id'] ?>">
                         <div class="product-img-wrap">
                             <?php if (!empty($product['image']) && file_exists(ROOT_PATH . '/assets/uploads/' . $product['image'])): ?>
@@ -98,7 +112,14 @@ require_once INCLUDES_PATH . '/navbar.php';
                                     <span>No Image</span>
                                 </div>
                             <?php endif; ?>
-                            <?php if (isset($product['stock']) && $product['stock'] <= 0): ?>
+                            <?php if (!empty($product['category_name'])): ?>
+                                <span class="product-category-tag"><?= htmlspecialchars($product['category_name']) ?></span>
+                            <?php endif; ?>
+                            <?php if ($isOutOfStock): ?>
+                                <div class="product-unavailable-overlay">
+                                    <i data-lucide="x-circle" style="width:28px;height:28px;margin-bottom:4px;"></i>
+                                    <span>Not Available</span>
+                                </div>
                                 <span class="product-badge badge-danger"><i data-lucide="alert-circle" style="width:11px;height:11px"></i> Out of Stock</span>
                             <?php elseif (isset($product['stock']) && $product['stock'] <= 5): ?>
                                 <span class="product-badge badge-warning"><i data-lucide="alert-triangle" style="width:11px;height:11px"></i> Low Stock</span>
@@ -107,16 +128,19 @@ require_once INCLUDES_PATH . '/navbar.php';
                         <div class="product-info">
                             <span class="product-category"><?= htmlspecialchars($product['category_name'] ?? '') ?></span>
                             <h3 class="product-name"><?= htmlspecialchars($product['name']) ?></h3>
+                            <?php if (!empty($product['description'])): ?>
+                                <p class="product-desc-preview"><?= htmlspecialchars(mb_strimwidth($product['description'], 0, 80, '…')) ?></p>
+                            <?php endif; ?>
                             <div class="product-price">₱<?= number_format($product['price'], 2) ?></div>
                         </div>
                     </a>
-                    <?php if (isset($_SESSION['user_id']) && $_SESSION['role_id'] == ROLE_CUSTOMER && ($product['stock'] ?? 0) > 0): ?>
+                    <?php if (isset($_SESSION['user_id']) && $_SESSION['role_id'] == ROLE_CUSTOMER && !$isOutOfStock): ?>
                         <button class="btn btn-accent btn-sm btn-add-cart" onclick="addToCart(<?= $product['id'] ?>, 1)">
                             <i data-lucide="shopping-cart"></i> Add to Cart
                         </button>
-                    <?php elseif (isset($product['stock']) && $product['stock'] <= 0): ?>
+                    <?php elseif ($isOutOfStock): ?>
                         <button class="btn btn-sm btn-add-cart btn-out-of-stock" disabled>
-                            <i data-lucide="x-circle"></i> Out of Stock
+                            <i data-lucide="x-circle"></i> Not Available
                         </button>
                     <?php endif; ?>
                 </div>

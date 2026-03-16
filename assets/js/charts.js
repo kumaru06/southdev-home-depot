@@ -12,19 +12,19 @@
 
     /* ── Design Tokens ───────────────────────────────────── */
     var COLORS = {
-        primary     : '#0B3D91',
-        primaryRGB  : '11,61,145',
-        accent      : 'rgb(255,87,51)',
-        accentRGB   : '255,87,51',
+        primary     : '#1B2A4A',
+        primaryRGB  : '27,42,74',
+        accent      : '#F97316',
+        accentRGB   : '249,115,22',
         success     : '#2E7D32',
         info        : '#1565C0',
         warning     : '#F59E0B',
-        charcoal    : '#2C3E50',
+        charcoal    : '#1B2A4A',
         steel       : '#51606F',
         grid        : 'rgba(0,0,0,.05)',
         gridZero    : 'rgba(0,0,0,.10)',
         white       : '#ffffff',
-        palette     : ['#0B3D91','#FF5733','#2E7D32','#1565C0','#F59E0B','#51606F','#6A1B9A','#00838F']
+        palette     : ['#1B2A4A','#F97316','#2E7D32','#1565C0','#F59E0B','#51606F','#6A1B9A','#00838F']
     };
 
     var FONT = {

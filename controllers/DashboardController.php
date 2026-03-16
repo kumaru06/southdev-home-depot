@@ -30,7 +30,7 @@ class DashboardController {
     }
 
     public function index() {
-        AuthMiddleware::adminOrStaff();
+        AuthMiddleware::adminOrStaffOrInventory();
 
         // --- Stat cards ---
         $totalSales     = $this->orderModel->getTotalSales();

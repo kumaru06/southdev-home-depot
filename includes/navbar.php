@@ -80,21 +80,9 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['role_id']) && $_SESSION['rol
                         <i class="lucide-log-out"></i> Logout
                     </a>
                 </li>
-                <li>
-                    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
-                        <i data-lucide="moon" class="theme-icon-dark"></i>
-                        <i data-lucide="sun" class="theme-icon-light"></i>
-                    </button>
-                </li>
             <?php else: ?>
                 <li><a href="<?= APP_URL ?>/index.php?url=login" class="<?= $currentUrl == 'login' ? 'active' : '' ?>">Login</a></li>
                 <li><a href="<?= APP_URL ?>/index.php?url=register" class="btn btn-accent btn-sm">Register</a></li>
-                <li>
-                    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
-                        <i data-lucide="moon" class="theme-icon-dark"></i>
-                        <i data-lucide="sun" class="theme-icon-light"></i>
-                    </button>
-                </li>
             <?php endif; ?>
         </ul>
 
@@ -103,3 +91,75 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['role_id']) && $_SESSION['rol
         </button>
     </div>
 </nav>
+
+<?php if (!isset($_SESSION['user_id'])): ?>
+<!-- Login Modal Overlay (blur background like logout dialog) -->
+<div class="login-modal-overlay" id="loginModalOverlay" role="dialog" aria-modal="true" aria-label="Sign in">
+    <div class="login-modal">
+        <button type="button" class="login-modal-close" aria-label="Close" id="loginModalClose">
+            <i data-lucide="x"></i>
+        </button>
+
+        <div class="login-modal-split">
+            <?php
+                $modalImage = null;
+                $modalImageRel = 'assets/uploads/images/image.png';
+                $modalImageFull = ROOT_PATH . '/' . $modalImageRel;
+                if (file_exists($modalImageFull)) {
+                    $modalImage = APP_URL . '/' . $modalImageRel;
+                }
+            ?>
+            <div class="login-modal-media" style="--login-modal-img: <?= $modalImage ? "url('" . htmlspecialchars($modalImage) . "')" : 'none' ?>;">
+                <div class="login-modal-media-overlay"></div>
+                <div class="login-modal-media-content">
+                    <div class="login-modal-badge">Welcome back</div>
+                    <div class="login-modal-store"><?= APP_NAME ?></div>
+                    <div class="login-modal-tagline"><?= APP_TAGLINE ?></div>
+                </div>
+            </div>
+
+            <div class="login-modal-form-panel">
+                <div class="login-modal-brand">
+                    <i data-lucide="grid-3x3" class="login-modal-icon"></i>
+                    <div>
+                        <h2><?= APP_NAME ?></h2>
+                        <p>Sign in to your account</p>
+                    </div>
+                </div>
+
+                <div class="login-modal-error" id="loginModalError" style="display:none;"></div>
+
+                <form id="loginModalForm" method="POST" action="<?= APP_URL ?>/index.php?url=login">
+                    <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+
+                    <div class="form-group">
+                        <label for="loginModalEmail">Email Address</label>
+                        <div class="input-icon-wrap">
+                            <i data-lucide="mail" class="input-icon"></i>
+                            <input type="email" id="loginModalEmail" name="email" class="form-control" placeholder="you@example.com" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="loginModalPassword">Password</label>
+                        <div class="input-icon-wrap">
+                            <i data-lucide="lock" class="input-icon"></i>
+                            <input type="password" id="loginModalPassword" name="password" class="form-control" placeholder="Enter your password" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-accent btn-block" id="loginModalSubmit">
+                        <i data-lucide="log-in"></i> Sign In
+                    </button>
+                </form>
+
+                <div class="login-modal-footer">
+                    <p>Need to verify your email? <a href="<?= APP_URL ?>/index.php?url=verify-email">Resend verification</a></p>
+                    <p><a href="<?= APP_URL ?>/index.php?url=forgot-password">Forgot password?</a></p>
+                    <p><a href="<?= APP_URL ?>/index.php?url=admin-login">Continue as administrator</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>

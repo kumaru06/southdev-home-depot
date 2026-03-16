@@ -40,6 +40,30 @@ class AuthMiddleware {
     }
 
     /**
+     * Require admin, staff, or inventory role
+     */
+    public static function adminOrStaffOrInventory() {
+        self::handle();
+        if (!in_array($_SESSION['role_id'], [ROLE_STAFF, ROLE_SUPER_ADMIN, ROLE_INVENTORY])) {
+            http_response_code(403);
+            include ROOT_PATH . '/views/errors/403.php';
+            exit;
+        }
+    }
+
+    /**
+     * Require inventory in-charge role (or super admin)
+     */
+    public static function inventory() {
+        self::handle();
+        if ($_SESSION['role_id'] != ROLE_INVENTORY && $_SESSION['role_id'] != ROLE_SUPER_ADMIN) {
+            http_response_code(403);
+            include ROOT_PATH . '/views/errors/403.php';
+            exit;
+        }
+    }
+
+    /**
      * Require super admin role
      */
     public static function superAdmin() {

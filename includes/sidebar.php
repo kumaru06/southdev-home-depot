@@ -4,7 +4,7 @@
  * Dark charcoal sidebar with animated expansion and red active indicator
  */
 $currentUrl = isset($_GET['url']) ? $_GET['url'] : '';
-$roleName   = ($_SESSION['role_id'] == ROLE_SUPER_ADMIN) ? 'Super Admin' : 'Staff Admin';
+$roleName   = ($_SESSION['role_id'] == ROLE_SUPER_ADMIN) ? 'Super Admin' : (($_SESSION['role_id'] == ROLE_INVENTORY) ? 'Inventory In‑Charge' : 'Staff Admin');
 $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($_SESSION['last_name'] ?? '', 0, 1));
 ?>
 <aside class="sidebar" id="sidebar">
@@ -56,6 +56,36 @@ $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=staff/reports" class="<?= strpos($currentUrl, 'reports') !== false ? 'active' : '' ?>">
+                    <span class="nav-icon"><i class="lucide-bar-chart-3"></i></span>
+                    <span class="nav-text">Reports</span>
+                </a>
+            </li>
+        </ul>
+        <?php endif; ?>
+
+        <?php if ($_SESSION['role_id'] == ROLE_INVENTORY): ?>
+        <div class="nav-label">Inventory</div>
+        <ul class="nav-menu">
+            <li>
+                <a href="<?= APP_URL ?>/index.php?url=inventory/stock" class="<?= strpos($currentUrl, 'inventory/stock') !== false && strpos($currentUrl, 'movements') === false && strpos($currentUrl, 'price-history') === false ? 'active' : '' ?>">
+                    <span class="nav-icon"><i class="lucide-warehouse"></i></span>
+                    <span class="nav-text">Manage Stock</span>
+                </a>
+            </li>
+            <li>
+                <a href="<?= APP_URL ?>/index.php?url=inventory/stock/movements" class="<?= strpos($currentUrl, 'movements') !== false ? 'active' : '' ?>">
+                    <span class="nav-icon"><i class="lucide-activity"></i></span>
+                    <span class="nav-text">Stock Movements</span>
+                </a>
+            </li>
+            <li>
+                <a href="<?= APP_URL ?>/index.php?url=inventory/stock/price-history" class="<?= strpos($currentUrl, 'price-history') !== false ? 'active' : '' ?>">
+                    <span class="nav-icon"><i class="lucide-trending-up"></i></span>
+                    <span class="nav-text">Price History</span>
+                </a>
+            </li>
+            <li>
+                <a href="<?= APP_URL ?>/index.php?url=inventory/reports" class="<?= strpos($currentUrl, 'reports') !== false ? 'active' : '' ?>">
                     <span class="nav-icon"><i class="lucide-bar-chart-3"></i></span>
                     <span class="nav-text">Reports</span>
                 </a>
@@ -151,11 +181,6 @@ $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($
             <span class="logout-text">Logout</span>
         </a>
 
-        <button type="button" class="sidebar-theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
-            <i data-lucide="moon" class="theme-icon-dark"></i>
-            <i data-lucide="sun" class="theme-icon-light"></i>
-            <span class="theme-toggle-text">Dark Mode</span>
-        </button>
     </div>
 </aside>
 

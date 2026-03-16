@@ -63,6 +63,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
                             <select name="role_id" class="form-control" required>
                                 <option value="1">Customer</option>
                                 <option value="2">Staff</option>
+                                <option value="4">Inventory In-Charge</option>
                                 <option value="3">Super Admin</option>
                             </select>
                         </div>
@@ -113,7 +114,13 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                     </td>
                                     <td data-label="Email"><span class="user-email-text"><?= htmlspecialchars($user['email']) ?></span></td>
                                     <td data-label="Role">
-                                        <span class="badge <?= $user['role_name'] === 'super_admin' ? 'badge-processing' : ($user['role_name'] === 'staff' ? 'badge-pending' : 'badge-delivered') ?>">
+                                        <?php
+                                        $roleBadgeClass = 'badge-delivered';
+                                        if ($user['role_name'] === 'super_admin') $roleBadgeClass = 'badge-processing';
+                                        elseif ($user['role_name'] === 'staff') $roleBadgeClass = 'badge-pending';
+                                        elseif ($user['role_name'] === 'inventory_incharge') $roleBadgeClass = 'badge-pending';
+                                        ?>
+                                        <span class="badge <?= $roleBadgeClass ?>">
                                             <?= ucfirst(str_replace('_', ' ', $user['role_name'])) ?>
                                         </span>
                                     </td>
@@ -122,7 +129,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                             <?= $user['is_active'] ? 'Active' : 'Inactive' ?>
                                         </span>
                                     </td>
-                                    <td data-label="Joined"><?= date('M d, Y', strtotime($user['created_at'])) ?></td>
+                                    <td data-label="Joined" style="white-space:nowrap;"><?= date('M d, Y', strtotime($user['created_at'])) ?></td>
                                     <td data-label="Actions">
                                         <?php if ($user['id'] != $_SESSION['user_id']): ?>
                                             <div class="action-btn-group">

@@ -24,9 +24,11 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
 
 <?php require_once INCLUDES_PATH . '/navbar.php'; ?>
 
-<div class="container">
-    <div class="auth-wrapper">
-        <div class="auth-card card auth-card--split">
+<div class="auth-page-backdrop" style="--auth-bg: <?= $authImage ? "url('" . htmlspecialchars($authImage) . "')" : 'none' ?>;">
+    <div class="auth-page-blur"></div>
+    <div class="container">
+        <div class="auth-wrapper auth-wrapper--blur">
+            <div class="auth-card card auth-card--split">
             <div class="auth-split">
                 <div class="auth-media" role="img" aria-label="SouthDev Home Depot building"
                     style="--auth-image: <?= $authImage ? "url('" . htmlspecialchars($authImage) . "')" : 'none' ?>;">
@@ -80,6 +82,7 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <?php require_once INCLUDES_PATH . '/footer.php'; ?>

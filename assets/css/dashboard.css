@@ -256,33 +256,4 @@
     margin-bottom: 24px;
 }
 
-/* ========================================================
-   DARK MODE – Dashboard Overrides
-   ======================================================== */
-[data-theme="dark"] .dashboard-header h1 { color: var(--text-primary); }
-[data-theme="dark"] .chart-container { background: var(--white); border-color: var(--border); }
-[data-theme="dark"] .chart-container:hover { box-shadow: 0 8px 30px rgba(0,0,0,.3); }
-[data-theme="dark"] .chart-header {
-    border-bottom-color: var(--border);
-    background: linear-gradient(to bottom, rgba(255,255,255,.02), transparent);
-}
-[data-theme="dark"] .chart-header h3 { color: var(--text-primary); }
-[data-theme="dark"] .chart-header div { background: rgba(255,255,255,.05); }
-[data-theme="dark"] .chart-header div .btn.btn-outline { color: var(--text-muted); }
-[data-theme="dark"] .chart-header div .btn.btn-outline:hover { color: var(--text-primary); background: rgba(255,255,255,.06); }
 
-[data-theme="dark"] .recent-orders { background: var(--white); border-color: var(--border); }
-[data-theme="dark"] .recent-orders .widget-header { border-bottom-color: var(--border); }
-
-[data-theme="dark"] .activity-feed { background: var(--white); border-color: var(--border); }
-[data-theme="dark"] .activity-feed .widget-header { border-bottom-color: var(--border); }
-[data-theme="dark"] .activity-item { border-bottom-color: var(--border); }
-[data-theme="dark"] .activity-item:hover { background: rgba(255,255,255,.02); }
-
-[data-theme="dark"] .top-product-row { border-bottom-color: var(--border); }
-[data-theme="dark"] .top-product-rank { background: rgba(255,255,255,.06); }
-
-[data-theme="dark"] .low-stock-alert {
-    background: rgba(251,191,36,.08);
-    border-color: rgba(251,191,36,.15);
-}

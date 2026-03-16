@@ -36,8 +36,6 @@
             document.body.style.opacity = '1';
         });
 
-        /* ========== Dark Mode Toggle ========== */
-        initThemeToggle();
     });
 
     /* ========== Sidebar Toggle ========== */
@@ -244,6 +242,126 @@
                 if (confirm('Are you sure you want to log out?')) go();
             }
         });
+
+        /* ========== Login Modal (blur overlay like logout) ========== */
+        (function initLoginModal() {
+            var overlay = document.getElementById('loginModalOverlay');
+            if (!overlay) return; // user is logged in, no modal present
+
+            var closeBtn = document.getElementById('loginModalClose');
+            var form     = document.getElementById('loginModalForm');
+            var errorBox = document.getElementById('loginModalError');
+            var submitBtn= document.getElementById('loginModalSubmit');
+            var emailIn  = document.getElementById('loginModalEmail');
+
+            // Intercept all "Login" nav links that go to ?url=login
+            document.addEventListener('click', function (e) {
+                var link = findClosestAnchor(e.target);
+                if (!link) return;
+
+                var href = link.getAttribute('href') || '';
+                var isLogin = /\burl=login\b/.test(href) && !link.classList.contains('btn');
+                if (!isLogin) return;
+
+                e.preventDefault();
+                openLoginModal();
+            });
+
+            function openLoginModal() {
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                // Render lucide icons inside the modal
+                if (window.lucide) lucide.createIcons({ nodes: [overlay] });
+                setTimeout(function () { emailIn && emailIn.focus(); }, 100);
+            }
+
+            function closeLoginModal() {
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+                if (errorBox) { errorBox.style.display = 'none'; errorBox.textContent = ''; }
+            }
+
+            // Close button
+            if (closeBtn) closeBtn.addEventListener('click', closeLoginModal);
+
+            // Click outside modal
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) closeLoginModal();
+            });
+
+            // Escape key
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && overlay.classList.contains('active')) {
+                    closeLoginModal();
+                }
+            });
+
+            // AJAX form submission
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+
+                    var email    = form.querySelector('[name="email"]').value.trim();
+                    var password = form.querySelector('[name="password"]').value;
+                    var csrf     = form.querySelector('[name="csrf_token"]').value;
+
+                    if (!email || !password) {
+                        showLoginError('Please fill in all fields.');
+                        return;
+                    }
+
+                    // Disable button
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i data-lucide="loader" class="spin"></i> Signing in...';
+                        if (window.lucide) lucide.createIcons({ nodes: [submitBtn] });
+                    }
+
+                    var body = 'csrf_token=' + encodeURIComponent(csrf)
+                             + '&email=' + encodeURIComponent(email)
+                             + '&password=' + encodeURIComponent(password);
+
+                    fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        body: body
+                    })
+                    .then(function (res) { return res.json(); })
+                    .then(function (data) {
+                        if (data.success) {
+                            window.location.href = data.redirect;
+                        } else {
+                            showLoginError(data.message || 'Invalid email or password.');
+                            resetSubmitBtn();
+                            if (data.redirect) {
+                                setTimeout(function () { window.location.href = data.redirect; }, 1500);
+                            }
+                        }
+                    })
+                    .catch(function () {
+                        showLoginError('Something went wrong. Please try again.');
+                        resetSubmitBtn();
+                    });
+                });
+            }
+
+            function showLoginError(msg) {
+                if (!errorBox) return;
+                errorBox.textContent = msg;
+                errorBox.style.display = 'block';
+            }
+
+            function resetSubmitBtn() {
+                if (!submitBtn) return;
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i data-lucide="log-in"></i> Sign In';
+                if (window.lucide) lucide.createIcons({ nodes: [submitBtn] });
+            }
+        })();
 
         /* ========== Button Ripple Effect ========== */
         document.querySelectorAll('.btn').forEach(function (btn) {
@@ -528,35 +646,5 @@
             document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
         }
     });
-
-    /* ========== Dark Mode Toggle ========== */
-    function initThemeToggle() {
-        // Bind all toggle buttons (navbar + sidebar)
-        document.querySelectorAll('#themeToggle, .theme-toggle, .sidebar-theme-toggle').forEach(function (btn) {
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var current = document.documentElement.getAttribute('data-theme');
-                var next = current === 'dark' ? 'light' : 'dark';
-
-                // Kill all transitions so theme switch is instant
-                document.documentElement.classList.add('no-transition');
-                document.documentElement.setAttribute('data-theme', next);
-                localStorage.setItem('shd-theme', next);
-
-                // Re-enable transitions after the repaint
-                requestAnimationFrame(function () {
-                    requestAnimationFrame(function () {
-                        document.documentElement.classList.remove('no-transition');
-                    });
-                });
-
-                // Re-render Lucide icons so the toggle icons update
-                if (window.lucide && typeof window.lucide.createIcons === 'function') {
-                    setTimeout(function() { window.lucide.createIcons(); }, 50);
-                }
-            });
-        });
-    }
 
 })();

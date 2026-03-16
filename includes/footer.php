@@ -9,29 +9,27 @@
     <footer class="footer">
         <div class="container">
             <div class="footer-grid">
-                <div class="footer-col">
+                <div class="footer-col footer-brand">
                     <h4><?= APP_NAME ?></h4>
                     <p class="footer-tagline"><?= APP_TAGLINE ?></p>
-                    <p class="footer-location">
-                        <i class="lucide-map-pin"></i> <?= APP_LOCATION ?>
-                    </p>
+                    <p class="footer-desc">Your trusted partner for premium building materials, fixtures, and interior finishes. Quality you can count on.</p>
                 </div>
                 <div class="footer-col">
                     <h5>Quick Links</h5>
                     <ul>
-                        <li><a href="<?= APP_URL ?>/index.php?url=products">Shop Products</a></li>
-                        <li><a href="<?= APP_URL ?>/index.php?url=orders">My Orders</a></li>
-                        <li><a href="<?= APP_URL ?>/index.php?url=cart">Shopping Cart</a></li>
+                        <li><a href="<?= APP_URL ?>/index.php?url=products"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i> Shop Products</a></li>
+                        <li><a href="<?= APP_URL ?>/index.php?url=orders"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i> My Orders</a></li>
+                        <li><a href="<?= APP_URL ?>/index.php?url=cart"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i> Shopping Cart</a></li>
+                        <li><a href="<?= APP_URL ?>/index.php?url=profile"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i> My Profile</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
-                    <h5>Categories</h5>
-                    <ul>
-                        <li><a href="#">Hardware</a></li>
-                        <li><a href="#">Construction Materials</a></li>
-                        <li><a href="#">Tools</a></li>
-                        <li><a href="#">Plumbing</a></li>
-                        <li><a href="#">Electrical Supplies</a></li>
+                    <h5>Contact</h5>
+                    <ul class="footer-contact-list">
+                        <li><i data-lucide="map-pin" class="footer-icon"></i> <?= APP_LOCATION ?></li>
+                        <li><i data-lucide="phone" class="footer-icon"></i> +63 (939) 939 8250</li>
+                        <li><i data-lucide="mail" class="footer-icon"></i> southdevhomedepo2020@gmail.com</li>
+                        <li><i data-lucide="clock" class="footer-icon"></i> Mon–Sat: 8:00 AM – 5:00 PM</li>
                     </ul>
                 </div>
             </div>

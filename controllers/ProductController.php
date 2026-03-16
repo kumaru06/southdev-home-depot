@@ -7,18 +7,26 @@ require_once __DIR__ . '/../models/Product.php';
 require_once __DIR__ . '/../models/Category.php';
 require_once __DIR__ . '/../models/Inventory.php';
 require_once __DIR__ . '/../models/Log.php';
+require_once __DIR__ . '/../models/PriceHistory.php';
+require_once __DIR__ . '/../models/StockMovement.php';
+require_once __DIR__ . '/../models/PriceHistory.php';
+require_once __DIR__ . '/../models/StockMovement.php';
 
 class ProductController {
     private $productModel;
     private $categoryModel;
     private $logModel;
+    private $priceHistoryModel;
+    private $stockMovementModel;
     private $pdo;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
-        $this->productModel  = new Product($pdo);
-        $this->categoryModel = new Category($pdo);
-        $this->logModel      = new Log($pdo);
+        $this->productModel      = new Product($pdo);
+        $this->categoryModel     = new Category($pdo);
+        $this->logModel          = new Log($pdo);
+        $this->priceHistoryModel = new PriceHistory($pdo);
+        $this->stockMovementModel = new StockMovement($pdo);
     }
 
     public function index() {
@@ -91,8 +99,15 @@ class ProductController {
 
         $productId = $this->productModel->create($data);
         if ($productId) {
+            $initialQty = intval($_POST['quantity'] ?? 0);
             $inv = new Inventory($this->pdo);
-            $inv->updateQuantity($productId, intval($_POST['quantity'] ?? 0));
+            $inv->updateQuantity($productId, $initialQty);
+
+            // Record initial stock movement
+            if ($initialQty > 0) {
+                $this->stockMovementModel->record($productId, 'initial', $initialQty, null, 'Initial stock on product creation', $_SESSION['user_id']);
+            }
+
             $this->logModel->create(LOG_PRODUCT_CREATE, "Product created: {$data['name']} (ID #{$productId})");
             flash('success', 'Product created successfully.');
         } else {
@@ -135,11 +150,33 @@ class ProductController {
             exit;
         }
 
+        // Track price change before updating
+        $existingProduct = $this->productModel->findById($id);
+        $oldPrice = floatval($existingProduct['price'] ?? 0);
+        $newPrice = $data['price'];
+
         $this->productModel->update($id, $data);
+
+        // Record price history if price changed
+        if (abs($oldPrice - $newPrice) > 0.001) {
+            $reason = trim($_POST['price_change_reason'] ?? 'Price updated via product edit');
+            $this->priceHistoryModel->record($id, $oldPrice, $newPrice, $_SESSION['user_id'], $reason);
+            $this->logModel->create(LOG_PRICE_UPDATE, "Price updated for {$data['name']} (ID #{$id}): ₱" . number_format($oldPrice, 2) . " → ₱" . number_format($newPrice, 2));
+        }
 
         if (isset($_POST['quantity'])) {
             $inv = new Inventory($this->pdo);
-            $inv->updateQuantity($id, intval($_POST['quantity']));
+            $oldQty = intval($existingProduct['stock'] ?? 0);
+            $newQty = intval($_POST['quantity']);
+            $inv->updateQuantity($id, $newQty);
+
+            // Record stock movement if quantity changed
+            $diff = $newQty - $oldQty;
+            if ($diff != 0) {
+                $type = ($diff > 0) ? 'adjustment' : 'adjustment';
+                $this->stockMovementModel->record($id, $type, $diff, null, 'Stock adjusted via product edit', $_SESSION['user_id']);
+                $this->logModel->create(LOG_STOCK_MOVEMENT, "Stock adjusted for {$data['name']} (ID #{$id}): {$oldQty} → {$newQty}");
+            }
         }
 
         $this->logModel->create(LOG_PRODUCT_UPDATE, "Product updated: {$data['name']} (ID #{$id})");

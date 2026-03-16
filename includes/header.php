@@ -5,21 +5,13 @@
  */
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
     <meta name="description" content="<?= APP_TAGLINE ?>">
     <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle) . ' – ' : '' ?><?= APP_NAME ?></title>
-
-    <!-- Prevent flash: apply saved theme before any paint -->
-    <script>
-        (function(){
-            var t = localStorage.getItem('shd-theme') || 'light';
-            document.documentElement.setAttribute('data-theme', t);
-        })();
-    </script>
 
     <!-- Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -49,8 +41,8 @@
 <body>
 
 <!-- Loading Overlay -->
-<div id="loading-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(28,28,28,.7);align-items:center;justify-content:center;">
-    <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:#C62828;border-radius:50%;animation:spin .6s linear infinite;"></div>
+<div id="loading-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(27,42,74,.55);align-items:center;justify-content:center;">
+    <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:#F97316;border-radius:50%;animation:spin .6s linear infinite;"></div>
     <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 </div>
 
