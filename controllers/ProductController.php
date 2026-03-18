@@ -44,6 +44,24 @@ class ProductController {
         require_once VIEWS_PATH . '/customer/products.php';
     }
 
+    /**
+     * Alternate products layout used by the main Products link (simpler hero-less grid)
+     */
+    public function alt() {
+        $categoryId = $_GET['category'] ?? null;
+        $page       = max(1, intval($_GET['page'] ?? 1));
+        $offset     = ($page - 1) * ITEMS_PER_PAGE;
+
+        $products      = $this->productModel->getAll($categoryId, ITEMS_PER_PAGE, $offset);
+        $categories    = $this->categoryModel->getAll();
+        $totalProducts = $this->productModel->count($categoryId);
+        $totalPages    = ceil($totalProducts / ITEMS_PER_PAGE);
+
+        $pageTitle = 'Products';
+        $extraCss  = ['customer.css'];
+        require_once VIEWS_PATH . '/customer/products_alt.php';
+    }
+
     public function show($id) {
         $product = $this->productModel->findById($id);
         if (!$product) {

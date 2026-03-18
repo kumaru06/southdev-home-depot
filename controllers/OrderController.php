@@ -46,7 +46,6 @@ class OrderController {
         return $selected;
     }
 
-    /* ===== Customer: My Orders ===== */
     public function index() {
         AuthMiddleware::handle();
         $pageTitle = 'My Orders';

@@ -104,7 +104,7 @@
     width: 100% !important;
 }
 
-/* ---------- Recent Orders Widget ---------- */
+/* ---------- Profile Widget (formerly Recent Orders) ---------- */
 .recent-orders {
     background: var(--white);
     border-radius: var(--radius-md);

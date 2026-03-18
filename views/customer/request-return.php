@@ -6,7 +6,7 @@ require_once INCLUDES_PATH . '/navbar.php';
 
 <div class="container">
     <nav class="breadcrumb">
-        <a href="<?= APP_URL ?>/index.php?url=orders">My Orders</a>
+        <a href="<?= APP_URL ?>/index.php?url=orders">Profile</a>
         <i class="lucide-chevron-right"></i>
         <a href="<?= APP_URL ?>/index.php?url=orders/<?= $order['id'] ?>"><?= htmlspecialchars($order['order_number']) ?></a>
         <i class="lucide-chevron-right"></i>

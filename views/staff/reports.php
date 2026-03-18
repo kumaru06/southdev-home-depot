@@ -153,10 +153,11 @@ $activeTab = $_GET['tab'] ?? 'sales';
                                 <td><span class="badge badge-pending"><?= ucfirst($s['type']) ?></span></td>
                                 <td><?= $s['movement_count'] ?></td>
                                 <td>
-                                    <?php if ($s['total_quantity'] > 0): ?>
-                                        <span style="color:var(--success);font-weight:600;">+<?= $s['total_quantity'] ?></span>
+                                    <?php $totalQty = isset($s['total_quantity']) ? (int)$s['total_quantity'] : 0; ?>
+                                    <?php if ($totalQty > 0): ?>
+                                        <span style="color:var(--success);font-weight:600;">+<?= $totalQty ?></span>
                                     <?php else: ?>
-                                        <span style="color:var(--danger);font-weight:600;"><?= $s['total_quantity'] ?></span>
+                                        <span style="color:var(--danger);font-weight:600;"><?= $totalQty ?></span>
                                     <?php endif; ?>
                                 </td>
                             </tr>

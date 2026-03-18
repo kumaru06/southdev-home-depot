@@ -39,14 +39,16 @@ require_once INCLUDES_PATH . '/navbar.php';
             <!-- Featured Tiles Banner -->
             <!-- Hero / Intro (uses image.png) -->
             <section class="products-hero" style="background-image: url('<?= APP_URL ?>/assets/uploads/images/image.png'); background-size: cover; background-position: center;">
-                <div style="max-width:1100px;margin:0 auto;padding:3.5rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:2rem;width:100%;">
-                    <div style="flex:1;max-width:600px;">
+                <div class="hero-banner-content" style="padding:3.5rem 2rem;">
+                    <div class="hero-text">
                         <span class="hero-badge"><span style="color:var(--accent);font-size:10px;">&#9632;</span> PREMIUM BUILDING MATERIALS</span>
-                        <h1>Build Your<br><span class="accent-text">Dream Space</span><br>With Us</h1>
-                        <p style="margin:0 0 1.5rem;">From flooring to structural materials, bathroom fixtures to interior finishes — everything you need to create stunning spaces, all in one place.</p>
-                        <button class="btn btn-accent btn-lg btn-explore" style="padding:.75rem 2rem;font-size:.95rem;border-radius:999px;display:inline-flex;align-items:center;gap:8px;">
-                            Explore Products <i data-lucide="arrow-right" style="width:16px;height:16px"></i>
-                        </button>
+                        <h1 class="hero-title">Build Your<br><span class="accent-text">Dream Space</span><br>With Us</h1>
+                        <p class="hero-subtitle">From flooring to structural materials, bathroom fixtures to interior finishes — everything you need to create stunning spaces, all in one place.</p>
+                        <div class="hero-actions">
+                            <button class="btn btn-accent btn-lg btn-explore" style="border-radius:999px;">
+                                Explore Products <i data-lucide="arrow-right" style="width:16px;height:16px"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -67,17 +69,10 @@ require_once INCLUDES_PATH . '/navbar.php';
                 </div>
             </div>
 
-            <div class="storefront-toolbar">
-                <form action="<?= APP_URL ?>/index.php" method="GET" class="search-form storefront-search">
-                    <input type="hidden" name="url" value="products/search">
-                    <div class="input-icon-wrap">
-                        <i data-lucide="search" class="input-icon"></i>
-                        <input type="text" name="q" class="form-control" placeholder="Search for items, brands, materials…" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
-                    </div>
-                    <button type="submit" class="btn btn-accent">Search</button>
-                </form>
-            </div>
+            <!-- Search moved to topbar; storefront toolbar removed to avoid duplication -->
 
+            <?php // Render the products section for any route that begins with 'products' (includes search and subpaths) ?>
+            <?php if ((isset($_GET['url']) && strpos($_GET['url'], 'products') === 0) || (isset($currentUrl) && strpos($currentUrl, 'products') === 0)): ?>
             <!-- Section heading -->
             <div class="section-heading">
                 <span class="section-badge"><i data-lucide="package" style="width:13px;height:13px;"></i> OUR PRODUCTS</span>
@@ -168,6 +163,9 @@ require_once INCLUDES_PATH . '/navbar.php';
             <p>Try adjusting your search or browse a different category.</p>
             <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-accent">View All Products</a>
         </div>
+            <?php endif; ?>
+
+            <?php // Close the conditional that only renders this section when URL is 'products' ?>
             <?php endif; ?>
         </main>
     </div>

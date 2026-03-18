@@ -275,6 +275,12 @@
                 setTimeout(function () { emailIn && emailIn.focus(); }, 100);
             }
 
+            // Auto-open modal when page loads with ?url=login or ?login_modal=1 (used after logout)
+            if (overlay && (/\burl=login\b/.test(window.location.search) || /\blogin_modal=1\b/.test(window.location.search))) {
+                // small timeout to allow page render and icons to initialize
+                setTimeout(openLoginModal, 60);
+            }
+
             function closeLoginModal() {
                 overlay.classList.remove('active');
                 document.body.style.overflow = '';

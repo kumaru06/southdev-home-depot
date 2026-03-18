@@ -132,7 +132,8 @@ switch ($urlParts[0]) {
                 $controller->show($urlParts[1]);
             }
         } else {
-            $controller->index();
+            // Serve the alternate products layout when clicking the main Products link
+            $controller->alt();
         }
         break;
 
@@ -513,8 +514,10 @@ switch ($urlParts[0]) {
      * HOME / DEFAULT
      * ============================================================= */
     case '':
-        // Make the products listing the main public entry page for all visitors
-        header('Location: ' . APP_URL . '/index.php?url=products');
+        // Serve the public homepage (customer dashboard view used as public landing)
+        $pageTitle = 'Home';
+        $extraCss  = ['customer.css'];
+        require_once VIEWS_PATH . '/customer/dashboard.php';
         exit;
         break;
 

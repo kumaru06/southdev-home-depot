@@ -641,7 +641,8 @@ class AuthController {
         session_destroy();
         session_start();
         flash('success', 'You have been logged out.');
-        header('Location: ' . APP_URL . '/index.php?url=login');
+        // Redirect back and trigger the login modal on the landing page
+        header('Location: ' . APP_URL . '/index.php?login_modal=1');
         exit;
     }
 }

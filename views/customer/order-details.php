@@ -21,7 +21,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
 <div class="container">
     <!-- Breadcrumb -->
     <nav class="breadcrumb">
-        <a href="<?= APP_URL ?>/index.php?url=orders">My Orders</a>
+        <a href="<?= APP_URL ?>/index.php?url=orders">Profile</a>
         <i data-lucide="chevron-right"></i>
         <span><?= htmlspecialchars($order['order_number']) ?></span>
     </nav>

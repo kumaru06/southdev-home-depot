@@ -29,7 +29,8 @@ require_once INCLUDES_PATH . '/sidebar.php';
                 </div>
                 <div class="stat-icon">
                     <span style="font-size:.85rem;color:var(--text-secondary);">
-                        Total: <?= $s['total_quantity'] > 0 ? '+' : '' ?><?= $s['total_quantity'] ?> units
+                        <?php $totalQty = isset($s['total_quantity']) ? (int)$s['total_quantity'] : 0; ?>
+                        Total: <?= $totalQty > 0 ? '+' : '' ?><?= $totalQty ?> units
                     </span>
                 </div>
             </div>

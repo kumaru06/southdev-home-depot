@@ -11,17 +11,23 @@ These accounts are created in your local MySQL database (`southdev`) for testing
 ### Customer
 - **Email**: `customer@southdev.com`
 - **Password**: `Customer@2026!`
-- **Role**: customer (`role_id = 1`)
+- **Role**: customer 
 
 ### Staff Admin
 - **Email**: `staff@southdev.com`
 - **Password**: `Staff@2026!`
-- **Role**: staff (`role_id = 2`)
+- **Role**: staff 
 
 ### Super Admin
 - **Email**: `admin@southdev.com`
 - **Password**: `SuperAdmin@2026!`
-- **Role**: super_admin (`role_id = 3`)
+- **Role**: super_admin
+
+### Inventory In-charge
+- **Email**: `inventory@demo.local`
+- **Password**: `Demo@1234`
+- **Role**: inventory in-charge
+
 
 ## Reset a password (bcrypt)
 Generate a bcrypt hash:

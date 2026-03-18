@@ -104,7 +104,9 @@ h4 { font-size: 16px; }
 
 p { color: var(--text-secondary); }
 
-::selection { background: var(--accent); color: var(--white); }
+/* Use system default selection colors so selection looks native
+    'Highlight' and 'HighlightText' map to the OS/browser default colors */
+::selection { background: Highlight; color: HighlightText; }
 
 /* Page fade-in transition */
 @keyframes pageFadeIn {
@@ -128,12 +130,13 @@ p { color: var(--text-secondary); }
     background: #fff;
     border-bottom: 1px solid var(--border);
     box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    margin-bottom: 18px;
 }
 .navbar .container {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 64px;
+    min-height: 72px;
     gap: 16px;
 }
 .logo {
@@ -269,17 +272,149 @@ p { color: var(--text-secondary); }
 }
     /* removed internal .lucide-menu fallback to avoid doubled/offset lines; use .mobile-toggle::before only */
 
-    /* Strong fallback: draw three dark lines if the icon isn't rendered */
-    .mobile-toggle::before {
-        content: '';
-        display: block;
-        width: 20px;
-        height: 2px;
-        background: currentColor;
-        border-radius: 2px;
-        margin: 0 auto;
-        box-shadow: 0 -6px 0 currentColor, 0 6px 0 currentColor;
+    /* Remove manual ::before fallback to avoid duplicate hamburger icons when SVG/icon font is present */
+    .mobile-toggle::before { display: none; }
+
+    /* Ensure icon inside the button is visible and correctly sized/colored */
+    .mobile-toggle i,
+    .mobile-toggle svg { width: 20px; height: 20px; display: inline-block; vertical-align: middle; color: inherit; }
+
+    /* Two-row header: topbar (brand red) + main nav (light) */
+    :root { --brand-red: #b71c1c; }
+    .site-header .topbar {
+        background: var(--brand-red);
+        color: #fff;
+        padding: 8px 0;
     }
+    .topbar-inner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    /* Make topbar layout resilient at very wide or narrow viewports
+       Ensure search can shrink and auth links won't disappear */
+    .topbar-inner { flex-wrap: nowrap; align-items: center; }
+    .brand { flex: 0 0 auto; }
+    .search-inline { margin-left: auto; display:flex; align-items:center; gap:8px; flex: 1 1 420px; min-width: 140px; max-width: 720px; }
+    .search-inline .form-control { flex: 1 1 auto; min-width: 120px; max-width: 100%; }
+    .auth-links { margin-left:12px; display:flex; gap:10px; align-items:center; flex: 0 0 auto; }
+    .brand { display:flex; align-items:center; gap:10px; color:#fff; font-weight:800; }
+    .brand .logo-icon { width:36px; height:36px; border-radius:6px; overflow:hidden; display:inline-flex; align-items:center; justify-content:center; background:rgba(255,255,255,.06); }
+    .brand .logo-icon img { width:100%; height:100%; object-fit:cover; display:block; }
+    .brand .logo-text { font-size:18px; letter-spacing:0.6px; }
+    .search-inline { margin-left:auto; display:flex; align-items:center; gap:8px; }
+    .search-inline .form-control { padding:8px 10px; border-radius:3px; min-width:260px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); color:#fff; }
+    .search-inline .form-control::placeholder { color: rgba(255,255,255,.8); }
+    .search-inline .btn { padding:8px 10px; }
+    .auth-links { margin-left:12px; display:flex; gap:10px; align-items:center; }
+    .auth-links a { color:#fff; text-transform:uppercase; font-weight:700; font-size:13px; }
+    .auth-links .btn-outline { background: transparent; border:1px solid rgba(255,255,255,.12); color:#fff; }
+
+    .main-nav { background: #f6f6f6; border-bottom: 1px solid rgba(0,0,0,.06); border-top: 1px solid rgba(0,0,0,.03); }
+    .main-menu { display:flex; justify-content:center; gap:36px; padding:12px 0; list-style:none; margin:0; align-items:center; }
+    .main-menu li { display:inline; }
+    .main-menu a { color:#222; text-transform:uppercase; font-weight:700; padding:6px 4px; letter-spacing:.6px; font-size:13px; }
+    .main-menu a .caret { font-size:12px; margin-left:6px; opacity:.7; }
+
+    /* Products dropdown submenu */
+    .menu-has-dropdown { position: relative; }
+    .menu-has-dropdown .submenu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: #fff;
+        border: 1px solid rgba(0,0,0,.08);
+        box-shadow: 0 10px 30px rgba(0,0,0,.08);
+        min-width: 240px;
+        z-index: 120;
+        display: none;
+    }
+    .menu-has-dropdown .submenu ul { list-style:none; margin:0; padding:8px 0; }
+    .menu-has-dropdown .submenu li { padding:0; }
+    .menu-has-dropdown .submenu a { display:block; padding:10px 18px; color:#111; font-weight:700; text-transform:none; }
+    .menu-has-dropdown .submenu a:hover { background: #f6f7f9; }
+    .menu-has-dropdown .submenu .submenu-header { padding:8px 14px; color:#666; font-size:12px; text-transform:uppercase; font-weight:800; }
+    .menu-has-dropdown:focus-within .submenu,
+    .menu-has-dropdown:hover .submenu { display:block; }
+
+    @media (max-width: 900px) {
+        .menu-has-dropdown .submenu { position: static; box-shadow: none; border: none; display: none; }
+        .menu-has-dropdown.open .submenu { display:block; }
+    }
+
+    @media (max-width: 900px) {
+        .search-inline .form-control { min-width: 160px; }
+        .main-menu { gap: 18px; padding:10px 0; }
+    }
+
+    @media (max-width: 680px) {
+        .search-inline { display:none; }
+        .auth-links .nav-cart { display:none; }
+        .main-menu { flex-wrap:wrap; gap:12px; justify-content:flex-start; }
+        /* Mobile menu behaviour (animated) */
+        .main-nav {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height .42s cubic-bezier(.2,.9,.2,1), opacity .32s ease;
+            background: transparent;
+        }
+        .site-header.mobile-open .main-nav {
+            max-height: 1000px;
+            opacity: 1;
+            background:#fff;
+            border-top: 1px solid rgba(0,0,0,.04);
+        }
+        .site-header .main-nav .container { padding: 12px 18px; }
+        .main-menu { display:block; }
+        .main-menu li { display:block; border-bottom:1px solid rgba(0,0,0,.04); }
+        .main-menu a { display:block; padding:14px 6px; font-weight:800; color:#222; }
+        .mobile-search { display:block; margin-bottom:12px; }
+        .mobile-search .form-control { padding:10px 12px; }
+        .menu-has-dropdown .submenu { display:none; position:static; box-shadow:none; border:none; background:transparent; }
+        .menu-has-dropdown.open .submenu { display:block; }
+    }
+
+    /* Mobile-specific tweaks */
+    .mobile-only { display:none; }
+    @media (max-width: 680px) {
+        .topbar .auth-links { display:none; }
+        .mobile-only { display:block; }
+        .topbar { padding-bottom: 8px; }
+        .mobile-search .form-control { background: #fff; color:#222; border:1px solid rgba(0,0,0,.06); min-width:100%; }
+        .mobile-search { padding: 10px 0; }
+        /* Make hero full-bleed and remove border radius on small screens */
+        .products-hero {
+            border-radius: 0 !important;
+            margin-left: calc(-1 * var(--container-padding, 24px));
+            margin-right: calc(-1 * var(--container-padding, 24px));
+            overflow: hidden;
+        }
+        /* fallback if variable not available */
+        .products-hero { margin-left: -24px; margin-right: -24px; }
+    }
+
+/* Mobile toggle animation */
+.mobile-toggle { transition: transform .22s ease, background-color .22s ease, border-color .22s ease; }
+.mobile-toggle i, .mobile-toggle svg { transition: transform .32s cubic-bezier(.2,.9,.2,1), opacity .2s ease; }
+.mobile-toggle.open { transform: scale(.96); background: rgba(255,255,255,.08); }
+.mobile-toggle.open i, .mobile-toggle.open svg { transform: rotate(90deg) scale(1.05); }
+
+/* Menu items default state (visible on desktop) */
+.main-menu li { transform: none; opacity: 1; transition: transform .32s cubic-bezier(.2,.9,.2,1), opacity .28s ease; }
+
+/* Entrance animation only for mobile expanded menu */
+@media (max-width: 680px) {
+    .main-menu li { transform: translateY(-6px); opacity: 0; }
+    .site-header.mobile-open .main-menu li { transform: translateY(0); opacity: 1; }
+    .site-header.mobile-open .main-menu li:nth-child(1) { transition-delay: 0.04s; }
+    .site-header.mobile-open .main-menu li:nth-child(2) { transition-delay: 0.06s; }
+    .site-header.mobile-open .main-menu li:nth-child(3) { transition-delay: 0.08s; }
+    .site-header.mobile-open .main-menu li:nth-child(4) { transition-delay: 0.10s; }
+    .site-header.mobile-open .main-menu li:nth-child(5) { transition-delay: 0.12s; }
+    .site-header.mobile-open .main-menu li:nth-child(6) { transition-delay: 0.14s; }
+    .site-header.mobile-open .main-menu li:nth-child(7) { transition-delay: 0.16s; }
+}
 
 /* ---------- Footer ---------- */
 .footer {

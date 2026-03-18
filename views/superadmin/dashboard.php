@@ -99,7 +99,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
         <div class="dashboard-grid-2">
             <div class="card">
                 <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-                    <h3 style="margin:0;font-size:1rem;font-weight:600;">Recent Orders</h3>
+                    <h3 style="margin:0;font-size:1rem;font-weight:600;">Profile</h3>
                     <a href="<?= APP_URL ?>/index.php?url=admin/orders" class="btn btn-sm" style="font-size:.8rem;">View All</a>
                 </div>
                 <div class="data-table-wrap">

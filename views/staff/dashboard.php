@@ -87,7 +87,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
         <div class="dashboard-grid-2">
             <!-- Recent Orders -->
             <div class="card">
-                <h3><i data-lucide="package"></i> Recent Orders</h3>
+                <h3><i data-lucide="package"></i> Profile</h3>
                 <?php if (!empty($recentOrders)): ?>
                     <div class="data-table-wrap">
                         <table class="data-table">

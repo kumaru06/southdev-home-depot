@@ -55,6 +55,10 @@
     /* Navbar responsive */
     .navbar .nav-links { display: none; }
     .navbar .mobile-toggle { display: flex; }
+    /* Also support site-header mobile toggle (two-row header) */
+    .site-header .topbar-inner { position: relative; }
+    .site-header .mobile-toggle { display: flex; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); z-index: 120; background: transparent; border-color: rgba(255,255,255,.18); color: #fff; }
+    .site-header .mobile-toggle i { color: #fff; }
     .navbar .nav-links.mobile-open {
         display: flex;
         flex-direction: column;

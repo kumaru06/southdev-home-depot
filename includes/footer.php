@@ -18,7 +18,7 @@
                     <h5>Quick Links</h5>
                     <ul>
                         <li><a href="<?= APP_URL ?>/index.php?url=products"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i> Shop Products</a></li>
-                        <li><a href="<?= APP_URL ?>/index.php?url=orders"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i> My Orders</a></li>
+                        <li><a href="<?= APP_URL ?>/index.php?url=orders"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i> Profile</a></li>
                         <li><a href="<?= APP_URL ?>/index.php?url=cart"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i> Shopping Cart</a></li>
                         <li><a href="<?= APP_URL ?>/index.php?url=profile"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i> My Profile</a></li>
                     </ul>

@@ -76,7 +76,7 @@ if ($orderId) {
                 </a>
             <?php endif; ?>
             <a href="<?= APP_URL ?>/index.php?url=orders" class="btn btn-outline btn-block">
-                <i data-lucide="list" style="width:16px;height:16px;"></i> My Orders
+                <i data-lucide="list" style="width:16px;height:16px;"></i> Profile
             </a>
         </div>
     </div>
