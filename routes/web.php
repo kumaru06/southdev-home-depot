@@ -386,6 +386,8 @@ switch ($urlParts[0]) {
                     $controller = new ProductController($pdo);
                     if (isset($urlParts[2]) && $urlParts[2] === 'create') {
                         $controller->create();
+                    } elseif (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'edit') {
+                        $controller->edit($urlParts[2]);
                     } elseif (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'update') {
                         $controller->update($urlParts[2]);
                     } elseif (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'delete') {

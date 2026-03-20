@@ -101,7 +101,7 @@ class ProductController {
         if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
             $allowed = ['image/jpeg','image/png','image/webp'];
             if (in_array($_FILES['image']['type'], $allowed)) {
-                $fileName   = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($_FILES['image']['name']));
+                $fileName   = time() . '_' . uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($_FILES['image']['name']));
                 $targetPath = UPLOADS_PATH . '/' . $fileName;
                 if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
                     $data['image'] = $fileName;
@@ -136,10 +136,26 @@ class ProductController {
         exit;
     }
 
+    public function edit($id) {
+        AuthMiddleware::superAdmin();
+        $product = $this->productModel->findById($id);
+        if (!$product) {
+            require_once VIEWS_PATH . '/errors/404.php';
+            return;
+        }
+        $categories = $this->categoryModel->getAll();
+        $pageTitle  = 'Edit Product';
+        $isAdmin    = true;
+        $extraCss   = ['admin.css'];
+        require_once VIEWS_PATH . '/superadmin/edit-product.php';
+    }
+
     public function update($id) {
         AuthMiddleware::superAdmin();
         AuthMiddleware::csrf();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
         $sku = trim($_POST['sku'] ?? '');
         $data = [
@@ -154,7 +170,7 @@ class ProductController {
         if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
             $allowed = ['image/jpeg','image/png','image/webp'];
             if (in_array($_FILES['image']['type'], $allowed)) {
-                $fileName   = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($_FILES['image']['name']));
+                $fileName   = time() . '_' . uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($_FILES['image']['name']));
                 $targetPath = UPLOADS_PATH . '/' . $fileName;
                 if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
                     $data['image'] = $fileName;
@@ -198,6 +214,18 @@ class ProductController {
         }
 
         $this->logModel->create(LOG_PRODUCT_UPDATE, "Product updated: {$data['name']} (ID #{$id})");
+        if ($isAjax) {
+            // Return JSON for AJAX callers (avoid consuming server-side flash so frontend can show notification)
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => 'Product updated successfully.',
+                'image'   => $data['image'] ?? null,
+                'id'      => $id,
+            ]);
+            exit;
+        }
+
         flash('success', 'Product updated successfully.');
         header('Location: ' . APP_URL . '/index.php?url=admin/products');
         exit;

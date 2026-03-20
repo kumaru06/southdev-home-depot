@@ -53,7 +53,9 @@ try {
             <form action="<?= APP_URL ?>/index.php" method="GET" class="search-inline" role="search">
                 <input type="hidden" name="url" value="products/search">
                 <input type="text" name="q" class="form-control" placeholder="Looking for tiles?" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
-                <button type="submit" class="btn btn-primary"><i data-lucide="search"></i></button>
+                <span class="btn btn-primary search-icon" aria-hidden="true" style="pointer-events:none;">
+                    <i data-lucide="search"></i>
+                </span>
             </form>
 
             <div class="auth-links">
