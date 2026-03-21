@@ -112,18 +112,20 @@ try {
                     </div>
                 </li>
                 <li><a href="#">Styles &amp; Ideas <span class="caret">▾</span></a></li>
-                <li><a href="#">Locations</a></li>
+                <li><a href="<?= APP_URL ?>/index.php?url=locations">Locations</a></li>
                 <li><a href="#">Contact Us <span class="caret">▾</span></a></li>
-                	<li class="menu-has-dropdown">
-                    <a href="<?= APP_URL ?>/index.php?url=profile">PROFILE <span class="caret">▾</span></a>
-                    <div class="submenu">
-                        <ul>
-                            <li><a href="<?= APP_URL ?>/index.php?url=profile">Account</a></li>
-                            <li><a href="<?= APP_URL ?>/index.php?url=orders">My Orders</a></li>
-                            <li><a href="<?= APP_URL ?>/index.php?url=logout">Logout</a></li>
-                        </ul>
-                    </div>
-                	</li>
+                    <?php if (isset($_SESSION['user_id']) && isset($_SESSION['role_id']) && $_SESSION['role_id'] === ROLE_CUSTOMER): ?>
+                        <li class="menu-has-dropdown">
+                            <a href="<?= APP_URL ?>/index.php?url=profile">PROFILE <span class="caret">▾</span></a>
+                            <div class="submenu">
+                                <ul>
+                                    <li><a href="<?= APP_URL ?>/index.php?url=profile">Account</a></li>
+                                    <li><a href="<?= APP_URL ?>/index.php?url=orders">My Orders</a></li>
+                                    <li><a href="<?= APP_URL ?>/index.php?url=logout">Logout</a></li>
+                                </ul>
+                            </div>
+                        </li>
+                    <?php endif; ?>
                 <!-- mobile-only auth links removed to avoid duplicate topbar links -->
             </ul>
         </div>
@@ -161,6 +163,33 @@ try {
             });
 
             
+        });
+        </script>
+        <script>
+        // Server-side flag for logged-in state (used by client logic below)
+        window.appLoggedIn = <?= isset($_SESSION['user_id']) ? 'true' : 'false' ?>;
+
+        // If the URL contains `login_modal` but the user is already logged in,
+        // remove the query param and hide/remove the modal overlay so the
+        // page shows account content instead of the sign-in dialog.
+        document.addEventListener('DOMContentLoaded', function(){
+            try {
+                var params = new URLSearchParams(window.location.search);
+                if (params.has('login_modal') && window.appLoggedIn) {
+                    params.delete('login_modal');
+                    var newQs = params.toString();
+                    var newUrl = window.location.pathname + (newQs ? '?' + newQs : '');
+                    history.replaceState(null, '', newUrl + window.location.hash);
+
+                    var overlay = document.getElementById('loginModalOverlay');
+                    if (overlay) {
+                        overlay.style.display = 'none';
+                        overlay.remove();
+                    }
+                }
+            } catch (e) {
+                // non-fatal: ignore older browsers
+            }
         });
         </script>
     </nav>

@@ -138,6 +138,15 @@ switch ($urlParts[0]) {
         break;
 
     /* ================================================================
+     * LOCATIONS
+     * Simple public page showing store locations with an embedded map
+     * ============================================================= */
+    case 'locations':
+        $pageTitle = 'Locations';
+        require_once VIEWS_PATH . '/customer/locations.php';
+        break;
+
+    /* ================================================================
      * CART
      * ============================================================= */
     case 'cart':

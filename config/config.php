@@ -14,6 +14,14 @@ define('APP_TAGLINE', 'Davao City\'s Premier Tiles & Construction Supply');
 define('APP_URL', 'http://localhost/southdev-home-depot');
 define('APP_VERSION', '1.0.0');
 define('APP_LOCATION', 'Davao City, Philippines');
+// Optional: default coordinates for the main store location. If empty,
+// the Locations page will attempt to geocode `APP_LOCATION` at runtime.
+define('APP_MAP_LAT', getenv('APP_MAP_LAT') ?: '');
+define('APP_MAP_LNG', getenv('APP_MAP_LNG') ?: '');
+// Optional: Google Maps JavaScript API key. If set, the Locations page will
+// use Google Maps for the interactive map and geocoding. Obtain a key from
+// https://console.cloud.google.com/apis/credentials and enable Maps JavaScript API.
+define('APP_GOOGLE_MAPS_API_KEY', getenv('APP_GOOGLE_MAPS_API_KEY') ?: '');
 
 // PayMongo Configuration
 // Get keys from: https://dashboard.paymongo.com/settings/api-keys
