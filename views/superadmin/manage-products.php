@@ -86,7 +86,15 @@ require_once INCLUDES_PATH . '/sidebar.php';
                     <i data-lucide="package" style="width:20px;height:20px;color:var(--accent);"></i>
                     <h3 style="margin:0; font-size:1.05rem; font-weight:600;">All Products</h3>
                 </div>
-                <span class="badge badge-pending" style="font-size:.8rem;"><?= count($products ?? []) ?> items</span>
+                <div style="display:flex; align-items:center; gap:.75rem;">
+                    <select id="adminCategoryFilter" class="form-control" style="min-width:180px;padding:.45rem;border-radius:6px;border:1px solid var(--border);background:var(--surface);">
+                        <option value="">All Categories</option>
+                        <?php if (!empty($categories)): foreach ($categories as $cat): ?>
+                            <option value="<?= htmlspecialchars($cat['name'], ENT_QUOTES) ?>"><?= htmlspecialchars($cat['name']) ?></option>
+                        <?php endforeach; endif; ?>
+                    </select>
+                    <span class="badge badge-pending" style="font-size:.8rem;"><?= count($products ?? []) ?> items</span>
+                </div>
             </div>
             <div class="data-table-wrap">
                 <table class="data-table">
@@ -446,5 +454,23 @@ document.head.appendChild(cropperScript);
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    var sel = document.getElementById('adminCategoryFilter');
+    if(!sel) return;
+    sel.addEventListener('change', function(){
+        var v = this.value.trim().toLowerCase();
+        var rows = document.querySelectorAll('.data-table tbody tr');
+        rows.forEach(function(r){
+            var catTd = r.querySelector('td[data-label="Category"]');
+            if(!catTd) return;
+            var text = catTd.textContent.trim().toLowerCase();
+            // show row when filter empty or matches exactly
+            r.style.display = (v === '' || text === v) ? '' : 'none';
+        });
+    });
+});
+</script>
 
 <?php require_once INCLUDES_PATH . '/footer.php'; ?>

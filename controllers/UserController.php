@@ -9,8 +9,10 @@ require_once __DIR__ . '/../models/Log.php';
 class UserController {
     private $userModel;
     private $logModel;
+    private $pdo;
 
     public function __construct($pdo) {
+        $this->pdo = $pdo;
         $this->userModel = new User($pdo);
         $this->logModel  = new Log($pdo);
     }
@@ -41,6 +43,13 @@ class UserController {
         if ($this->userModel->findByEmail($data['email'])) {
             flash('error', 'Email already exists.');
         } elseif ($this->userModel->create($data)) {
+            // If super admin created a staff or inventory account, mark email verified
+            // so the account can sign in immediately without email verification.
+            $newId = (int)$this->pdo->lastInsertId();
+            if (in_array($data['role_id'], [2, 4], true) && $newId > 0) {
+                $this->userModel->markEmailVerified($newId);
+            }
+
             $this->logModel->create(LOG_USER_CREATE, "User created: {$data['email']} (Role ID: {$data['role_id']})");
             flash('success', 'User created successfully.');
         } else {

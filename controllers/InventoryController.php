@@ -180,7 +180,7 @@ class InventoryController {
         $productId = $_GET['product_id'] ?? null;
         if ($productId) {
             $history = $this->priceHistoryModel->getByProduct($productId, $limit, $offset);
-            $total = count($history); // simplified
+            $total = $this->priceHistoryModel->countByProduct($productId);
         } else {
             $history = $this->priceHistoryModel->getAll($limit, $offset);
             $total = $this->priceHistoryModel->count();

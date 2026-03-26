@@ -21,7 +21,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
         <!-- Filter by Product -->
         <div class="card" style="margin-bottom:1.5rem;padding:1rem;">
             <form method="GET" action="<?= APP_URL ?>/index.php" style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;">
-                <input type="hidden" name="url" value="staff/inventory/price-history">
+                <input type="hidden" name="url" value="<?= htmlspecialchars($_GET['url'] ?? 'staff/inventory/price-history') ?>">
                 <div class="form-group" style="margin-bottom:0;flex:1;min-width:200px;">
                     <label class="form-label" style="font-size:.8rem;">Filter by Product</label>
                     <select name="product_id" class="form-control form-control-sm">

@@ -9,7 +9,7 @@ require_once INCLUDES_PATH . '/navbar.php';
 
     <div class="card">
         <div class="card-body">
-            <p>Our primary store location:</p>
+            <p>Store Location</p>
             <address style="font-weight:600; margin-bottom:1rem;"><?= htmlspecialchars(APP_LOCATION) ?></address>
                 <div class="map-responsive" style="width:100%;height:420px;overflow:hidden;border-radius:8px;">
                     <iframe
@@ -23,8 +23,6 @@ require_once INCLUDES_PATH . '/navbar.php';
                     </iframe>
                 </div>
             </div>
-
-            <p style="margin-top:1rem;color:var(--muted);">Tip: replace the embedded map with a Google Maps JavaScript implementation if you need markers, directions, or an API key.</p>
         </div>
     </div>
 </div>

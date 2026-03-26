@@ -60,6 +60,12 @@ $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($
                     <span class="nav-text">Reports</span>
                 </a>
             </li>
+            <li>
+                <a href="<?= APP_URL ?>/index.php?url=staff/reviews" class="<?= strpos($currentUrl, 'reviews') !== false ? 'active' : '' ?>">
+                    <span class="nav-icon"><i class="lucide-message-square"></i></span>
+                    <span class="nav-text">Reviews</span>
+                </a>
+            </li>
         </ul>
         <?php endif; ?>
 
@@ -136,6 +142,12 @@ $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($
                 <a href="<?= APP_URL ?>/index.php?url=admin/returns" class="<?= strpos($currentUrl, 'returns') !== false ? 'active' : '' ?>">
                     <span class="nav-icon"><i class="lucide-rotate-ccw"></i></span>
                     <span class="nav-text">Returns</span>
+                </a>
+            </li>
+            <li>
+                <a href="<?= APP_URL ?>/index.php?url=admin/reviews" class="<?= strpos($currentUrl, 'reviews') !== false ? 'active' : '' ?>">
+                    <span class="nav-icon"><i class="lucide-message-square"></i></span>
+                    <span class="nav-text">Reviews</span>
                 </a>
             </li>
         </ul>

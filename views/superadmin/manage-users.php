@@ -61,7 +61,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
                         <div class="form-group">
                             <label class="form-label">Role <span class="required">*</span></label>
                             <select name="role_id" class="form-control" required>
-                                <option value="1">Customer</option>
+                                <option value="">Select role</option>
                                 <option value="2">Staff</option>
                                 <option value="4">Inventory In-Charge</option>
                                 <option value="3">Super Admin</option>

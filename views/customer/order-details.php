@@ -206,7 +206,12 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
                         <span class="od-item-unit">₱<?= number_format($item['price'], 2) ?> × <?= $item['quantity'] ?></span>
                     </div>
                 </div>
-                <span class="od-item-subtotal">₱<?= number_format($item['subtotal'], 2) ?></span>
+                <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+                    <span class="od-item-subtotal">₱<?= number_format($item['subtotal'], 2) ?></span>
+                    <?php if ($order['status'] === 'delivered'): ?>
+                        <button class="btn btn-outline btn-sm js-open-review" data-product-id="<?= $item['product_id'] ?>" data-order-id="<?= $order['id'] ?>" data-order-item-id="<?= $item['id'] ?>">Write a Review</button>
+                    <?php endif; ?>
+                </div>
             </div>
             <?php endforeach; ?>
         </div>
@@ -229,5 +234,59 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
         </a>
     </div>
 </div>
+
+<!-- Review Modal (simple inline modal) -->
+<?php if ($order['status'] === 'delivered'): ?>
+<div id="reviewModal" class="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);align-items:center;justify-content:center;z-index:1200">
+    <div class="modal" style="width:640px;max-width:96%;background:#fff;padding:18px;border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,.28);">
+        <h3 style="margin-bottom:8px">Write a Review</h3>
+        <form id="reviewForm" action="<?= APP_URL ?>/index.php?url=reviews/submit" method="POST">
+            <?= csrf_field() ?>
+            <input type="hidden" name="product_id" id="rv_product_id" value="">
+            <input type="hidden" name="order_id" id="rv_order_id" value="">
+            <input type="hidden" name="order_item_id" id="rv_order_item_id" value="">
+
+            <div class="form-group">
+                <label for="rating">Rating</label>
+                <select name="rating" id="rating" class="form-control" required>
+                    <option value="">Select rating…</option>
+                    <option value="5">5 — Excellent</option>
+                    <option value="4">4 — Very Good</option>
+                    <option value="3">3 — Good</option>
+                    <option value="2">2 — Fair</option>
+                    <option value="1">1 — Poor</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="comment">Comment (optional)</label>
+                <textarea name="comment" id="comment" class="form-control" rows="4" placeholder="Share your experience..."></textarea>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+                <button type="button" class="btn btn-outline js-close-review">Cancel</button>
+                <button type="submit" class="btn btn-accent">Submit Review</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    function openModal(productId, orderId, orderItemId){
+        document.getElementById('rv_product_id').value = productId;
+        document.getElementById('rv_order_id').value = orderId;
+        document.getElementById('rv_order_item_id').value = orderItemId;
+        document.getElementById('reviewModal').style.display = 'flex';
+    }
+    function closeModal(){ document.getElementById('reviewModal').style.display = 'none'; }
+
+    document.querySelectorAll('.js-open-review').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            openModal(this.dataset.productId, this.dataset.orderId, this.dataset.orderItemId);
+        });
+    });
+    document.querySelectorAll('.js-close-review').forEach(function(btn){ btn.addEventListener('click', closeModal); });
+    document.getElementById('reviewModal').addEventListener('click', function(e){ if(e.target === this) closeModal(); });
+});
+</script>
+<?php endif; ?>
 
 <?php require_once INCLUDES_PATH . '/footer.php'; ?>

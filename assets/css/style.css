@@ -35,6 +35,7 @@
     --shadow-hover: 0 16px 40px rgba(0,0,0,.12);
     --radius-sm:    8px;
     --radius-md:    12px;
+    --radius-md-num: 12; /* unitless numeric token (px multiplier) */
     --radius-lg:    16px;
     --radius-xl:    20px;
     --transition:   all .25s ease;
@@ -42,6 +43,64 @@
     --font-mono:    'Fira Code', 'Consolas', monospace;
     --sidebar-w:    260px;
 }
+
+#loading-overlay { display:flex; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background: linear-gradient(180deg, rgba(10,14,20,.62), rgba(10,14,20,.78)); }
+
+/* Floating glass card with animated ring */
+#loading-overlay .loading-box {
+    width: 260px;
+    padding: 22px 22px 18px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+    box-shadow: 0 18px 40px rgba(2,6,23,.64), 0 6px 18px rgba(2,6,23,.48);
+    border: 1px solid rgba(255,255,255,.04);
+    backdrop-filter: blur(8px) saturate(120%);
+    transform: translateY(0);
+    animation: loaderFloat 3.6s ease-in-out infinite;
+}
+
+#loading-overlay .loading-brand img {
+    width: 68px; height: 68px; object-fit:cover; border-radius:12px;
+    border: 2px solid rgba(255,255,255,.06);
+    box-shadow: 0 8px 20px rgba(0,0,0,.45);
+}
+
+/* Conic-gradient ring with inner mask for a cool loader */
+.loading-ring {
+    width: 82px; height: 82px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    background: conic-gradient(var(--accent) 0deg, rgba(249,115,22,.85) 60deg, rgba(255,255,255,.06) 120deg, rgba(255,255,255,.02) 360deg);
+    filter: drop-shadow(0 6px 14px rgba(0,0,0,.45));
+    animation: ringRotate 1.8s linear infinite;
+}
+.loading-ring::after{
+    content: '';
+    width: 52px; height: 52px; border-radius:50%;
+    background: linear-gradient(180deg, rgba(10,14,20,.88), rgba(10,14,20,.9));
+    position: absolute; box-shadow: inset 0 2px 6px rgba(0,0,0,.6);
+}
+.loading-ring::before{
+    content: '';
+    position: absolute; inset: 0; border-radius:50%;
+    background: radial-gradient(closest-side, rgba(255,255,255,.06), transparent 60%);
+    mix-blend-mode: overlay; pointer-events:none;
+}
+
+.loading-msg { color:#fff; font-weight:800; letter-spacing:.36px; }
+.loading-sub { color: rgba(255,255,255,.84); font-size:13px; margin-top:-4px; }
+.loading-dot { display:inline-block; opacity:.9; animation:ldDot .9s infinite; }
+.loading-dot:nth-child(2){ animation-delay:.12s }
+.loading-dot:nth-child(3){ animation-delay:.24s }
+
+@keyframes ringRotate{ to { transform: rotate(360deg); } }
+@keyframes ldDot { 0%{ transform: translateY(0); opacity:.28 } 50%{ transform: translateY(-6px); opacity:1 } 100%{ transform: translateY(0); opacity:.28 } }
+@keyframes loaderFloat { 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-8px); } }
+
 
 /* ---------- Reset & Base ---------- */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -170,6 +229,9 @@ p { color: var(--text-secondary); }
 }
 .logo-text { font-size: 15px; font-weight: 800; letter-spacing: -.2px; }
 
+/* Hide textual brand when a compact/visual logo is preferred (removes visible "Southdev Home Depot" text) */
+/* site name visibility restored */
+
 .nav-links {
     display: flex;
     align-items: center;
@@ -281,11 +343,19 @@ p { color: var(--text-secondary); }
 
     /* Two-row header: topbar (brand red) + main nav (light) */
     :root { --brand-red: #b71c1c; }
+    /* Small spacing so header doesn't touch the very top of the viewport */
+    /* Removed extra top gap to align header flush with viewport */
+    .site-header { margin-top: 0; }
     .site-header .topbar {
         background: var(--brand-red);
         color: #fff;
         padding: 8px 0;
     }
+
+    /* Hide storefront topbar on admin/staff pages where admin layout is used */
+    body.admin-layout .site-header .topbar { display: none; }
+    /* When topbar is hidden, reduce header spacing so admin header aligns with sidebar */
+    body.admin-layout .site-header .main-nav { border-top: 0; margin-bottom: 0; }
     .topbar-inner {
         display: flex;
         align-items: center;
@@ -311,6 +381,8 @@ p { color: var(--text-secondary); }
     .auth-links .btn-outline { background: transparent; border:1px solid rgba(255,255,255,.12); color:#fff; }
 
     .main-nav { background: #f6f6f6; border-bottom: 1px solid rgba(0,0,0,.06); border-top: 1px solid rgba(0,0,0,.03); }
+    /* Add a small gap below the site main navigation so hero/content doesn't butt up against it */
+    .main-nav { margin-bottom: 8px; }
     .main-menu { display:flex; justify-content:center; gap:36px; padding:12px 0; list-style:none; margin:0; align-items:center; }
     .main-menu li { display:inline; }
     .main-menu a { color:#222; text-transform:uppercase; font-weight:700; padding:6px 4px; letter-spacing:.6px; font-size:13px; }
@@ -1080,6 +1152,17 @@ p { color: var(--text-secondary); }
 .login-modal-footer {
     margin-top: 16px;
 }
+
+/* Override: make login modal square (no rounded corners) */
+.login-modal {
+    border-radius: 0 !important;
+}
+.login-modal-media,
+.login-modal-form-panel,
+.login-modal-split {
+    border-radius: 0 !important;
+}
+.login-modal-error { border-radius: 0 !important; }
 .login-modal-footer p {
     font-size: 13px;
     margin: 6px 0;

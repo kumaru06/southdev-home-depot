@@ -30,6 +30,24 @@ $activeTab = $_GET['tab'] ?? 'sales';
 
         <!-- ===== SALES TAB ===== -->
         <?php if ($activeTab === 'sales'): ?>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px;gap:8px;">
+            <?php
+                $qs = $_GET;
+                $qs['tab'] = 'sales';
+                // raw rows export
+                $qs['export'] = 'sales';
+                $rawExportUrl = 'index.php?' . http_build_query($qs);
+                // daily aggregated
+                $qs['period'] = 'daily';
+                $dailyExportUrl = 'index.php?' . http_build_query($qs);
+                // monthly aggregated
+                $qs['period'] = 'monthly';
+                $monthlyExportUrl = 'index.php?' . http_build_query($qs);
+            ?>
+            <a href="<?= htmlspecialchars($rawExportUrl) ?>" class="btn btn-outline btn-sm">Export Rows CSV</a>
+            <a href="<?= htmlspecialchars($dailyExportUrl) ?>" class="btn btn-outline btn-sm">Export Daily CSV</a>
+            <a href="<?= htmlspecialchars($monthlyExportUrl) ?>" class="btn btn-outline btn-sm">Export Monthly CSV</a>
+        </div>
         <div class="stat-cards">
             <div class="stat-card">
                 <div class="stat-info">
@@ -103,6 +121,24 @@ $activeTab = $_GET['tab'] ?? 'sales';
 
         <!-- ===== INVENTORY TAB ===== -->
         <?php elseif ($activeTab === 'inventory'): ?>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px;gap:8px;">
+            <?php
+                $qs = $_GET;
+                $qs['tab'] = 'inventory';
+                $qs['export'] = 'inventory';
+                // keep any existing date filters from querystring
+                $inventoryExportUrl = 'index.php?' . http_build_query($qs);
+            ?>
+            <form method="GET" action="index.php" style="display:flex;gap:.5rem;align-items:center;">
+                <input type="hidden" name="url" value="<?= htmlspecialchars($_GET['url'] ?? 'staff/reports') ?>">
+                <input type="hidden" name="tab" value="inventory">
+                <input type="hidden" name="export" value="inventory">
+                <input type="date" name="date_from" value="<?= htmlspecialchars($_GET['date_from'] ?? '') ?>" style="height:34px;padding:.25rem;border-radius:4px;border:1px solid var(--border);">
+                <input type="date" name="date_to" value="<?= htmlspecialchars($_GET['date_to'] ?? '') ?>" style="height:34px;padding:.25rem;border-radius:4px;border:1px solid var(--border);">
+                <button class="btn btn-outline btn-sm" type="submit">Export Inventory CSV</button>
+                <a href="<?= htmlspecialchars($inventoryExportUrl) ?>" class="btn btn-outline btn-sm">Quick Export</a>
+            </form>
+        </div>
         <div class="stat-cards">
             <div class="stat-card">
                 <div class="stat-info">

@@ -86,3 +86,10 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
 </div>
 
 <?php require_once INCLUDES_PATH . '/footer.php'; ?>
+
+<style>
+/* Make auth split card square (no border radius) */
+.auth-card.card, .auth-card--split.auth-card.card { border-radius: 0 !important; }
+.auth-card--split .auth-media, .auth-card--split .auth-panel { border-radius: 0 !important; }
+.auth-card.card .form-control, .auth-card.card .btn { border-radius: 0 !important; }
+</style>

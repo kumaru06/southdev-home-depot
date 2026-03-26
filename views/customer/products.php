@@ -2,6 +2,25 @@
 /* $pageTitle, $extraCss set by controller */
 require_once INCLUDES_PATH . '/header.php';
 require_once INCLUDES_PATH . '/navbar.php';
+
+// Determine hero images: prefer display1.jpg and display2.jpg if present,
+// otherwise fall back to image.png for missing assets.
+$heroRel = 'assets/uploads/images/display1.jpg';
+$heroFull = ROOT_PATH . '/' . $heroRel;
+if (!file_exists($heroFull)) {
+    $heroRel = 'assets/uploads/images/image.png';
+}
+
+$display1 = 'assets/uploads/images/display1.jpg';
+$display2 = 'assets/uploads/images/display2.jpg';
+$display1Full = ROOT_PATH . '/' . $display1;
+$display2Full = ROOT_PATH . '/' . $display2;
+if (!file_exists($display1Full)) {
+    $display1 = 'assets/uploads/images/image.png';
+}
+if (!file_exists($display2Full)) {
+    $display2 = 'assets/uploads/images/image.png';
+}
 ?>
 
 <div class="container">
@@ -37,20 +56,16 @@ require_once INCLUDES_PATH . '/navbar.php';
         <!-- Main Content -->
         <main class="storefront-main">
             <!-- Featured Tiles Banner -->
-            <!-- Hero / Intro (uses image.png) -->
-            <section class="products-hero" style="background-image: url('<?= APP_URL ?>/assets/uploads/images/image.png'); background-size: cover; background-position: center;">
-                <div class="hero-banner-content" style="padding:3.5rem 2rem;">
-                    <div class="hero-text">
-                        <span class="hero-badge"><span style="color:var(--accent);font-size:10px;">&#9632;</span> PREMIUM BUILDING MATERIALS</span>
-                        <h1 class="hero-title">Build Your<br><span class="accent-text">Dream Space</span><br>With Us</h1>
-                        <p class="hero-subtitle">From flooring to structural materials, bathroom fixtures to interior finishes — everything you need to create stunning spaces, all in one place.</p>
-                        <div class="hero-actions">
-                            <button class="btn btn-accent btn-lg btn-explore" style="border-radius:999px;">
-                                Explore Products <i data-lucide="arrow-right" style="width:16px;height:16px"></i>
-                            </button>
-                        </div>
+            <!-- Hero / Intro: left column shows display1 + display2 stacked, right column uses the main hero image -->
+            <section class="products-hero">
+                <div class="products-hero-inner">
+                    <div class="hero-left">
+                        <img src="<?= APP_URL ?>/<?= $display1 ?>" alt="Display 1" class="hero-thumb">
+                        <img src="<?= APP_URL ?>/<?= $display2 ?>" alt="Display 2" class="hero-thumb">
                     </div>
+                    <div class="hero-right" style="background-image: url('<?= APP_URL ?>/<?= $heroRel ?>');"></div>
                 </div>
+                <h1 class="sr-only">Featured</h1>
             </section>
 
             <!-- Stats strip -->
@@ -84,12 +99,36 @@ require_once INCLUDES_PATH . '/navbar.php';
                 <a href="<?= APP_URL ?>/index.php?url=products" class="<?= !isset($_GET['category']) ? 'active' : '' ?>">
                     <i data-lucide="grid-3x3" style="width:14px;height:14px"></i> All Products
                 </a>
+                <!-- Category select for quick filtering / mobile users -->
+                <div class="category-select" style="margin-left:12px; display:inline-block; vertical-align:middle;">
+                    <select id="categorySelect" class="form-control" style="min-width:160px;padding:.45rem;border-radius:6px;border:1px solid var(--border);background:var(--surface);">
+                        <option value="">All Categories</option>
+                        <?php if (isset($categories)): foreach ($categories as $cat): ?>
+                            <option value="<?= $cat['id'] ?>" <?= (isset($_GET['category']) && $_GET['category'] == $cat['id']) ? 'selected' : '' ?>><?= htmlspecialchars($cat['name']) ?></option>
+                        <?php endforeach; endif; ?>
+                    </select>
+                </div>
                 <?php if (isset($categories)): foreach ($categories as $cat): ?>
                     <a href="<?= APP_URL ?>/index.php?url=products&category=<?= $cat['id'] ?>" class="<?= (isset($_GET['category']) && $_GET['category'] == $cat['id']) ? 'active' : '' ?>">
                         <?= htmlspecialchars($cat['name']) ?>
                     </a>
                 <?php endforeach; endif; ?>
             </div>
+
+            <script>
+            document.addEventListener('DOMContentLoaded', function(){
+                var sel = document.getElementById('categorySelect');
+                if(!sel) return;
+                sel.addEventListener('change', function(){
+                    var v = this.value;
+                    if(v === ''){
+                        window.location.href = '<?= APP_URL ?>/index.php?url=products';
+                    } else {
+                        window.location.href = '<?= APP_URL ?>/index.php?url=products&category=' + encodeURIComponent(v);
+                    }
+                });
+            });
+            </script>
 
             <!-- Product Grid -->
             <?php if (!empty($products)): ?>

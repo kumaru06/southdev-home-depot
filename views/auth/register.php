@@ -76,8 +76,6 @@ require_once INCLUDES_PATH . '/header.php';
     </div>
 </div>
 
-<?php require_once INCLUDES_PATH . '/footer.php'; ?>
-
 <style>
 /* Visible text input styled with calendar icon on the right */
 .input-icon-wrap .date-display{
@@ -93,7 +91,18 @@ require_once INCLUDES_PATH . '/header.php';
 /* hide native picker indicator for hidden date input */
 .input-icon-wrap input[type="date"]::-webkit-calendar-picker-indicator { display:none; }
 .input-icon-wrap input[type="date"]::-ms-clear, .input-icon-wrap input[type="date"]::-ms-expand { display: none; }
+
+/* Remove border-radius for a square / sharp look on the register card */
+.auth-card.card { border-radius: 0 !important; }
+.auth-card.card .form-control { border-radius: 0 !important; }
+.auth-card.card .btn { border-radius: 0 !important; }
+
+/* Ensure input-icon wrapped inputs are square too (icons + inputs) */
+.input-icon-wrap { border-radius: 0 !important; }
+.input-icon-wrap .form-control { border-radius: 0 !important; }
+.input-icon-wrap .date-display { border-radius: 0 !important; }
 </style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('.input-icon-wrap').forEach(function(wrapper){
@@ -215,10 +224,12 @@ document.addEventListener('DOMContentLoaded', function(){
                 var mmddyyyy = display.value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
                 var mmddyy = display.value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
                 if(mmddyyyy){ setHiddenFromParts(mmddyyyy[1], mmddyyyy[2], mmddyyyy[3]); }
-                else if(mmddyy){ var exp = expandTwoDigitYear(mmddyy[3]); if(exp) setHiddenFromParts(mmddyy[1], mmddyy[2], String(exp)); }
+                else if(mmddyy){ var exp = expandTwoDigitYear(mmddyy[3]); if(exp) setHiddenFromParts(mmddyy[1],mmddyy[2], String(exp)); }
                 else { e.preventDefault(); display.setCustomValidity('Please enter date as mm/dd/yyyy'); display.reportValidity(); }
             });
         }
     });
 });
 </script>
+
+<?php require_once INCLUDES_PATH . '/footer.php'; ?>

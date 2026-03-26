@@ -1,8 +1,25 @@
 <?php
-$pageTitle = 'My Account';
+// Preserve any page title provided by the router; otherwise default to "My Account"
+if (!isset($pageTitle) || empty($pageTitle)) {
+    $pageTitle = 'My Account';
+}
 $extraCss = ['customer.css'];
 require_once INCLUDES_PATH . '/header.php';
 require_once INCLUDES_PATH . '/navbar.php';
+
+// Determine hero image: prefer display1.jpg if present, otherwise fall back to image.png
+$heroRel = 'assets/uploads/images/display1.jpg';
+$heroFull = ROOT_PATH . '/' . $heroRel;
+if (!file_exists($heroFull)) {
+    $heroRel = 'assets/uploads/images/image.png';
+}
+
+// Also prepare display2 (small thumbnail shown below the hero if present)
+$display2 = 'assets/uploads/images/display2.jpg';
+$display2Full = ROOT_PATH . '/' . $display2;
+if (!file_exists($display2Full)) {
+    $display2 = 'assets/uploads/images/image.png';
+}
 
 // Fetch featured tile products for the hero carousel
 $featuredTiles = [];
@@ -22,51 +39,20 @@ try {
 
 <div class="container">
 
-    <!-- Hero Banner — Tiles -->
-    <section class="hero-banner">
-        <div class="hero-banner-bg">
-            <div class="hero-tile-pattern"></div>
-        </div>
-        <div class="hero-banner-content">
-            <div class="hero-text">
-                <span class="hero-badge"><i data-lucide="star" style="width:12px;height:12px"></i> Main Product</span>
-                <h1 class="hero-title">Premium Tiles Collection</h1>
-                <p class="hero-subtitle">Transform your spaces with our curated selection of porcelain, ceramic, mosaic, and granite tiles — Davao City's finest.</p>
-                <!-- Removed product-specific action buttons to keep homepage product-free -->
-            </div>
-            <!-- Featured product tiles removed to allow a separate homepage design (no product displays on home) -->
-        </div>
+    <!-- Hero Banner — replaced with plain image hero (text removed) -->
+    <section class="hero-banner" style="background-image: url('<?= APP_URL ?>/<?= $heroRel ?>'); background-size: cover; background-position: center;">
     </section>
 
-    <div class="page-heading">
-        <h1>Welcome back, <?= htmlspecialchars($_SESSION['first_name'] ?? 'Customer') ?>!</h1>
-        <p style="color:var(--steel); margin-top:.25rem;">Here's a summary of your account activity.</p>
+    <!-- Optional secondary display image below the hero -->
+    <div class="hero-below">
+        <div class="hero-below-inner">
+            <img src="<?= APP_URL ?>/<?= $display2 ?>" alt="Display 2" class="hero-below-thumb">
+        </div>
     </div>
 
-    <!-- Stat Cards -->
-    <div class="stat-cards" style="margin-bottom:2rem;">
-        <div class="stat-card">
-            <div class="stat-icon"><i data-lucide="shopping-bag"></i></div>
-            <div class="stat-info">
-                <span class="stat-value"><?= $totalOrders ?? 0 ?></span>
-                <span class="stat-label">Total Orders</span>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon"><i data-lucide="clock"></i></div>
-            <div class="stat-info">
-                <span class="stat-value"><?= $pendingOrders ?? 0 ?></span>
-                <span class="stat-label">Pending</span>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon"><i data-lucide="check-circle"></i></div>
-            <div class="stat-info">
-                <span class="stat-value"><?= $deliveredOrders ?? 0 ?></span>
-                <span class="stat-label">Delivered</span>
-            </div>
-        </div>
-    </div>
+    <!-- page-heading removed per request -->
+
+    <!-- Stat cards removed per request -->
 
     <!-- Recent Orders block removed per request -->
 </div>

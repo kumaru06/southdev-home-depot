@@ -39,17 +39,23 @@ class PriceHistory {
         return $stmt->execute([$productId, $oldPrice, $newPrice, $changedBy, $reason]);
     }
 
-    public function getByProduct($productId, $limit = 20) {
+    public function getByProduct($productId, $limit = 20, $offset = 0) {
         $stmt = $this->pdo->prepare(
             "SELECT ph.*, u.first_name, u.last_name
              FROM price_history ph
              LEFT JOIN users u ON ph.changed_by = u.id
              WHERE ph.product_id = ?
              ORDER BY ph.created_at DESC
-             LIMIT ?"
+             LIMIT ? OFFSET ?"
         );
-        $stmt->execute([$productId, $limit]);
+        $stmt->execute([$productId, $limit, $offset]);
         return $stmt->fetchAll();
+    }
+
+    public function countByProduct($productId) {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM price_history WHERE product_id = ?");
+        $stmt->execute([$productId]);
+        return (int) $stmt->fetchColumn();
     }
 
     public function getAll($limit = 50, $offset = 0) {

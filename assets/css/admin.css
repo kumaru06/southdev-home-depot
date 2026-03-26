@@ -257,6 +257,8 @@
     transition: margin-left .3s cubic-bezier(.4,0,.2,1);
     display: flex;
     flex-direction: column;
+    /* Space between sticky top-bar/header and page content */
+    /* spacing moved to .page-content so the top-bar stays flush */
 }
 .sidebar.collapsed ~ .main-content { margin-left: 68px; }
 
@@ -267,12 +269,12 @@
     z-index: 50;
     background: var(--white);
     border-bottom: 1px solid var(--border);
-    padding: 0 32px;
-    height: 64px;
+    padding: 0 24px;
+    height: 56px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
 }
 
 /* Layout: keep menu button + title aligned on one row */
@@ -293,7 +295,7 @@
     text-overflow: ellipsis;
 }
 .top-bar-left h2 {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 900;
     color: var(--charcoal);
 }
@@ -347,14 +349,20 @@
     color: var(--accent);
 }
 .top-bar .page-title {
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: 800;
     color: var(--charcoal);
 }
 .top-bar .top-actions {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+.top-bar-right .badge {
+    align-self: center;
+    font-size: 13px;
+    padding: 6px 10px;
+    border-radius: 10px;
 }
 .top-bar .notif-btn {
     position: relative;
@@ -381,7 +389,8 @@
 
 /* ---------- Page Content ---------- */
 .page-content {
-    padding: 28px 32px;
+    padding: 20px 28px;
+    margin-top: 8px;
     flex: 1;
     animation: pageFadeIn .4s ease;
 }

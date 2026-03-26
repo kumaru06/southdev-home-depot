@@ -248,6 +248,7 @@ class ProductController {
         $categories = $this->categoryModel->getAll();
         $pageTitle  = 'Search: ' . htmlspecialchars($keyword);
         $extraCss   = ['customer.css'];
-        require_once VIEWS_PATH . '/customer/products.php';
+        // Use the alternate products layout (grid-focused) for search results
+        require_once VIEWS_PATH . '/customer/products_alt.php';
     }
 }

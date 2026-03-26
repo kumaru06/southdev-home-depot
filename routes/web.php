@@ -214,6 +214,19 @@ switch ($urlParts[0]) {
         break;
 
     /* ================================================================
+     * REVIEWS (customer reviews for delivered items)
+     * ============================================================= */
+    case 'reviews':
+        require_once CONTROLLERS_PATH . '/ReviewController.php';
+        $controller = new ReviewController($pdo);
+        if (isset($urlParts[1]) && $urlParts[1] === 'submit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->submit();
+        } else {
+            require_once VIEWS_PATH . '/errors/404.php';
+        }
+        break;
+
+    /* ================================================================
      * PAYMENT
      * ============================================================= */
     case 'payment':
@@ -349,6 +362,16 @@ switch ($urlParts[0]) {
                         $controller->updateStatus($urlParts[2]);
                     } else {
                         $controller->manage();
+                    }
+                    break;
+
+                case 'reviews':
+                    require_once CONTROLLERS_PATH . '/ReviewController.php';
+                    $controller = new ReviewController($pdo);
+                    if (isset($urlParts[2]) && $urlParts[2] === 'delete' && isset($urlParts[3])) {
+                        $controller->delete($urlParts[3]);
+                    } else {
+                        $controller->adminIndex();
                     }
                     break;
 
