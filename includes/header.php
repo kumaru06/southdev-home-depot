@@ -3,6 +3,13 @@
  * SouthDev Home Depot – Header Include
  * Enterprise layout with Inter font, CSRF meta, design tokens
  */
+// Prevent caching of pages that depend on authentication state so browsers
+// don't serve stale HTML showing the wrong Login/Register state after logout.
+if (!headers_sent()) {
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

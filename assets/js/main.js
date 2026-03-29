@@ -38,6 +38,26 @@
 
     });
 
+    /* Ensure auth links visible when server indicates logged out.
+       Some browser states or client scripts may hide the topbar links —
+       force-show them when the server-side flag `window.appLoggedIn` is false. */
+    document.addEventListener('DOMContentLoaded', function () {
+        try {
+            var authLinks = document.querySelector('.auth-links');
+            if (!authLinks) return;
+            // Debug info (visible in console)
+            console.log('Auth links initial display:', getComputedStyle(authLinks).display, 'appLoggedIn=', window.appLoggedIn);
+            if (typeof window.appLoggedIn !== 'undefined' && window.appLoggedIn === false) {
+                // Remove any inline 'display:none' that may have been applied
+                if (authLinks.style.display === 'none') authLinks.style.display = '';
+                // Remove mobile-hide class if present
+                if (authLinks.classList.contains('hidden-by-client')) authLinks.classList.remove('hidden-by-client');
+            }
+        } catch (e) {
+            console.warn('Auth-links resilience check failed', e);
+        }
+    });
+
     /* ========== Sidebar Toggle ========== */
     document.addEventListener('DOMContentLoaded', function () {
         const sidebar = document.querySelector('.sidebar');
