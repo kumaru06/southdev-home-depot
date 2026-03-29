@@ -134,15 +134,15 @@
 
                 if (typeof window.confirmDialog === 'function') {
                     window.confirmDialog({
-                        title: 'Delete item?',
-                        message: 'Are you sure you want to delete this item? This action cannot be undone.',
+                        title: 'Delete user?',
+                        message: 'Are you sure you want to delete this user? This action cannot be undone.',
                         confirmText: 'Delete',
                         confirmVariant: 'danger'
                     }).then(function (ok) {
                         if (ok) proceed();
                     });
                 } else {
-                    if (confirm('Are you sure you want to delete this item? This action cannot be undone.')) {
+                    if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
                         proceed();
                     }
                 }
