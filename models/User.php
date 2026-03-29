@@ -10,6 +10,17 @@ class User {
         $this->pdo = $pdo;
     }
 
+    public function hasColumn($column) {
+        try {
+            $dbName = $this->pdo->query('SELECT DATABASE()')->fetchColumn();
+            $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'users' AND COLUMN_NAME = ?");
+            $stmt->execute([$dbName, $column]);
+            return ((int)$stmt->fetchColumn()) > 0;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
     public function findById($id) {
         $stmt = $this->pdo->prepare("SELECT u.*, r.name as role_name FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = ?");
         $stmt->execute([$id]);
@@ -22,29 +33,71 @@ class User {
         return $stmt->fetch();
     }
 
+    public function findByUsername($username) {
+        if (!$this->hasColumn('username')) {
+            return null;
+        }
+        $stmt = $this->pdo->prepare("SELECT u.*, r.name as role_name FROM users u JOIN roles r ON u.role_id = r.id WHERE u.username = ?");
+        $stmt->execute([$username]);
+        return $stmt->fetch();
+    }
+
     public function create($data) {
-        $stmt = $this->pdo->prepare("INSERT INTO users (role_id, first_name, last_name, email, password, phone, birthdate, address, city, state, zip_code, verification_token, otp_code, otp_expires_at, otp_attempts, otp_locked_until) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        return $stmt->execute([
-            $data['role_id'] ?? ROLE_CUSTOMER,
-            $data['first_name'],
-            $data['last_name'],
-            $data['email'],
-            password_hash($data['password'], PASSWORD_DEFAULT),
-            $data['phone'] ?? null,
-            $data['birthdate'] ?? null,
-            $data['address'] ?? null,
-            $data['city'] ?? null,
-            $data['state'] ?? null,
-            $data['zip_code'] ?? null,
-            $data['verification_token'] ?? null,
-            $data['otp_code'] ?? null,
-            $data['otp_expires_at'] ?? null,
-            $data['otp_attempts'] ?? 0,
-            $data['otp_locked_until'] ?? null
-        ]);
+        if ($this->hasColumn('username')) {
+            $stmt = $this->pdo->prepare("INSERT INTO users (role_id, first_name, last_name, username, email, password, phone, birthdate, address, city, state, zip_code, verification_token, otp_code, otp_expires_at, otp_attempts, otp_locked_until) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            return $stmt->execute([
+                $data['role_id'] ?? ROLE_CUSTOMER,
+                $data['first_name'],
+                $data['last_name'],
+                $data['username'] ?? null,
+                $data['email'],
+                password_hash($data['password'], PASSWORD_DEFAULT),
+                $data['phone'] ?? null,
+                $data['birthdate'] ?? null,
+                $data['address'] ?? null,
+                $data['city'] ?? null,
+                $data['state'] ?? null,
+                $data['zip_code'] ?? null,
+                $data['verification_token'] ?? null,
+                $data['otp_code'] ?? null,
+                $data['otp_expires_at'] ?? null,
+                $data['otp_attempts'] ?? 0,
+                $data['otp_locked_until'] ?? null
+            ]);
+        } else {
+            $stmt = $this->pdo->prepare("INSERT INTO users (role_id, first_name, last_name, email, password, phone, birthdate, address, city, state, zip_code, verification_token, otp_code, otp_expires_at, otp_attempts, otp_locked_until) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            return $stmt->execute([
+                $data['role_id'] ?? ROLE_CUSTOMER,
+                $data['first_name'],
+                $data['last_name'],
+                $data['email'],
+                password_hash($data['password'], PASSWORD_DEFAULT),
+                $data['phone'] ?? null,
+                $data['birthdate'] ?? null,
+                $data['address'] ?? null,
+                $data['city'] ?? null,
+                $data['state'] ?? null,
+                $data['zip_code'] ?? null,
+                $data['verification_token'] ?? null,
+                $data['otp_code'] ?? null,
+                $data['otp_expires_at'] ?? null,
+                $data['otp_attempts'] ?? 0,
+                $data['otp_locked_until'] ?? null
+            ]);
+        }
     }
 
     public function update($id, $data) {
+        // If the `username` column exists and caller provided username, include it in the update
+        if ($this->hasColumn('username') && array_key_exists('username', $data)) {
+            $stmt = $this->pdo->prepare("UPDATE users SET first_name = ?, last_name = ?, username = ?, email = ?, phone = ?, address = ?, city = ?, state = ?, zip_code = ? WHERE id = ?");
+            return $stmt->execute([
+                $data['first_name'], $data['last_name'], $data['username'] ?? null, $data['email'],
+                $data['phone'], $data['address'], $data['city'],
+                $data['state'], $data['zip_code'], $id
+            ]);
+        }
+
         $stmt = $this->pdo->prepare("UPDATE users SET first_name = ?, last_name = ?, email = ?, phone = ?, address = ?, city = ?, state = ?, zip_code = ? WHERE id = ?");
         return $stmt->execute([
             $data['first_name'], $data['last_name'], $data['email'],

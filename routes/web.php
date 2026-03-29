@@ -48,6 +48,12 @@ switch ($urlParts[0]) {
         }
         break;
 
+    case 'check-username':
+        require_once CONTROLLERS_PATH . '/AuthController.php';
+        $controller = new AuthController($pdo);
+        $controller->checkUsername();
+        break;
+
     case 'logout':
         require_once CONTROLLERS_PATH . '/AuthController.php';
         $controller = new AuthController($pdo);
@@ -264,6 +270,30 @@ switch ($urlParts[0]) {
         } else {
             $controller->profile();
         }
+        break;
+
+    case 'profile-send-email-otp':
+        require_once CONTROLLERS_PATH . '/UserController.php';
+        $controller = new UserController($pdo);
+        $controller->sendEmailChangeOtp();
+        break;
+
+    case 'profile-verify-email-otp':
+        require_once CONTROLLERS_PATH . '/UserController.php';
+        $controller = new UserController($pdo);
+        $controller->verifyEmailChangeOtp();
+        break;
+
+    case 'profile-send-new-email-otp':
+        require_once CONTROLLERS_PATH . '/UserController.php';
+        $controller = new UserController($pdo);
+        $controller->sendNewEmailOtp();
+        break;
+
+    case 'profile-verify-new-email-otp':
+        require_once CONTROLLERS_PATH . '/UserController.php';
+        $controller = new UserController($pdo);
+        $controller->verifyNewEmailOtp();
         break;
 
     /* ================================================================

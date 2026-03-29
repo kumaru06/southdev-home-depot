@@ -135,6 +135,7 @@ class UserController {
     public function profile() {
         AuthMiddleware::handle();
         $user      = $this->userModel->findById($_SESSION['user_id']);
+        $usernameEnabled = $this->userModel->hasColumn('username');
         $pageTitle = 'My Profile';
         if (($_SESSION['role_id'] ?? ROLE_CUSTOMER) == ROLE_CUSTOMER) {
             $extraCss  = ['customer.css'];
@@ -220,6 +221,11 @@ class UserController {
             'zip_code'   => trim($_POST['zip_code'] ?? '')
         ];
 
+        // Include username if supported and provided
+        if ($this->userModel->hasColumn('username') && isset($_POST['username'])) {
+            $data['username'] = trim($_POST['username']);
+        }
+
         $this->userModel->update($_SESSION['user_id'], $data);
 
         // Optional: profile image upload
@@ -272,5 +278,183 @@ class UserController {
         flash('success', 'Profile updated.');
         header('Location: ' . APP_URL . '/index.php?url=profile');
         exit;
+    }
+
+    // --- Email change via two-step OTP flow ---
+    // Step A: send OTP to CURRENT email to authorize change
+    public function sendEmailChangeOtp() {
+        AuthMiddleware::handle();
+        $raw = file_get_contents('php://input');
+        $data = json_decode($raw, true) ?: [];
+
+        if (!verify_csrf($data['csrf_token'] ?? null)) {
+            header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Invalid CSRF']); exit;
+        }
+
+        // No new email required for authorization step. Send OTP to the user's current email.
+        $user = $this->userModel->findById($_SESSION['user_id']);
+        if (!$user) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'User not found']); exit; }
+
+        try { $otp = (string)random_int(100000, 999999); } catch (Exception $e) { $otp = (string)mt_rand(100000,999999); }
+        $expiry = time() + (defined('OTP_EXPIRY_MINUTES') ? OTP_EXPIRY_MINUTES * 60 : 300);
+
+        // Store authorize OTP separately from the new-email OTP
+        $_SESSION['email_change_authorize'] = [
+            'hash' => password_hash($otp, PASSWORD_DEFAULT),
+            'expires' => $expiry,
+            'attempts' => 0
+        ];
+
+        require_once INCLUDES_PATH . '/Mailer.php';
+        $mailer = new Mailer();
+        $subject = 'Authorize email change';
+        $html = "<p>Hi " . htmlspecialchars($user['first_name'] ?? '') . ",</p>" .
+                "<p>Use the following OTP to authorize changing your account email (this confirms it is you). This does not change your email yet. The code expires in " . (defined('OTP_EXPIRY_MINUTES') ? OTP_EXPIRY_MINUTES : 5) . " minutes:</p>" .
+                "<h2>" . htmlspecialchars($otp) . "</h2>";
+
+        $sent = false;
+        try { $sent = $mailer->send($user['email'], ($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''), $subject, $html); } catch (Exception $e) { $sent = false; }
+
+        header('Content-Type: application/json'); echo json_encode(['success' => true, 'emailed' => (bool)$sent]); exit;
+    }
+
+    // Step A verify: check OTP sent to current email and mark session authorized
+    public function verifyEmailChangeOtp() {
+        AuthMiddleware::handle();
+        $raw = file_get_contents('php://input');
+        $data = json_decode($raw, true) ?: [];
+
+        if (!verify_csrf($data['csrf_token'] ?? null)) {
+            header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Invalid CSRF']); exit;
+        }
+
+        $otp = trim((string)($data['otp'] ?? ''));
+        if ($otp === '') { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Missing OTP']); exit; }
+
+        if (empty($_SESSION['email_change_authorize']) || !is_array($_SESSION['email_change_authorize'])) {
+            header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'No pending authorization']); exit;
+        }
+
+        $pending = &$_SESSION['email_change_authorize'];
+        if (time() > ($pending['expires'] ?? 0)) { unset($_SESSION['email_change_authorize']); header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'OTP expired']); exit; }
+
+        $pending['attempts'] = (int)($pending['attempts'] ?? 0) + 1;
+        if ($pending['attempts'] > (defined('OTP_MAX_ATTEMPTS') ? OTP_MAX_ATTEMPTS : 5)) { unset($_SESSION['email_change_authorize']); header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Too many attempts']); exit; }
+
+        if (!password_verify($otp, $pending['hash'])) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Invalid OTP']); exit; }
+
+        // Mark session as authorized to proceed with new-email step.
+        $authorizedExpiry = time() + (defined('OTP_EXPIRY_MINUTES') ? OTP_EXPIRY_MINUTES * 60 : 300);
+        $_SESSION['email_change_authorized'] = [ 'expires' => $authorizedExpiry ];
+        unset($_SESSION['email_change_authorize']);
+
+        header('Content-Type: application/json'); echo json_encode(['success' => true]); exit;
+    }
+
+    // Step B: send OTP to the NEW email (requires prior authorization)
+    public function sendNewEmailOtp() {
+        AuthMiddleware::handle();
+        $raw = file_get_contents('php://input');
+        $data = json_decode($raw, true) ?: [];
+
+        if (!verify_csrf($data['csrf_token'] ?? null)) {
+            header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Invalid CSRF']); exit;
+        }
+
+        $newEmail = trim((string)($data['new_email'] ?? ''));
+        if ($newEmail === '' || !filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
+            header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Invalid new email']); exit;
+        }
+
+        // Ensure authorization step completed and not expired
+        if (empty($_SESSION['email_change_authorized']) || !is_array($_SESSION['email_change_authorized']) || time() > ($_SESSION['email_change_authorized']['expires'] ?? 0)) {
+            header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Not authorized. Please verify the OTP sent to your current email first.']); exit;
+        }
+
+        $user = $this->userModel->findById($_SESSION['user_id']);
+        if (!$user) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'User not found']); exit; }
+
+        if (strcasecmp($newEmail, $user['email']) === 0) {
+            header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'New email is same as current']); exit;
+        }
+
+        $exists = $this->userModel->findByEmail($newEmail);
+        if ($exists && (int)$exists['id'] !== (int)$_SESSION['user_id']) {
+            header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Email already in use']); exit;
+        }
+
+        try { $otp = (string)random_int(100000, 999999); } catch (Exception $e) { $otp = (string)mt_rand(100000,999999); }
+        $expiry = time() + (defined('OTP_EXPIRY_MINUTES') ? OTP_EXPIRY_MINUTES * 60 : 300);
+
+        $_SESSION['email_change_otp'] = [
+            'hash' => password_hash($otp, PASSWORD_DEFAULT),
+            'expires' => $expiry,
+            'attempts' => 0,
+            'new_email' => $newEmail
+        ];
+
+        require_once INCLUDES_PATH . '/Mailer.php';
+        $mailer = new Mailer();
+        $subject = 'Confirm new email address';
+        $html = "<p>Hi " . htmlspecialchars($user['first_name'] ?? '') . ",</p>" .
+                "<p>Use the following OTP to confirm ownership of <strong>" . htmlspecialchars($newEmail) . "</strong> (expires in " . (defined('OTP_EXPIRY_MINUTES') ? OTP_EXPIRY_MINUTES : 5) . " minutes):</p>" .
+                "<h2>" . htmlspecialchars($otp) . "</h2>";
+
+        $sent = false;
+        try { $sent = $mailer->send($newEmail, ($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''), $subject, $html); } catch (Exception $e) { $sent = false; }
+
+        header('Content-Type: application/json'); echo json_encode(['success' => true, 'emailed' => (bool)$sent]); exit;
+    }
+
+    // Step B verify: check OTP sent to NEW email and finalize change
+    public function verifyNewEmailOtp() {
+        AuthMiddleware::handle();
+        $raw = file_get_contents('php://input');
+        $data = json_decode($raw, true) ?: [];
+
+        if (!verify_csrf($data['csrf_token'] ?? null)) {
+            header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Invalid CSRF']); exit;
+        }
+
+        $otp = trim((string)($data['otp'] ?? ''));
+        $newEmail = trim((string)($data['new_email'] ?? ''));
+        if ($otp === '' || $newEmail === '') { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Missing data']); exit; }
+
+        if (empty($_SESSION['email_change_otp']) || !is_array($_SESSION['email_change_otp'])) {
+            header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'No pending change']); exit;
+        }
+
+        $pending = &$_SESSION['email_change_otp'];
+        if (time() > ($pending['expires'] ?? 0)) { unset($_SESSION['email_change_otp']); header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'OTP expired']); exit; }
+
+        $pending['attempts'] = (int)($pending['attempts'] ?? 0) + 1;
+        if ($pending['attempts'] > (defined('OTP_MAX_ATTEMPTS') ? OTP_MAX_ATTEMPTS : 5)) { unset($_SESSION['email_change_otp']); header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Too many attempts']); exit; }
+
+        if (!password_verify($otp, $pending['hash'])) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Invalid OTP']); exit; }
+
+        if (strcasecmp($pending['new_email'] ?? '', $newEmail) !== 0) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'New email mismatch']); exit; }
+
+        // Update email (preserve other fields from DB)
+        $current = $this->userModel->findById($_SESSION['user_id']);
+        $profileData = [
+            'first_name' => $current['first_name'] ?? '',
+            'last_name'  => $current['last_name'] ?? '',
+            'email'      => $newEmail,
+            'phone'      => $current['phone'] ?? '',
+            'address'    => $current['address'] ?? '',
+            'city'       => $current['city'] ?? '',
+            'state'      => $current['state'] ?? '',
+            'zip_code'   => $current['zip_code'] ?? ''
+        ];
+        if ($this->userModel->hasColumn('username')) { $profileData['username'] = $current['username'] ?? null; }
+
+        $ok = $this->userModel->update($_SESSION['user_id'], $profileData);
+        if (!$ok) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => 'Update failed']); exit; }
+
+        // Clear session states related to email change
+        unset($_SESSION['email_change_otp']);
+        unset($_SESSION['email_change_authorized']);
+        $_SESSION['email'] = $newEmail;
+        header('Content-Type: application/json'); echo json_encode(['success' => true, 'email' => $newEmail]); exit;
     }
 }

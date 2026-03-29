@@ -227,7 +227,13 @@ p { color: var(--text-secondary); }
     display: block;
     border-radius: inherit;
 }
-.logo-text { font-size: 15px; font-weight: 800; letter-spacing: -.2px; }
+.logo-text {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+}
 
 /* Hide textual brand when a compact/visual logo is preferred (removes visible "Southdev Home Depot" text) */
 /* site name visibility restored */
@@ -342,7 +348,8 @@ p { color: var(--text-secondary); }
     .mobile-toggle svg { width: 20px; height: 20px; display: inline-block; vertical-align: middle; color: inherit; }
 
     /* Two-row header: topbar (brand red) + main nav (light) */
-    :root { --brand-red: #b71c1c; }
+    /* Use the accent color for the brand red so it matches the Register button border */
+    :root { --brand-red: var(--accent); }
     /* Small spacing so header doesn't touch the very top of the viewport */
     /* Removed extra top gap to align header flush with viewport */
     .site-header { margin-top: 0; }
@@ -369,9 +376,21 @@ p { color: var(--text-secondary); }
     .search-inline .form-control { flex: 1 1 auto; min-width: 120px; max-width: 100%; }
     .auth-links { margin-left:12px; display:flex; gap:10px; align-items:center; flex: 0 0 auto; }
     .brand { display:flex; align-items:center; gap:10px; color:#fff; font-weight:800; }
+    /* Ensure brand text remains visible on hover (don't inherit global a:hover color) */
+    .site-header .brand:hover,
+    .site-header .brand:focus {
+        color: #fff;
+        text-decoration: none;
+    }
     .brand .logo-icon { width:36px; height:36px; border-radius:6px; overflow:hidden; display:inline-flex; align-items:center; justify-content:center; background:rgba(255,255,255,.06); }
     .brand .logo-icon img { width:100%; height:100%; object-fit:cover; display:block; }
-    .brand .logo-text { font-size:18px; letter-spacing:0.6px; }
+    .brand .logo-text {
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: .6px;
+        text-transform: uppercase;
+    }
     .search-inline { margin-left:auto; display:flex; align-items:center; gap:8px; }
     .search-inline .form-control { padding:8px 10px; border-radius:3px; min-width:260px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); color:#fff; }
     .search-inline .form-control::placeholder { color: rgba(255,255,255,.8); }
@@ -379,6 +398,29 @@ p { color: var(--text-secondary); }
     .auth-links { margin-left:12px; display:flex; gap:10px; align-items:center; }
     .auth-links a { color:#fff; text-transform:uppercase; font-weight:700; font-size:13px; }
     .auth-links .btn-outline { background: transparent; border:1px solid rgba(255,255,255,.12); color:#fff; }
+
+    /* Give the plain Login link a smooth hover transition and subtle button feel
+       so it matches the Register button's affordance */
+    .auth-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        color: #fff;
+        font-weight: 700;
+        text-transform: uppercase;
+        transition: background-color .18s ease, transform .12s ease, box-shadow .18s ease;
+        text-decoration: none;
+    }
+    .auth-link:hover,
+    .auth-link:focus {
+        background: rgba(255,255,255,.06);
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(0,0,0,.08);
+        color: #fff;
+        text-decoration: none;
+    }
 
     .main-nav { background: #f6f6f6; border-bottom: 1px solid rgba(0,0,0,.06); border-top: 1px solid rgba(0,0,0,.03); }
     /* Add a small gap below the site main navigation so hero/content doesn't butt up against it */
