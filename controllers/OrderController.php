@@ -10,6 +10,7 @@ require_once __DIR__ . '/../models/Inventory.php';
 require_once __DIR__ . '/../models/Log.php';
 require_once __DIR__ . '/../models/CancelRequest.php';
 require_once __DIR__ . '/../models/Payment.php';
+require_once __DIR__ . '/../models/ReturnRequest.php';
 
 class OrderController {
     private $orderModel;
@@ -50,6 +51,12 @@ class OrderController {
         AuthMiddleware::handle();
         $pageTitle = 'My Orders';
         $orders = $this->orderModel->getByUserId($_SESSION['user_id']);
+
+        // Load return request data for all orders so we can show refund badges
+        $returnModel = new ReturnRequest($this->pdo);
+        $orderIds = array_column($orders, 'id');
+        $returnsByOrder = $returnModel->getByOrderIds($orderIds);
+
         $extraCss = ['customer.css'];
         require_once VIEWS_PATH . '/customer/orders.php';
     }
@@ -71,6 +78,8 @@ class OrderController {
 
         $orderItems = $this->orderModel->getItems($id);
         $payment = (new Payment($this->pdo))->getByOrderId($id);
+        $returnModel = new ReturnRequest($this->pdo);
+        $returnRequest = $returnModel->getByOrderId($id);
         $pageTitle = 'Order ' . $order['order_number'];
 
         if ($_SESSION['role_id'] == ROLE_CUSTOMER) {
@@ -99,6 +108,8 @@ class OrderController {
             $this->pdo->beginTransaction();
 
             $totalAmount = $this->cartModel->getCartTotal($_SESSION['user_id']);
+            $paymentMethod = trim($_POST['payment_method'] ?? 'cod');
+
             $orderId = $this->orderModel->create([
                 'user_id'          => $_SESSION['user_id'],
                 'total_amount'     => $totalAmount,
@@ -114,10 +125,19 @@ class OrderController {
                 $this->inventoryModel->adjustQuantity($item['product_id'], -$item['quantity']);
             }
 
+            // Create payment record so payment method is tracked
+            $paymentModel = new Payment($this->pdo);
+            $paymentModel->create([
+                'order_id'       => $orderId,
+                'payment_method' => $paymentMethod,
+                'amount'         => $totalAmount,
+                'status'         => ($paymentMethod === 'cod') ? 'completed' : 'pending'
+            ]);
+
             $this->cartModel->clearCart($_SESSION['user_id']);
             $this->pdo->commit();
 
-            $this->logModel->create(LOG_ORDER_CREATE, "Order #{$orderId} placed, total: ₱" . number_format($totalAmount, 2));
+            $this->logModel->create(LOG_ORDER_CREATE, "Order #{$orderId} placed via {$paymentMethod}, total: ₱" . number_format($totalAmount, 2));
             flash('success', 'Order placed successfully!');
             header('Location: ' . APP_URL . '/index.php?url=orders/' . $orderId);
         } catch (Exception $e) {

@@ -40,6 +40,47 @@ require_once INCLUDES_PATH . '/sidebar.php';
                     <span class="detail-label">Status:</span>
                     <span class="detail-value"><span class="badge badge-<?= $order['status'] ?>"><?= ucfirst($order['status']) ?></span></span>
                 </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment:</span>
+                    <span class="detail-value">
+                        <?php
+                            $pmLabel = 'N/A';
+                            $pmLogo  = APP_URL . '/assets/uploads/images/logo/creditcard.png';
+                            if (!empty($payment['payment_method'])) {
+                                $pmRaw = strtolower($payment['payment_method']);
+                                if (str_contains($pmRaw, 'gcash')) {
+                                    $pmLabel = 'GCash';
+                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/gcashlogo.png';
+                                } elseif (str_contains($pmRaw, 'cod') || str_contains($pmRaw, 'cash')) {
+                                    $pmLabel = 'Cash on Delivery';
+                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/COD.png';
+                                } elseif (str_contains($pmRaw, 'card') || str_contains($pmRaw, 'paymongo')) {
+                                    $pmLabel = 'Credit / Debit Card';
+                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/creditcard.png';
+                                } elseif (str_contains($pmRaw, 'ewallet') || str_contains($pmRaw, 'e-wallet')) {
+                                    $pmLabel = 'E-Wallet';
+                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/gcashlogo.png';
+                                } else {
+                                    $pmLabel = ucfirst($payment['payment_method']);
+                                }
+                            }
+                        ?>
+                        <span style="display:inline-flex;align-items:center;gap:5px;">
+                            <img src="<?= $pmLogo ?>" alt="<?= htmlspecialchars($pmLabel) ?>" class="payment-logo-icon">
+                            <strong><?= htmlspecialchars($pmLabel) ?></strong>
+                        </span>
+                    </span>
+                </div>
+                <?php if (!empty($payment['status'])): ?>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Status:</span>
+                    <span class="detail-value">
+                        <span class="badge badge-<?= $payment['status'] === 'completed' ? 'delivered' : ($payment['status'] === 'failed' ? 'cancelled' : 'pending') ?>">
+                            <?= ucfirst($payment['status']) ?>
+                        </span>
+                    </span>
+                </div>
+                <?php endif; ?>
                 <?php if (($order['status'] ?? '') === 'cancelled' && !empty($order['cancel_reason'])): ?>
                     <div class="detail-row">
                         <span class="detail-label">Cancel for Reason:</span>

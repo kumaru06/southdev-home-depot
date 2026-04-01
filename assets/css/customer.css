@@ -3,6 +3,42 @@
    Clean White Professional Theme
    ======================================================== */
 
+/* ---------- Customer Font Override ---------- */
+/* Plus Jakarta Sans: modern geometric sans-serif for the storefront */
+:root {
+    --font-customer: 'Plus Jakarta Sans', 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+body:not(.admin-layout) {
+    font-family: var(--font-customer);
+    letter-spacing: -0.01em;
+}
+body:not(.admin-layout) h1,
+body:not(.admin-layout) h2,
+body:not(.admin-layout) h3,
+body:not(.admin-layout) h4,
+body:not(.admin-layout) h5,
+body:not(.admin-layout) h6 {
+    font-family: var(--font-customer);
+    letter-spacing: -0.02em;
+}
+body:not(.admin-layout) .brand .logo-text {
+    font-family: var(--font-customer);
+    letter-spacing: 1.2px;
+}
+body:not(.admin-layout) .main-menu a {
+    font-family: var(--font-customer);
+    letter-spacing: .6px;
+}
+body:not(.admin-layout) .btn {
+    font-family: var(--font-customer);
+}
+body:not(.admin-layout) .auth-link {
+    font-family: var(--font-customer);
+}
+body:not(.admin-layout) .form-control {
+    font-family: var(--font-customer);
+}
+
 /* ---------- Hero Banner – Tiles Main Product ---------- */
 .hero-banner {
     position: relative;
@@ -861,7 +897,7 @@
     font-size: 15px;
     font-weight: 700;
     color: var(--charcoal);
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -870,6 +906,84 @@
     overflow: hidden;
     flex: 1;
 }
+
+/* Star ratings on product cards */
+.product-card .product-rating {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+.product-card .product-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+}
+.product-card .product-stars svg,
+.product-card .product-stars i {
+    width: 13px;
+    height: 13px;
+}
+.product-card .product-stars .star-filled {
+    color: #F59E0B;
+    fill: #F59E0B;
+    stroke: #F59E0B;
+}
+.product-card .product-stars .star-empty {
+    color: #D1D5DB;
+    fill: none;
+    stroke: #D1D5DB;
+}
+.product-card .rating-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: -.1px;
+}
+
+/* -------- Interactive Star Rating Input (Review Modal) -------- */
+.star-rating-input {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+}
+.star-rating-input .star-btn {
+    background: none;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    color: #D1D5DB;
+    transition: color .15s ease, transform .15s ease;
+    line-height: 0;
+    border-radius: 4px;
+    outline: none;
+}
+.star-rating-input .star-btn svg {
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    transition: fill .15s ease, stroke .15s ease;
+}
+.star-rating-input .star-btn:hover {
+    transform: scale(1.15);
+}
+.star-rating-input .star-btn.active {
+    color: #F59E0B;
+}
+.star-rating-input .star-btn.active svg {
+    fill: #F59E0B;
+    stroke: #F59E0B;
+}
+.star-rating-label {
+    margin-left: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: color .2s ease;
+    min-width: 90px;
+}
+
 .product-card .product-sku {
     font-size: 11px;
     color: var(--text-muted);
@@ -1005,121 +1119,197 @@
 }
 
 /* ---------- Profile ---------- */
-.profile-grid {
-    display: grid;
-    grid-template-columns: 300px 1fr;
-    gap: 24px;
-    align-items: start;
-    padding-bottom: 24px;
+
+/* Hero banner */
+.profile-hero {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 0;
+    box-shadow: var(--shadow-sm);
 }
-.profile-card-sidebar {
-    position: sticky;
-    top: 96px;
-    text-align: center;
-    padding: 28px 20px !important;
+.profile-hero-bg {
+    height: 140px;
+    background: linear-gradient(135deg, #F97316 0%, #EA580C 40%, #1B2A4A 100%);
+    position: relative;
 }
-.profile-card-photo-area {
+.profile-hero-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.profile-hero-content {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 16px;
-}
-.profile-photo--lg {
-    width: 96px;
-    height: 96px;
-    border-radius: 999px;
-    border: 3px solid var(--border);
+    align-items: flex-end;
+    gap: 20px;
+    padding: 0 28px 20px;
+    margin-top: -48px;
+    position: relative;
+    z-index: 1;
     background: var(--white);
-    box-shadow: 0 4px 16px rgba(27,42,74,.08);
+    border-bottom-left-radius: var(--radius-lg);
+    border-bottom-right-radius: var(--radius-lg);
+}
+.profile-hero-avatar {
+    position: relative;
+    flex-shrink: 0;
+    margin-top: -20px;
+}
+.profile-hero-avatar .profile-photo--lg {
+    width: 108px;
+    height: 108px;
+    border-radius: 999px;
+    border: 4px solid var(--white);
+    background: var(--white);
+    box-shadow: 0 4px 20px rgba(27,42,74,.12);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    flex-shrink: 0;
-    margin-bottom: 4px;
 }
-.profile-photo--lg .profile-avatar-img {
+.profile-hero-avatar .profile-avatar-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
 }
-.profile-photo--lg .profile-avatar-fallback {
+.profile-hero-avatar .profile-avatar-fallback {
     width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
     color: var(--white);
     font-weight: 900;
-    font-size: 28px;
+    font-size: 32px;
     letter-spacing: .6px;
 }
-.profile-card-name {
-    font-size: 17px;
-    font-weight: 800;
-    color: var(--charcoal);
-    margin: 0;
-}
-.profile-card-email,
-.profile-card-phone {
-    font-size: 12px;
-    color: var(--text-muted);
+.profile-camera-btn {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--white);
     display: flex;
     align-items: center;
-    gap: 4px;
-    margin: 0;
+    justify-content: center;
+    cursor: pointer;
+    border: 3px solid var(--white);
+    box-shadow: 0 2px 8px rgba(0,0,0,.14);
+    transition: background .2s, transform .2s;
 }
-.profile-card-email i,
-.profile-card-email svg,
-.profile-card-phone i,
-.profile-card-phone svg {
+.profile-camera-btn:hover {
+    background: var(--accent-dark, #EA580C);
+    transform: scale(1.08);
+}
+.profile-camera-btn i,
+.profile-camera-btn svg {
+    width: 14px;
+    height: 14px;
+}
+.profile-photo-upload-btn {
+    display: contents;
+}
+.profile-hero-info {
+    padding: 16px 0 4px;
+    min-width: 0;
+}
+.profile-hero-name {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--charcoal);
+    margin: 0 0 6px;
+    line-height: 1.2;
+}
+.profile-hero-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.profile-meta-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+.profile-meta-tag i,
+.profile-meta-tag svg {
     width: 13px;
     height: 13px;
+    opacity: .6;
 }
-.profile-card-upload {
-    text-align: center;
+
+/* Tab navigation */
+.profile-nav-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 14px 0 6px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 20px;
+    overflow-x: auto;
 }
-.profile-upload-label {
+.profile-tab {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 16px;
-    border-radius: 10px;
-    border: 1.5px solid var(--border);
-    background: var(--white);
-    color: var(--text-secondary);
-    font-size: 13px;
+    padding: 10px 18px;
+    background: none;
+    border: none;
+    border-bottom: 2.5px solid transparent;
+    margin-bottom: -2px;
+    font-size: 13.5px;
     font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-}
-.profile-upload-label:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-}
-.profile-upload-label i,
-.profile-upload-label svg {
-    width: 16px;
-    height: 16px;
-}
-.profile-upload-hint {
-    font-size: 11px;
     color: var(--text-muted);
-    margin-top: 6px;
+    cursor: pointer;
+    transition: color .2s, border-color .2s;
+    white-space: nowrap;
+    border-radius: 8px 8px 0 0;
 }
-.profile-forms {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+.profile-tab i,
+.profile-tab svg {
+    width: 15px;
+    height: 15px;
 }
+.profile-tab:hover {
+    color: var(--charcoal);
+    background: var(--neutral);
+}
+.profile-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: 700;
+}
+
+/* Section blocks */
+.profile-sections {
+    padding-bottom: 40px;
+}
+.profile-section-block {
+    animation: profileFadeIn .3s ease-out;
+}
+.profile-section-block.fade-in {
+    animation: profileFadeIn .3s ease-out;
+}
+@keyframes profileFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Section cards */
 .profile-section-card {
     padding: 0 !important;
     overflow: hidden;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
 }
 .profile-section-header {
     display: flex;
@@ -1129,13 +1319,28 @@
     background: var(--neutral);
     border-bottom: 1px solid var(--border);
 }
-.profile-section-header > i,
-.profile-section-header > svg {
-    width: 22px;
-    height: 22px;
-    color: var(--accent);
-    margin-top: 2px;
+.profile-section-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+}
+.profile-section-icon i,
+.profile-section-icon svg {
+    width: 20px;
+    height: 20px;
+    color: var(--accent);
+}
+.profile-section-icon--security {
+    background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+}
+.profile-section-icon--security i,
+.profile-section-icon--security svg {
+    color: #3B82F6;
 }
 .profile-section-header h3 {
     margin: 0 0 2px;
@@ -1145,12 +1350,74 @@
 }
 .profile-section-header p {
     margin: 0;
-    font-size: 12px;
+    font-size: 12.5px;
     color: var(--text-muted);
 }
 .profile-section-card form {
-    padding: 20px 24px;
+    padding: 22px 24px 24px;
 }
+
+/* Input with prefix icon (@ for username) */
+.input-icon-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.input-icon-prefix {
+    position: absolute;
+    left: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-muted);
+    z-index: 1;
+    pointer-events: none;
+}
+.form-control--prefixed {
+    padding-left: 30px !important;
+}
+
+/* Input with action button (email change) */
+.input-with-action {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Password toggle */
+.input-password-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.input-password-wrap .form-control {
+    padding-right: 42px;
+}
+.password-toggle {
+    position: absolute;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: color .2s, background .2s;
+}
+.password-toggle:hover {
+    color: var(--charcoal);
+    background: var(--neutral);
+}
+.password-toggle i,
+.password-toggle svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Form utilities */
 .form-divider {
     height: 1px;
     background: var(--border);
@@ -1173,9 +1440,20 @@
     height: 14px;
 }
 
-@media (max-width: 992px) {
-    .profile-grid { grid-template-columns: 1fr; }
-    .profile-card-sidebar { position: static; }
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-hero-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 0 16px 16px;
+    }
+    .profile-hero-avatar { margin-top: -30px; }
+    .profile-hero-meta { justify-content: center; }
+    .profile-nav-tabs { gap: 0; }
+    .profile-tab { padding: 8px 14px; font-size: 12.5px; }
+    .profile-section-card form { padding: 16px; }
+    .profile-section-header { padding: 16px; }
 }
 
 .cart-items-wrap {
@@ -2667,3 +2945,174 @@
 .product-card:nth-child(5) { animation-delay: .18s; }
 .product-card:nth-child(6) { animation-delay: .22s; }
 .product-card:nth-child(n+7) { animation-delay: .26s; }
+
+/* =============================================
+   Return / Refund Status Badges & Banner
+   ============================================= */
+
+/* Inline return badge (used in hero + order cards) */
+.return-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+}
+.return-badge--pending {
+    background: #FFF7ED;
+    color: #C2410C;
+    border: 1px solid #FDBA74;
+}
+.return-badge--approved {
+    background: #EFF6FF;
+    color: #1D4ED8;
+    border: 1px solid #93C5FD;
+}
+.return-badge--refunded {
+    background: #F0FDF4;
+    color: #15803D;
+    border: 1px solid #86EFAC;
+}
+
+/* Full-width refund status banner */
+.refund-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 24px;
+    border-radius: var(--radius-lg, 12px);
+    margin-bottom: 24px;
+    animation: fadeSlideUp .4s ease both;
+    animation-delay: .06s;
+}
+.refund-banner--pending {
+    background: linear-gradient(135deg, #FFF7ED 0%, #FFFBEB 100%);
+    border: 1px solid #FED7AA;
+}
+.refund-banner--approved {
+    background: linear-gradient(135deg, #EFF6FF 0%, #F0F9FF 100%);
+    border: 1px solid #BFDBFE;
+}
+.refund-banner--completed {
+    background: linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%);
+    border: 1px solid #BBF7D0;
+}
+.refund-banner-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.refund-banner--pending .refund-banner-icon {
+    background: #FDBA74;
+    color: #fff;
+}
+.refund-banner--approved .refund-banner-icon {
+    background: #60A5FA;
+    color: #fff;
+}
+.refund-banner--completed .refund-banner-icon {
+    background: #4ADE80;
+    color: #fff;
+}
+.refund-banner-icon i, .refund-banner-icon svg {
+    width: 22px;
+    height: 22px;
+}
+.refund-banner-content {
+    flex: 1;
+    min-width: 0;
+}
+.refund-banner-content h4 {
+    margin: 0 0 4px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--charcoal, #1B2A4A);
+}
+.refund-banner-content p {
+    margin: 0 0 10px;
+    font-size: .88rem;
+    color: var(--text-secondary, #6B7280);
+    line-height: 1.5;
+}
+.refund-banner-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: .82rem;
+    color: var(--text-secondary, #6B7280);
+}
+.refund-banner-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.refund-banner-notes {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: rgba(0,0,0,.04);
+    border-radius: 8px;
+    font-size: .84rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+}
+.refund-banner-badge {
+    flex-shrink: 0;
+}
+
+/* Return status note inside order info card */
+.od-return-status-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--light, #F8FAFC);
+    border-radius: 8px;
+    font-size: .88rem;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 640px) {
+    .refund-banner {
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+    }
+    .refund-banner-badge {
+        align-self: flex-start;
+    }
+}
+
+/* Payment badge in order cards */
+.order-payment-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    background: var(--light, #F1F5F9);
+    border: 1px solid var(--border, #E2E8F0);
+    border-radius: 20px;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--charcoal, #1B2A4A);
+    white-space: nowrap;
+}
+.order-payment-badge i, .order-payment-badge svg {
+    color: var(--accent, #F97316);
+}
+.payment-logo-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    flex-shrink: 0;
+    border-radius: 3px;
+}

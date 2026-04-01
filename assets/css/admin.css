@@ -91,25 +91,58 @@
     pointer-events: none;
 }
 
-.sidebar .nav-menu { list-style: none; padding: 0; margin: 0; }
-.sidebar .nav-menu li { position: relative; }
+.sidebar .nav-menu { list-style: none; padding: 0 14px; margin: 0; }
+.sidebar .nav-menu li { position: relative; margin-bottom: 10px; }
 .sidebar .nav-menu a {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 11px 22px;
-    color: rgba(255,255,255,.55);
+    gap: 12px;
+    padding: 10px 16px;
+    color: rgba(255,255,255,.6);
     font-size: 13px;
     font-weight: 500;
-    transition: var(--transition);
+    transition: all .25s ease;
     white-space: nowrap;
-    border-left: 3px solid transparent;
+    border-left: none;
+    border-radius: 10px;
+    background: rgba(255,255,255,.05);
 }
 .sidebar .nav-menu a .nav-icon {
     width: 20px;
-    text-align: center;
-    flex-shrink: 0;
+    min-width: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 16px;
+    transition: color .25s ease;
+    background: none;
+    border-radius: 0;
+}
+/* Hover state */
+.sidebar .nav-menu a:hover {
+    background: rgba(255,255,255,.1);
+    color: rgba(255,255,255,.95);
+    transform: translateX(2px);
+}
+.sidebar .nav-menu a:hover .nav-icon {
+    background: none;
+}
+/* Active state – accent pill */
+.sidebar .nav-menu a.active {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 4px 14px rgba(249,115,22,.35);
+}
+.sidebar .nav-menu a.active .nav-icon {
+    background: none;
+    color: #fff;
+    box-shadow: none;
+}
+/* Icon sizing */
+.sidebar .nav-menu a .nav-icon i {
+    font-size: 15px;
+    line-height: 1;
 }
 .sidebar .nav-menu a .nav-text {
     overflow: hidden;
@@ -117,16 +150,6 @@
     transition: opacity .2s;
 }
 .sidebar.collapsed .nav-menu a .nav-text { opacity: 0; width: 0; }
-.sidebar .nav-menu a:hover {
-    background: rgba(255,255,255,.06);
-    color: rgba(255,255,255,.9);
-}
-.sidebar .nav-menu a.active {
-    background: rgba(255,87,51,.14);
-    color: #fff;
-    border-left-color: var(--accent);
-    font-weight: 600;
-}
 
 /* When collapsed (labels hidden), prevent accidental navigation clicks */
 .sidebar.collapsed .nav-menu a {
@@ -138,10 +161,11 @@
 .sidebar.collapsed .nav-menu a:focus,
 .sidebar.collapsed .nav-menu a:active,
 .sidebar.collapsed .nav-menu a:focus-visible {
-    background: transparent;
+    background: rgba(255,255,255,.05);
     color: rgba(255,255,255,.55);
-    border-left-color: transparent;
     outline: none;
+    transform: none;
+    box-shadow: none;
 }
 
 /* Keep the active orange indicator, but don't animate/change on hover */
@@ -150,9 +174,8 @@
 .sidebar.collapsed .nav-menu a.active:focus,
 .sidebar.collapsed .nav-menu a.active:active,
 .sidebar.collapsed .nav-menu a.active:focus-visible {
-    background: transparent;
-    color: rgba(255,255,255,.55);
-    border-left-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
 }
 
 .sidebar .sidebar-footer {
@@ -829,3 +852,28 @@
 .log-action { font-family: var(--font-mono); font-size: 12px; }
 .log-ip { color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
 .log-time { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+
+/* ---------- Payment Method Badge ---------- */
+.payment-method-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    background: var(--light, #F1F5F9);
+    border: 1px solid var(--border, #E2E8F0);
+    border-radius: 20px;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--charcoal, #1B2A4A);
+    white-space: nowrap;
+}
+.payment-method-badge i, .payment-method-badge svg {
+    color: var(--accent, #F97316);
+}
+.payment-logo-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    flex-shrink: 0;
+    border-radius: 3px;
+}

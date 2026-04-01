@@ -50,4 +50,32 @@ class ReturnRequest {
         $stmt->execute([$orderId]);
         return $stmt->fetchColumn() > 0;
     }
+
+    /**
+     * Get the latest return request for a specific order.
+     */
+    public function getByOrderId($orderId) {
+        $stmt = $this->pdo->prepare("SELECT * FROM return_requests WHERE order_id = ? ORDER BY created_at DESC LIMIT 1");
+        $stmt->execute([$orderId]);
+        return $stmt->fetch();
+    }
+
+    /**
+     * Get return requests indexed by order_id for a list of order IDs.
+     */
+    public function getByOrderIds(array $orderIds) {
+        if (empty($orderIds)) return [];
+        $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+        $stmt = $this->pdo->prepare(
+            "SELECT * FROM return_requests WHERE order_id IN ($placeholders) AND status NOT IN ('rejected') ORDER BY created_at DESC"
+        );
+        $stmt->execute($orderIds);
+        $results = [];
+        while ($row = $stmt->fetch()) {
+            if (!isset($results[$row['order_id']])) {
+                $results[$row['order_id']] = $row;
+            }
+        }
+        return $results;
+    }
 }

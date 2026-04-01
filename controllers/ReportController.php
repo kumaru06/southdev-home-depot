@@ -112,7 +112,9 @@ class ReportController {
                     $sql = "SELECT {$groupExpr} as period, COUNT(DISTINCT o.id) as orders_count, SUM(oi.quantity) as units_sold, SUM(oi.subtotal) as revenue
                             FROM order_items oi
                             JOIN orders o ON oi.order_id = o.id
-                            WHERE o.status NOT IN ('cancelled')";
+                            LEFT JOIN payments pay ON pay.order_id = o.id
+                            WHERE o.status NOT IN ('cancelled')
+                            AND (pay.status IS NULL OR pay.status != 'refunded')";
                     $params = [];
                     if ($dateFrom && $dateTo) {
                         $sql .= " AND o.created_at BETWEEN ? AND ?";
@@ -148,7 +150,9 @@ class ReportController {
                             JOIN orders o ON oi.order_id = o.id
                             JOIN products p ON oi.product_id = p.id
                             JOIN users u ON o.user_id = u.id
-                            WHERE o.status NOT IN ('cancelled')";
+                            LEFT JOIN payments pay ON pay.order_id = o.id
+                            WHERE o.status NOT IN ('cancelled')
+                            AND (pay.status IS NULL OR pay.status != 'refunded')";
                     $params = [];
                     if ($dateFrom && $dateTo) {
                         $sql .= " AND o.created_at BETWEEN ? AND ?";
@@ -191,7 +195,14 @@ class ReportController {
         $topProducts = $this->orderItemModel->getTopProducts(10);
 
         // Monthly sales data
-        $stmt = $this->pdo->query("SELECT DATE_FORMAT(created_at, '%Y-%m') as month, SUM(total_amount) as total FROM orders WHERE status != 'cancelled' GROUP BY month ORDER BY month DESC LIMIT 12");
+        $stmt = $this->pdo->query("
+            SELECT DATE_FORMAT(o.created_at, '%Y-%m') as month, SUM(o.total_amount) as total
+            FROM orders o
+            LEFT JOIN payments p ON p.order_id = o.id
+            WHERE o.status != 'cancelled'
+            AND (p.status IS NULL OR p.status != 'refunded')
+            GROUP BY month ORDER BY month DESC LIMIT 12
+        ");
         $monthlySales = $stmt->fetchAll();
 
         // Order status counts

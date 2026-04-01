@@ -9,6 +9,7 @@ require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Inventory.php';
 require_once __DIR__ . '/../models/Log.php';
 require_once __DIR__ . '/../models/CancelRequest.php';
+require_once __DIR__ . '/../models/DamagedProduct.php';
 
 class DashboardController {
     private $pdo;
@@ -18,6 +19,7 @@ class DashboardController {
     private $inventoryModel;
     private $logModel;
     private $cancelModel;
+    private $damagedModel;
 
     public function __construct($pdo) {
         $this->pdo            = $pdo;
@@ -27,6 +29,7 @@ class DashboardController {
         $this->inventoryModel = new Inventory($pdo);
         $this->logModel       = new Log($pdo);
         $this->cancelModel    = new CancelRequest($pdo);
+        $this->damagedModel   = new DamagedProduct($pdo);
     }
 
     public function index() {
@@ -46,7 +49,14 @@ class DashboardController {
 
         // --- Charts data ---
         // Monthly sales (last 12 months)
-        $stmt = $this->pdo->query("SELECT DATE_FORMAT(created_at, '%Y-%m') as month, SUM(total_amount) as total FROM orders WHERE status != 'cancelled' GROUP BY month ORDER BY month ASC LIMIT 12");
+        $stmt = $this->pdo->query("
+            SELECT DATE_FORMAT(o.created_at, '%Y-%m') as month, SUM(o.total_amount) as total
+            FROM orders o
+            LEFT JOIN payments p ON p.order_id = o.id
+            WHERE o.status != 'cancelled'
+            AND (p.status IS NULL OR p.status != 'refunded')
+            GROUP BY month ORDER BY month ASC LIMIT 12
+        ");
         $monthlySales = $stmt->fetchAll();
         $chartLabels = [];
         $chartData   = [];
@@ -56,7 +66,15 @@ class DashboardController {
         }
 
         // Daily sales (last 30 days) - prefer daily view on dashboard
-        $stmt = $this->pdo->query("SELECT DATE(created_at) as day, SUM(total_amount) as total FROM orders WHERE status != 'cancelled' AND created_at >= DATE_SUB(CURDATE(), INTERVAL 29 DAY) GROUP BY day ORDER BY day ASC");
+        $stmt = $this->pdo->query("
+            SELECT DATE(o.created_at) as day, SUM(o.total_amount) as total
+            FROM orders o
+            LEFT JOIN payments p ON p.order_id = o.id
+            WHERE o.status != 'cancelled'
+            AND (p.status IS NULL OR p.status != 'refunded')
+            AND o.created_at >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)
+            GROUP BY day ORDER BY day ASC
+        ");
         $dailySales = $stmt->fetchAll();
         $dailyLabels = [];
         $dailyData   = [];
@@ -94,7 +112,9 @@ class DashboardController {
             JOIN products p ON oi.product_id = p.id
             JOIN categories c ON p.category_id = c.id
             JOIN orders o ON oi.order_id = o.id
+            LEFT JOIN payments pay ON pay.order_id = o.id
             WHERE o.status != 'cancelled'
+            AND (pay.status IS NULL OR pay.status != 'refunded')
             GROUP BY c.id
             ORDER BY revenue DESC
             LIMIT 5
@@ -113,6 +133,12 @@ class DashboardController {
 
         // --- Low stock alerts ---
         $lowStock = $this->inventoryModel->getLowStock();
+
+        // --- Damaged products ---
+        $damagedSummary     = $this->damagedModel->getSummary();
+        $recentDamaged      = $this->damagedModel->getRecent(5);
+        $totalDamaged       = $damagedSummary['total'];
+        $pendingDamaged     = $damagedSummary['received'];
 
         // --- Top selling products ---
         $stmt = $this->pdo->query("

@@ -55,6 +55,12 @@ $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($
                 </a>
             </li>
             <li>
+                <a href="<?= APP_URL ?>/index.php?url=staff/inventory/damaged" class="<?= strpos($currentUrl, 'damaged') !== false ? 'active' : '' ?>">
+                    <span class="nav-icon"><i class="lucide-alert-octagon"></i></span>
+                    <span class="nav-text">Damaged Products</span>
+                </a>
+            </li>
+            <li>
                 <a href="<?= APP_URL ?>/index.php?url=staff/reports" class="<?= strpos($currentUrl, 'reports') !== false ? 'active' : '' ?>">
                     <span class="nav-icon"><i class="lucide-bar-chart-3"></i></span>
                     <span class="nav-text">Reports</span>
@@ -88,6 +94,12 @@ $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($
                 <a href="<?= APP_URL ?>/index.php?url=inventory/stock/price-history" class="<?= strpos($currentUrl, 'price-history') !== false ? 'active' : '' ?>">
                     <span class="nav-icon"><i class="lucide-trending-up"></i></span>
                     <span class="nav-text">Price History</span>
+                </a>
+            </li>
+            <li>
+                <a href="<?= APP_URL ?>/index.php?url=inventory/stock/damaged" class="<?= strpos($currentUrl, 'damaged') !== false ? 'active' : '' ?>">
+                    <span class="nav-icon"><i class="lucide-alert-octagon"></i></span>
+                    <span class="nav-text">Damaged Products</span>
                 </a>
             </li>
             <li>
@@ -142,6 +154,12 @@ $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($
                 <a href="<?= APP_URL ?>/index.php?url=admin/returns" class="<?= strpos($currentUrl, 'returns') !== false ? 'active' : '' ?>">
                     <span class="nav-icon"><i class="lucide-rotate-ccw"></i></span>
                     <span class="nav-text">Returns</span>
+                </a>
+            </li>
+            <li>
+                <a href="<?= APP_URL ?>/index.php?url=admin/inventory/damaged" class="<?= strpos($currentUrl, 'damaged') !== false ? 'active' : '' ?>">
+                    <span class="nav-icon"><i class="lucide-alert-octagon"></i></span>
+                    <span class="nav-text">Damaged Products</span>
                 </a>
             </li>
             <li>

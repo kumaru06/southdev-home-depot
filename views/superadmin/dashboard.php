@@ -1,6 +1,26 @@
 <?php
 require_once INCLUDES_PATH . '/header.php';
 require_once INCLUDES_PATH . '/sidebar.php';
+
+// Helper: map log action to icon + colour class
+function _dash_activity_icon(string $action): array {
+    if (str_contains($action, 'login') || str_contains($action, 'logout'))
+        return ['log-in',      'ab-login'];
+    if (str_contains($action, 'order'))
+        return ['shopping-bag', 'ab-order'];
+    if (str_contains($action, 'user') || str_contains($action, 'register'))
+        return ['user',         'ab-user'];
+    if (str_contains($action, 'product') || str_contains($action, 'category'))
+        return ['package',      'ab-product'];
+    if (str_contains($action, 'stock') || str_contains($action, 'inventory'))
+        return ['layers',       'ab-stock'];
+    return ['activity', 'ab-default'];
+}
+
+// Friendly action label
+function _dash_action_label(string $raw): string {
+    return ucwords(str_replace('_', ' ', $raw));
+}
 ?>
 
 <div class="main-content">
@@ -13,7 +33,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
 
     <div class="page-content">
 
-        <!-- Stat Cards -->
+        <!-- ========== Stat Cards ========== -->
         <div class="stat-cards">
             <div class="stat-card">
                 <div class="stat-info">
@@ -57,13 +77,20 @@ require_once INCLUDES_PATH . '/sidebar.php';
                 </div>
                 <div class="stat-icon"><i data-lucide="x-circle"></i></div>
             </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <span class="stat-label">Damaged Products</span>
+                    <span class="stat-value"><?= $totalDamaged ?? 0 ?></span>
+                </div>
+                <div class="stat-icon" style="background:var(--danger-bg, #FEE2E2);color:var(--danger, #DC2626);"><i data-lucide="alert-octagon"></i></div>
+            </div>
         </div>
 
-        <!-- Charts -->
+        <!-- ========== Charts ========== -->
         <div class="chart-grid">
             <div class="chart-container">
                 <div class="chart-header">
-                    <h3>Sales</h3>
+                    <h3>Sales Overview</h3>
                     <div>
                         <button id="sales-view-monthly" class="btn btn-sm btn-outline">MONTHLY</button>
                         <button id="sales-view-daily" class="btn btn-sm btn-accent">DAILY</button>
@@ -95,25 +122,28 @@ require_once INCLUDES_PATH . '/sidebar.php';
             </div>
         </div>
 
-        <!-- Recent Orders + Activity -->
-        <div class="dashboard-grid-2">
-            <div class="card">
-                <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-                    <h3 style="margin:0;font-size:1rem;font-weight:600;">Profile</h3>
-                    <a href="<?= APP_URL ?>/index.php?url=admin/orders" class="btn btn-sm" style="font-size:.8rem;">View All</a>
+        <!-- ========== Recent Orders + Activity ========== -->
+        <div class="dashboard-grid-orders">
+            <!-- Recent Orders -->
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <h3><i data-lucide="shopping-bag"></i> Recent Orders</h3>
+                    <a href="<?= APP_URL ?>/index.php?url=admin/orders" class="view-all-link">
+                        View All <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+                    </a>
                 </div>
-                <div class="data-table-wrap">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Order #</th>
-                                <th>Customer</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (!empty($recentOrders)): ?>
+                <div class="dash-card-body">
+                    <?php if (!empty($recentOrders)): ?>
+                        <table class="dash-table">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                                 <?php foreach ($recentOrders as $order): ?>
                                     <tr>
                                         <td><a href="<?= APP_URL ?>/index.php?url=admin/orders/<?= $order['id'] ?>"><?= htmlspecialchars($order['order_number']) ?></a></td>
@@ -122,68 +152,95 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                         <td><span class="badge badge-<?= $order['status'] ?>"><?= ucfirst($order['status']) ?></span></td>
                                     </tr>
                                 <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr><td colspan="4" style="text-align:center;color:var(--steel);">No recent orders</td></tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    <?php else: ?>
+                        <div class="dash-empty">
+                            <i data-lucide="inbox"></i>
+                            <p>No recent orders</p>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
-            <div class="card">
-                <h3 style="margin:0 0 1rem;font-size:1rem;font-weight:600;">Recent Activity</h3>
-                <div class="activity-feed">
+            <!-- Recent Activity -->
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <h3><i data-lucide="activity"></i> Recent Activity</h3>
+                </div>
+                <div class="dash-card-body">
                     <?php if (!empty($recentLogs)): ?>
-                        <?php foreach ($recentLogs as $log): ?>
-                            <div class="activity-item">
-                                <div class="activity-dot"></div>
-                                <div class="activity-content">
-                                    <p class="activity-text"><?= htmlspecialchars($log['action']) ?></p>
-                                    <span class="activity-meta">
-                                        <?= htmlspecialchars($log['first_name'] . ' ' . $log['last_name']) ?>
-                                        &bull; <?= date('M d, g:i A', strtotime($log['created_at'])) ?>
-                                    </span>
-                                </div>
+                        <div class="activity-scroll">
+                            <div class="activity-list">
+                                <?php foreach ($recentLogs as $log):
+                                    [$icon, $colorCls] = _dash_activity_icon($log['action']);
+                                ?>
+                                    <div class="activity-row">
+                                        <div class="activity-badge <?= $colorCls ?>">
+                                            <i data-lucide="<?= $icon ?>"></i>
+                                        </div>
+                                        <div class="activity-body">
+                                            <p class="activity-action"><?= htmlspecialchars(_dash_action_label($log['action'])) ?></p>
+                                            <span class="activity-who">
+                                                <?= htmlspecialchars(($log['first_name'] ?? '') . ' ' . ($log['last_name'] ?? '')) ?>
+                                                <span class="sep"></span>
+                                                <?= date('M d, g:i A', strtotime($log['created_at'])) ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
-                        <?php endforeach; ?>
+                        </div>
                     <?php else: ?>
-                        <p style="color:var(--steel);text-align:center;padding:1rem;">No recent activity</p>
+                        <div class="dash-empty">
+                            <i data-lucide="clock"></i>
+                            <p>No recent activity</p>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
 
-        <!-- Low Stock + Top Products -->
+        <!-- ========== Low Stock + Top Products ========== -->
         <div class="dashboard-grid-2">
-            <div class="card">
-                <h3 style="margin:0 0 1rem;font-size:1rem;font-weight:600;">
-                    <i data-lucide="alert-triangle" style="width:16px;height:16px;color:var(--accent);vertical-align:middle;"></i>
-                    Low Stock Alert
-                </h3>
-                <?php if (!empty($lowStock)): ?>
-                    <div class="data-table-wrap">
-                        <table class="data-table">
+            <!-- Low Stock Alert -->
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <h3><i data-lucide="alert-triangle" style="color:var(--danger);"></i> Low Stock Alert</h3>
+                </div>
+                <div class="dash-card-body">
+                    <?php if (!empty($lowStock)): ?>
+                        <table class="dash-table">
                             <thead><tr><th>Product</th><th>Stock</th></tr></thead>
                             <tbody>
-                                <?php foreach ($lowStock as $item): ?>
+                                <?php foreach ($lowStock as $item):
+                                    $qty = (int)$item['quantity'];
+                                    $cls = $qty <= 5 ? 'critical' : 'warning';
+                                ?>
                                     <tr class="row-warning">
                                         <td><?= htmlspecialchars($item['product_name'] ?? $item['name']) ?></td>
-                                        <td><span class="badge badge-cancelled"><?= $item['quantity'] ?></span></td>
+                                        <td><span class="stock-badge <?= $cls ?>"><?= $qty ?> left</span></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
-                    </div>
-                <?php else: ?>
-                    <p style="color:var(--steel);text-align:center;padding:1rem;">All stock levels healthy</p>
-                <?php endif; ?>
+                    <?php else: ?>
+                        <div class="dash-empty">
+                            <i data-lucide="check-circle" style="color:var(--success);opacity:.6;"></i>
+                            <p>All stock levels healthy</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
 
-            <div class="card">
-                <h3 style="margin:0 0 1rem;font-size:1rem;font-weight:600;">Top Selling Products</h3>
-                <?php if (!empty($topProducts)): ?>
-                    <div class="data-table-wrap">
-                        <table class="data-table">
+            <!-- Top Selling Products -->
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <h3><i data-lucide="bar-chart-2"></i> Top Selling Products</h3>
+                </div>
+                <div class="dash-card-body">
+                    <?php if (!empty($topProducts)): ?>
+                        <table class="dash-table">
                             <thead><tr><th>Product</th><th>Sold</th><th>Revenue</th></tr></thead>
                             <tbody>
                                 <?php foreach ($topProducts as $tp): ?>
@@ -195,12 +252,52 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
-                    </div>
-                <?php else: ?>
-                    <p style="color:var(--steel);text-align:center;padding:1rem;">No sales data yet</p>
-                <?php endif; ?>
+                    <?php else: ?>
+                        <div class="dash-empty">
+                            <i data-lucide="bar-chart"></i>
+                            <p>No sales data yet</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
+
+        <!-- ========== Damaged Products ========== -->
+        <?php if (!empty($recentDamaged)): ?>
+        <div class="dashboard-grid-2" style="margin-top: 0;">
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <h3><i data-lucide="alert-octagon" style="color:var(--danger);"></i> Damaged Products</h3>
+                    <a href="<?= APP_URL ?>/index.php?url=admin/inventory/damaged" class="view-all-link">
+                        View All <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+                    </a>
+                </div>
+                <div class="dash-card-body">
+                    <table class="dash-table">
+                        <thead><tr><th>Product</th><th>Qty</th><th>Order</th><th>Status</th></tr></thead>
+                        <tbody>
+                            <?php foreach ($recentDamaged as $dmg):
+                                $dmgClass = match($dmg['status']) {
+                                    'received'    => 'badge-pending',
+                                    'inspected'   => 'badge-processing',
+                                    'written_off' => 'badge-cancelled',
+                                    'repaired'    => 'badge-delivered',
+                                    default       => 'badge-pending'
+                                };
+                            ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($dmg['product_name']) ?></td>
+                                    <td><strong><?= $dmg['quantity'] ?></strong></td>
+                                    <td><?= htmlspecialchars($dmg['order_number']) ?></td>
+                                    <td><span class="badge <?= $dmgClass ?>"><?= ucfirst(str_replace('_', ' ', $dmg['status'])) ?></span></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
 
     </div>
 </div>

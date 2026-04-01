@@ -17,6 +17,7 @@ CREATE TABLE `users` (
     `role_id` INT NOT NULL DEFAULT 1,
     `first_name` VARCHAR(100) NOT NULL,
     `last_name` VARCHAR(100) NOT NULL,
+    `username` VARCHAR(100) NULL,
     `email` VARCHAR(255) NOT NULL UNIQUE,
     `password` VARCHAR(255) NOT NULL,
     `phone` VARCHAR(20),
@@ -36,7 +37,8 @@ CREATE TABLE `users` (
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`),
-    INDEX `idx_users_verification_token` (`verification_token`)
+    INDEX `idx_users_verification_token` (`verification_token`),
+    UNIQUE INDEX `idx_users_username` (`username`)
 ) ENGINE=InnoDB;
 
 -- Categories table

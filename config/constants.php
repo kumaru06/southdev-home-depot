@@ -62,3 +62,4 @@ define('LOG_PRICE_UPDATE', 'price_updated');
 define('LOG_STOCK_ADD', 'stock_added');
 define('LOG_STOCK_MOVEMENT', 'stock_movement');
 define('LOG_SUPPLIER_REQUEST', 'supplier_request');
+define('LOG_DAMAGED_PRODUCT', 'damaged_product');

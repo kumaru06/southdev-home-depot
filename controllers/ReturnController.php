@@ -5,17 +5,32 @@
 
 require_once __DIR__ . '/../models/ReturnRequest.php';
 require_once __DIR__ . '/../models/Order.php';
+require_once __DIR__ . '/../models/OrderItem.php';
+require_once __DIR__ . '/../models/DamagedProduct.php';
+require_once __DIR__ . '/../models/Inventory.php';
+require_once __DIR__ . '/../models/StockMovement.php';
+require_once __DIR__ . '/../models/Payment.php';
 require_once __DIR__ . '/../models/Log.php';
 
 class ReturnController {
     private $returnModel;
     private $orderModel;
+    private $orderItemModel;
+    private $damagedModel;
+    private $inventoryModel;
+    private $stockMovementModel;
     private $logModel;
+    private $pdo;
 
     public function __construct($pdo) {
-        $this->returnModel = new ReturnRequest($pdo);
-        $this->orderModel  = new Order($pdo);
-        $this->logModel    = new Log($pdo);
+        $this->pdo               = $pdo;
+        $this->returnModel       = new ReturnRequest($pdo);
+        $this->orderModel        = new Order($pdo);
+        $this->orderItemModel    = new OrderItem($pdo);
+        $this->damagedModel      = new DamagedProduct($pdo);
+        $this->inventoryModel    = new Inventory($pdo);
+        $this->stockMovementModel = new StockMovement($pdo);
+        $this->logModel          = new Log($pdo);
     }
 
     public function requestForm($orderId) {
@@ -79,8 +94,95 @@ class ReturnController {
 
         $this->returnModel->updateStatus($id, $status, $adminNotes);
         $this->logModel->create(LOG_RETURN_UPDATE, "Return request #{$id} updated to: {$status}");
+
+        $return = $this->returnModel->findById($id);
+
+        // When a return is APPROVED
+        if ($status === 'approved' && $return) {
+            $isDamaged = $this->isDamageReason($return['reason']);
+            $orderItems = $this->orderItemModel->getByOrderId($return['order_id']);
+
+            foreach ($orderItems as $item) {
+                if ($isDamaged && !$this->damagedModel->existsForReturn($id)) {
+                    // Create damaged product record
+                    $this->damagedModel->create([
+                        'product_id'        => $item['product_id'],
+                        'order_id'          => $return['order_id'],
+                        'return_request_id' => $id,
+                        'quantity'           => $item['quantity'],
+                        'reason'            => $return['reason'],
+                        'reported_by'       => $_SESSION['user_id']
+                    ]);
+
+                    // Record a stock movement for the damage
+                    $this->stockMovementModel->record(
+                        $item['product_id'],
+                        'adjustment',
+                        -$item['quantity'],
+                        $id,
+                        'Damaged product from return #' . $id . ': ' . substr($return['reason'], 0, 200),
+                        $_SESSION['user_id']
+                    );
+
+                    $this->logModel->create(LOG_STOCK_MOVEMENT,
+                        "Damaged product recorded: {$item['product_name']} (qty: {$item['quantity']}) from Return #{$id}"
+                    );
+                } elseif (!$isDamaged) {
+                    // Non-damaged returns: restore inventory
+                    $this->inventoryModel->adjustQuantity($item['product_id'], $item['quantity']);
+                    $this->stockMovementModel->record(
+                        $item['product_id'],
+                        'return',
+                        $item['quantity'],
+                        $id,
+                        'Return approved (non-damaged) from return #' . $id,
+                        $_SESSION['user_id']
+                    );
+                    $this->logModel->create(LOG_STOCK_MOVEMENT,
+                        "Stock restored: {$item['product_name']} (qty: {$item['quantity']}) from Return #{$id}"
+                    );
+                }
+            }
+        }
+
+        // When a return is marked COMPLETED → mark payment as refunded
+        if ($status === 'completed' && $return) {
+            $paymentModel = new Payment($this->pdo);
+            $payment = $paymentModel->getByOrderId($return['order_id']);
+            if ($payment) {
+                $paymentModel->updateStatus($payment['id'], 'refunded');
+                $this->logModel->create(LOG_RETURN_UPDATE,
+                    "Payment for Order #{$return['order_id']} marked as refunded (Return #{$id})"
+                );
+            }
+        }
+
         flash('success', 'Return request updated.');
-        header('Location: ' . APP_URL . '/index.php?url=staff/returns');
+
+        // Redirect based on role
+        $roleId = $_SESSION['role_id'] ?? ROLE_STAFF;
+        if ($roleId == ROLE_SUPER_ADMIN) {
+            header('Location: ' . APP_URL . '/index.php?url=admin/returns');
+        } else {
+            header('Location: ' . APP_URL . '/index.php?url=staff/returns');
+        }
         exit;
+    }
+
+    /**
+     * Check if a return reason indicates item damage.
+     */
+    private function isDamageReason($reason) {
+        $damageKeywords = [
+            'damaged', 'broken', 'defective', 'not working',
+            'cracked', 'torn', 'dented', 'scratched'
+        ];
+        $reasonLower = strtolower($reason);
+        foreach ($damageKeywords as $keyword) {
+            if (str_contains($reasonLower, $keyword)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

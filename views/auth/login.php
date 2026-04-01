@@ -53,10 +53,10 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
                         <?= csrf_field() ?>
 
                         <div class="form-group">
-                            <label for="email">Email Address</label>
+                            <label for="email">Email or Username</label>
                             <div class="input-icon-wrap">
-                                <i data-lucide="mail" class="input-icon"></i>
-                                <input type="email" id="email" name="email" class="form-control" placeholder="you@example.com" required autofocus>
+                                <i data-lucide="user" class="input-icon"></i>
+                                <input type="text" id="email" name="email" class="form-control" placeholder="you@example.com or username" required autofocus>
                             </div>
                         </div>
 

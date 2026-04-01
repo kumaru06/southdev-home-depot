@@ -20,10 +20,10 @@ if (!headers_sent()) {
     <meta name="description" content="<?= APP_TAGLINE ?>">
     <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle) . ' – ' : '' ?><?= APP_NAME ?></title>
 
-    <!-- Inter Font -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Lucide Icons -->
     <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css">
@@ -46,62 +46,6 @@ if (!headers_sent()) {
         <script>var APP_URL = '<?= APP_URL ?>';</script>
 </head>
 <body class="<?= isset($isAdmin) && $isAdmin ? 'admin-layout' : '' ?>">
-
-<!-- Loading Overlay (visible by default while page loads) -->
-<div id="loading-overlay" aria-hidden="false">
-    <div class="loading-box">
-        <div class="loading-brand">
-            <img src="<?= APP_URL ?>/assets/uploads/images/image2.png" alt="<?= htmlspecialchars(APP_NAME) ?>" onerror="this.style.display='none'">
-        </div>
-        <div class="loading-ring" aria-hidden="true"></div>
-        <div class="loading-msg">Loading <span class="loading-dot">.</span><span class="loading-dot">.</span><span class="loading-dot">.</span></div>
-        <div class="loading-sub">Preparing your personalized storefront</div>
-    </div>
-    <noscript>
-        <style>
-            #loading-overlay { display:none !important; }
-        </style>
-    </noscript>
-</div>
-
-<script>
-// Immediately show overlay (in case CSS hasn't loaded yet) using inline styles
-(function(){
-    var el = document.getElementById('loading-overlay');
-    if(!el) return;
-    el.style.position = 'fixed';
-    el.style.inset = '0';
-    el.style.display = 'flex';
-    el.style.alignItems = 'center';
-    el.style.justifyContent = 'center';
-    el.style.zIndex = 9999;
-    el.style.background = 'rgba(27,42,74,.75)';
-    // Hide overlay after window load with fade, but enforce a minimum visible time
-    var startTs = Date.now();
-    var MIN_VISIBLE = 900; // milliseconds - reduced so loader is shorter but still visible
-    function doHide(){
-        el.style.transition = 'opacity .5s ease';
-        el.style.opacity = '0';
-        setTimeout(function(){ try{ el.style.display='none'; el.remove(); }catch(e){} }, 540);
-    }
-    function hideOverlay(){
-        var elapsed = Date.now() - startTs;
-        if(elapsed >= MIN_VISIBLE){
-            doHide();
-        } else {
-            setTimeout(doHide, MIN_VISIBLE - elapsed);
-        }
-    }
-    if(document.readyState === 'complete'){
-        // If already loaded, ensure minimum visible time before hide
-        hideOverlay();
-    } else {
-        window.addEventListener('load', hideOverlay);
-        // fallback: hide after 8s if load never fires
-        setTimeout(function(){ if(document.body) hideOverlay(); }, 8000);
-    }
-})();
-</script>
 
 <?php if (has_flash('success') || has_flash('error') || has_flash('warning')): ?>
     <div class="toast-container" role="status" aria-live="polite">

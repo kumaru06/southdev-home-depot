@@ -49,10 +49,10 @@ class AuthController {
             strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
         ) || (strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false);
 
-        $email    = trim($_POST['email'] ?? '');
+        $login    = trim($_POST['email'] ?? '');  // accepts email or username
         $password = $_POST['password'] ?? '';
 
-        if (empty($email) || empty($password)) {
+        if (empty($login) || empty($password)) {
             if ($isAjax) {
                 session_write_close();
                 header('Content-Type: application/json; charset=utf-8');
@@ -64,7 +64,11 @@ class AuthController {
             exit;
         }
 
-        $user = $this->userModel->findByEmail($email);
+        // Try lookup by email first, then by username
+        $user = $this->userModel->findByEmail($login);
+        if (!$user) {
+            $user = $this->userModel->findByUsername($login);
+        }
 
         if ($user && password_verify($password, $user['password'])) {
             if (!$user['is_active']) {
@@ -114,11 +118,11 @@ class AuthController {
         if ($isAjax) {
             session_write_close();
             header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['success' => false, 'message' => 'Invalid email or password.']);
+            echo json_encode(['success' => false, 'message' => 'Invalid email/username or password.']);
             exit;
         }
 
-        flash('error', 'Invalid email or password.');
+        flash('error', 'Invalid email/username or password.');
         header('Location: ' . APP_URL . '/index.php?url=login');
         exit;
     }
@@ -194,6 +198,7 @@ class AuthController {
         $data = [
             'first_name' => trim($_POST['first_name'] ?? ''),
             'last_name'  => trim($_POST['last_name'] ?? ''),
+            'username'   => trim($_POST['username'] ?? ''),
             'email'      => trim($_POST['email'] ?? ''),
             'password'   => $_POST['password'] ?? '',
             'phone'      => trim($_POST['phone'] ?? ''),
@@ -205,6 +210,28 @@ class AuthController {
             flash('error', 'Please fill in all required fields.');
             header('Location: ' . APP_URL . '/index.php?url=register');
             exit;
+        }
+
+        // Validate username
+        if (!empty($data['username'])) {
+            if (strlen($data['username']) < 3 || strlen($data['username']) > 30) {
+                flash('error', 'Username must be between 3 and 30 characters.');
+                header('Location: ' . APP_URL . '/index.php?url=register');
+                exit;
+            }
+            if (!preg_match('/^[a-zA-Z0-9._-]+$/', $data['username'])) {
+                flash('error', 'Username can only contain letters, numbers, underscores, dashes and dots.');
+                header('Location: ' . APP_URL . '/index.php?url=register');
+                exit;
+            }
+            // Check uniqueness
+            if ($this->userModel->hasColumn('username') && $this->userModel->findByUsername($data['username'])) {
+                flash('error', 'Username is already taken. Please choose another.');
+                header('Location: ' . APP_URL . '/index.php?url=register');
+                exit;
+            }
+        } else {
+            $data['username'] = null;
         }
 
         if (strlen($data['password']) < 8) {

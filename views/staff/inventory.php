@@ -21,6 +21,9 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
             <h2><?= $pageTitle ?></h2>
         </div>
         <div class="top-bar-right">
+            <a href="<?= $invBase ?>/damaged" class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);">
+                <i data-lucide="alert-octagon" style="width:15px;height:15px"></i> Damaged Products
+            </a>
             <a href="<?= $invBase ?>/movements" class="btn btn-outline btn-sm">
                 <i data-lucide="activity" style="width:15px;height:15px"></i> Stock Movements
             </a>

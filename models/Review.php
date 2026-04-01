@@ -101,4 +101,66 @@ class Review {
             return false;
         }
     }
+
+    /**
+     * Get all reviews by a specific user.
+     */
+    public function getByUserId($userId, $limit = 100) {
+        try {
+            $stmt = $this->pdo->prepare(
+                "SELECT r.*, p.name AS product_name, p.image AS product_image
+                 FROM reviews r
+                 LEFT JOIN products p ON r.product_id = p.id
+                 WHERE r.user_id = ?
+                 ORDER BY r.created_at DESC
+                 LIMIT ?"
+            );
+            $stmt->execute([$userId, $limit]);
+            return $stmt->fetchAll();
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Get average rating and review count for a list of product IDs.
+     * Returns assoc array keyed by product_id => ['avg_rating' => float, 'review_count' => int]
+     */
+    public function getAvgRatingsByProductIds(array $productIds) {
+        if (empty($productIds)) return [];
+        try {
+            $placeholders = implode(',', array_fill(0, count($productIds), '?'));
+            $stmt = $this->pdo->prepare(
+                "SELECT product_id, ROUND(AVG(rating),1) AS avg_rating, COUNT(*) AS review_count
+                 FROM reviews
+                 WHERE product_id IN ($placeholders)
+                 GROUP BY product_id"
+            );
+            $stmt->execute(array_values($productIds));
+            $rows = $stmt->fetchAll();
+            $result = [];
+            foreach ($rows as $row) {
+                $result[(int)$row['product_id']] = [
+                    'avg_rating'   => (float)$row['avg_rating'],
+                    'review_count' => (int)$row['review_count']
+                ];
+            }
+            return $result;
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Get IDs of order items that the user has already reviewed for a given order.
+     */
+    public function getReviewedOrderItemIds($userId, $orderId) {
+        try {
+            $stmt = $this->pdo->prepare("SELECT order_item_id FROM reviews WHERE user_id = ? AND order_id = ? AND order_item_id IS NOT NULL");
+            $stmt->execute([$userId, $orderId]);
+            return array_column($stmt->fetchAll(), 'order_item_id');
+        } catch (Exception $e) {
+            return [];
+        }
+    }
 }

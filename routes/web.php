@@ -315,6 +315,12 @@ switch ($urlParts[0]) {
                         $controller->movements();
                     } elseif (isset($urlParts[2]) && $urlParts[2] === 'price-history') {
                         $controller->priceHistory();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'damaged') {
+                        if (isset($urlParts[3]) && isset($urlParts[4]) && $urlParts[4] === 'update') {
+                            $controller->updateDamagedStatus($urlParts[3]);
+                        } else {
+                            $controller->damagedProducts();
+                        }
                     } else {
                         $controller->index();
                     }
@@ -380,6 +386,12 @@ switch ($urlParts[0]) {
                         $controller->movements();
                     } elseif (isset($urlParts[2]) && $urlParts[2] === 'price-history') {
                         $controller->priceHistory();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'damaged') {
+                        if (isset($urlParts[3]) && isset($urlParts[4]) && $urlParts[4] === 'update') {
+                            $controller->updateDamagedStatus($urlParts[3]);
+                        } else {
+                            $controller->damagedProducts();
+                        }
                     } else {
                         $controller->index();
                     }
@@ -530,6 +542,12 @@ switch ($urlParts[0]) {
                         $controller->movements();
                     } elseif (isset($urlParts[2]) && $urlParts[2] === 'price-history') {
                         $controller->priceHistory();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'damaged') {
+                        if (isset($urlParts[3]) && isset($urlParts[4]) && $urlParts[4] === 'update') {
+                            $controller->updateDamagedStatus($urlParts[3]);
+                        } else {
+                            $controller->damagedProducts();
+                        }
                     } else {
                         $controller->index();
                     }
@@ -542,6 +560,16 @@ switch ($urlParts[0]) {
                         $controller->updateStatus($urlParts[2]);
                     } else {
                         $controller->manage();
+                    }
+                    break;
+
+                case 'reviews':
+                    require_once CONTROLLERS_PATH . '/ReviewController.php';
+                    $controller = new ReviewController($pdo);
+                    if (isset($urlParts[2]) && $urlParts[2] === 'delete' && isset($urlParts[3])) {
+                        $controller->delete($urlParts[3]);
+                    } else {
+                        $controller->adminIndex();
                     }
                     break;
 

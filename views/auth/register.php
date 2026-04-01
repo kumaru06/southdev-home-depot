@@ -29,6 +29,15 @@ require_once INCLUDES_PATH . '/header.php';
                 </div>
 
                 <div class="form-group">
+                    <label for="username">Username <span class="required">*</span></label>
+                    <div class="input-icon-wrap">
+                        <i data-lucide="at-sign" class="input-icon"></i>
+                        <input type="text" id="username" name="username" class="form-control" placeholder="e.g. john_doe" required minlength="3" maxlength="30" pattern="[a-zA-Z0-9._-]+">
+                    </div>
+                    <small class="text-muted">Letters, numbers, underscore, dash or dot (3-30 chars).</small>
+                </div>
+
+                <div class="form-group">
                     <label for="email">Email Address <span class="required">*</span></label>
                     <div class="input-icon-wrap">
                         <i data-lucide="mail" class="input-icon"></i>

@@ -9,6 +9,7 @@ require_once __DIR__ . '/../models/Product.php';
 require_once __DIR__ . '/../models/Log.php';
 require_once __DIR__ . '/../models/StockMovement.php';
 require_once __DIR__ . '/../models/PriceHistory.php';
+require_once __DIR__ . '/../models/DamagedProduct.php';
 
 class InventoryController {
     private $inventoryModel;
@@ -16,15 +17,17 @@ class InventoryController {
     private $logModel;
     private $stockMovementModel;
     private $priceHistoryModel;
+    private $damagedProductModel;
     private $pdo;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
-        $this->inventoryModel    = new Inventory($pdo);
-        $this->productModel      = new Product($pdo);
-        $this->logModel          = new Log($pdo);
-        $this->stockMovementModel = new StockMovement($pdo);
-        $this->priceHistoryModel  = new PriceHistory($pdo);
+        $this->inventoryModel       = new Inventory($pdo);
+        $this->productModel         = new Product($pdo);
+        $this->logModel             = new Log($pdo);
+        $this->stockMovementModel   = new StockMovement($pdo);
+        $this->priceHistoryModel    = new PriceHistory($pdo);
+        $this->damagedProductModel  = new DamagedProduct($pdo);
     }
 
     /**
@@ -193,5 +196,71 @@ class InventoryController {
         $isAdmin   = true;
         $extraCss  = ['admin.css'];
         require_once VIEWS_PATH . '/staff/price-history.php';
+    }
+
+    /**
+     * Damaged Products inventory page
+     */
+    public function damagedProducts() {
+        AuthMiddleware::adminOrStaffOrInventory();
+        $status   = $_GET['status'] ?? null;
+        $damaged  = $this->damagedProductModel->getAll($status);
+        $summary  = $this->damagedProductModel->getSummary();
+        $pageTitle = 'Damaged Products';
+        $isAdmin   = true;
+        $extraCss  = ['admin.css'];
+        require_once VIEWS_PATH . '/staff/damaged-products.php';
+    }
+
+    /**
+     * Update damaged product status (inspected, written_off, repaired)
+     */
+    public function updateDamagedStatus($id) {
+        AuthMiddleware::adminOrStaffOrInventory();
+        AuthMiddleware::csrf();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+
+        $status     = $_POST['status'] ?? '';
+        $adminNotes = trim($_POST['admin_notes'] ?? '');
+
+        $validStatuses = ['received', 'inspected', 'written_off', 'repaired'];
+        if (!in_array($status, $validStatuses)) {
+            flash('error', 'Invalid status.');
+            header('Location: ' . $this->inventoryUrl() . '/damaged');
+            exit;
+        }
+
+        $damaged = $this->damagedProductModel->findById($id);
+        if (!$damaged) {
+            flash('error', 'Damaged product record not found.');
+            header('Location: ' . $this->inventoryUrl() . '/damaged');
+            exit;
+        }
+
+        $this->damagedProductModel->updateStatus($id, $status, $adminNotes);
+
+        // If repaired, add the quantity back to inventory
+        if ($status === 'repaired') {
+            $this->inventoryModel->adjustQuantity($damaged['product_id'], $damaged['quantity']);
+            $this->stockMovementModel->record(
+                $damaged['product_id'],
+                'adjustment',
+                $damaged['quantity'],
+                $damaged['return_request_id'],
+                'Repaired damaged product restored to inventory (Damage Record #' . $id . ')',
+                $_SESSION['user_id']
+            );
+            $this->logModel->create(LOG_STOCK_MOVEMENT,
+                "Repaired item restored: {$damaged['product_name']} (qty: {$damaged['quantity']}) from Damage Record #{$id}"
+            );
+        }
+
+        $this->logModel->create(LOG_STOCK_MOVEMENT,
+            "Damaged product #{$id} ({$damaged['product_name']}) status updated to: {$status}"
+        );
+
+        flash('success', 'Damaged product status updated to ' . str_replace('_', ' ', $status) . '.');
+        header('Location: ' . $this->inventoryUrl() . '/damaged');
+        exit;
     }
 }

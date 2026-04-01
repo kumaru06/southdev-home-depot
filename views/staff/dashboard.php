@@ -46,6 +46,13 @@ require_once INCLUDES_PATH . '/sidebar.php';
                 </div>
                 <div class="stat-icon"><i data-lucide="alert-triangle"></i></div>
             </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <span class="stat-label">Damaged Products</span>
+                    <span class="stat-value"><?= $totalDamaged ?? 0 ?></span>
+                </div>
+                <div class="stat-icon" style="background:var(--danger-bg, #FEE2E2);color:var(--danger, #DC2626);"><i data-lucide="alert-octagon"></i></div>
+            </div>
         </div>
 
         <!-- Charts Row -->
@@ -161,6 +168,47 @@ require_once INCLUDES_PATH . '/sidebar.php';
                 </div>
             <?php endif; ?>
         </div>
+
+        <!-- Damaged Products -->
+        <?php if (!empty($recentDamaged)): ?>
+        <div class="dashboard-grid-2" style="margin-top: 0;">
+            <div class="card">
+                <h3><i data-lucide="alert-octagon" style="color:var(--danger, #DC2626);"></i> Damaged Products</h3>
+                <?php
+                    $dmgUrl = ($_SESSION['role_id'] == ROLE_INVENTORY)
+                        ? APP_URL . '/index.php?url=inventory/stock/damaged'
+                        : APP_URL . '/index.php?url=staff/inventory/damaged';
+                ?>
+                <div class="data-table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Product</th><th>Qty</th><th>Order</th><th>Status</th></tr></thead>
+                        <tbody>
+                            <?php foreach ($recentDamaged as $dmg):
+                                $dmgClass = match($dmg['status']) {
+                                    'received'    => 'badge-pending',
+                                    'inspected'   => 'badge-processing',
+                                    'written_off' => 'badge-cancelled',
+                                    'repaired'    => 'badge-delivered',
+                                    default       => 'badge-pending'
+                                };
+                            ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($dmg['product_name']) ?></td>
+                                    <td><strong><?= $dmg['quantity'] ?></strong></td>
+                                    <td><?= htmlspecialchars($dmg['order_number']) ?></td>
+                                    <td><span class="badge <?= $dmgClass ?>"><?= ucfirst(str_replace('_', ' ', $dmg['status'])) ?></span></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top:12px;text-align:right;">
+                    <a href="<?= $dmgUrl ?>" class="btn btn-outline btn-sm">View All Damaged Products →</a>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
     </div>
 </div>
 

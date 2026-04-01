@@ -38,7 +38,7 @@ try {
         <div class="container topbar-inner">
             <a href="<?= APP_URL ?>" class="brand">
                 <?php
-                    $logoRel = 'assets/uploads/images/image2.png';
+                    $logoRel = 'assets/uploads/images/southdev.png';
                     $logoFull = ROOT_PATH . '/' . $logoRel;
                     if (file_exists($logoFull)):
                         $logoUrl = APP_URL . '/' . $logoRel;
@@ -52,10 +52,10 @@ try {
 
             <form action="<?= APP_URL ?>/index.php" method="GET" class="search-inline" role="search">
                 <input type="hidden" name="url" value="products/search">
-                <input type="text" name="q" class="form-control" placeholder="Looking for tiles?" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
-                <span class="btn btn-primary search-icon" aria-hidden="true" style="pointer-events:none;">
+                <input type="text" name="q" class="form-control" placeholder="Search tiles, vinyl, tools..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
+                <button type="submit" class="search-icon" aria-label="Search">
                     <i data-lucide="search"></i>
-                </span>
+                </button>
             </form>
 
             <div class="auth-links">
@@ -68,8 +68,8 @@ try {
                     <?php endif; ?>
                     <!-- Topbar PROFILE and Logout removed: use main navigation PROFILE dropdown instead -->
                 <?php else: ?>
-                    <a href="<?= APP_URL ?>/index.php?url=login" class="auth-link">Login</a>
-                    <a href="<?= APP_URL ?>/index.php?url=register" class="btn btn-accent">Register</a>
+                    <a href="<?= APP_URL ?>/index.php?url=login" class="auth-link"><i data-lucide="log-in" style="width:15px;height:15px;"></i> Login</a>
+                    <a href="<?= APP_URL ?>/index.php?url=register" class="btn btn-accent"><i data-lucide="user-plus" style="width:15px;height:15px;"></i> Register</a>
                 <?php endif; ?>
             </div>
             <button class="mobile-toggle" aria-label="Open menu" aria-expanded="false">
@@ -236,10 +236,10 @@ try {
                     <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
 
                     <div class="form-group">
-                        <label for="loginModalEmail">Email Address</label>
+                        <label for="loginModalEmail">Email or Username</label>
                         <div class="input-icon-wrap">
-                            <i data-lucide="mail" class="input-icon"></i>
-                            <input type="email" id="loginModalEmail" name="email" class="form-control" placeholder="you@example.com" required>
+                            <i data-lucide="user" class="input-icon"></i>
+                            <input type="text" id="loginModalEmail" name="email" class="form-control" placeholder="you@example.com or username" required>
                         </div>
                     </div>
 

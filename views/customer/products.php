@@ -162,6 +162,26 @@ if (!file_exists($display2Full)) {
                         <div class="product-info">
                             <span class="product-category"><?= htmlspecialchars($product['category_name'] ?? '') ?></span>
                             <h3 class="product-name"><?= htmlspecialchars($product['name']) ?></h3>
+                            <?php
+                                $rating = $productRatings[$product['id']] ?? null;
+                                if ($rating && $rating['review_count'] > 0):
+                                    $avg = round($rating['avg_rating'], 1);
+                            ?>
+                            <div class="product-rating">
+                                <span class="product-stars">
+                                    <?php for ($s = 1; $s <= 5; $s++): ?>
+                                        <?php if ($s <= floor($avg)): ?>
+                                            <i data-lucide="star" class="star-filled"></i>
+                                        <?php elseif ($s - $avg < 1 && $s - $avg > 0): ?>
+                                            <i data-lucide="star-half" class="star-filled"></i>
+                                        <?php else: ?>
+                                            <i data-lucide="star" class="star-empty"></i>
+                                        <?php endif; ?>
+                                    <?php endfor; ?>
+                                </span>
+                                <span class="rating-text"><?= $avg ?> (<?= $rating['review_count'] ?>)</span>
+                            </div>
+                            <?php endif; ?>
                             <?php if (!empty($product['description'])): ?>
                                 <p class="product-desc-preview"><?= htmlspecialchars(mb_strimwidth($product['description'], 0, 80, '…')) ?></p>
                             <?php endif; ?>

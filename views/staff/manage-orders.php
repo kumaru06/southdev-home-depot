@@ -34,6 +34,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
                         <th>Order #</th>
                         <th>Customer</th>
                         <th>Total</th>
+                        <th>Payment</th>
                         <th>Status</th>
                         <th>Cancel Reason</th>
                         <th>Date</th>
@@ -47,6 +48,34 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                 <td><strong><?= htmlspecialchars($order['order_number']) ?></strong></td>
                                 <td><?= htmlspecialchars($order['first_name'] . ' ' . $order['last_name']) ?></td>
                                 <td>₱<?= number_format($order['total_amount'], 2) ?></td>
+                                <td>
+                                    <?php
+                                        $pmText = 'N/A';
+                                        $pmLogo = APP_URL . '/assets/uploads/images/logo/creditcard.png';
+                                        if (!empty($order['payment_method'])) {
+                                            $pmRaw = strtolower($order['payment_method']);
+                                            if (str_contains($pmRaw, 'gcash')) {
+                                                $pmText = 'GCash';
+                                                $pmLogo = APP_URL . '/assets/uploads/images/logo/gcashlogo.png';
+                                            } elseif (str_contains($pmRaw, 'cod') || str_contains($pmRaw, 'cash')) {
+                                                $pmText = 'COD';
+                                                $pmLogo = APP_URL . '/assets/uploads/images/logo/COD.png';
+                                            } elseif (str_contains($pmRaw, 'card') || str_contains($pmRaw, 'paymongo')) {
+                                                $pmText = 'Card';
+                                                $pmLogo = APP_URL . '/assets/uploads/images/logo/creditcard.png';
+                                            } elseif (str_contains($pmRaw, 'ewallet') || str_contains($pmRaw, 'e-wallet')) {
+                                                $pmText = 'E-Wallet';
+                                                $pmLogo = APP_URL . '/assets/uploads/images/logo/gcashlogo.png';
+                                            } else {
+                                                $pmText = ucfirst($order['payment_method']);
+                                            }
+                                        }
+                                    ?>
+                                    <span class="payment-method-badge">
+                                        <img src="<?= $pmLogo ?>" alt="<?= $pmText ?>" class="payment-logo-icon">
+                                        <?= $pmText ?>
+                                    </span>
+                                </td>
                                 <td><span class="badge badge-<?= $order['status'] ?>"><?= ucfirst($order['status']) ?></span></td>
                                 <td>
                                     <?php if (($order['status'] ?? '') === 'cancelled' && !empty($order['cancel_reason'])): ?>
@@ -64,7 +93,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr><td colspan="7" class="text-center">No orders found.</td></tr>
+                        <tr><td colspan="8" class="text-center">No orders found.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>

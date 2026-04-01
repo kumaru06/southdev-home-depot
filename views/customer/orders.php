@@ -22,7 +22,29 @@ require_once INCLUDES_PATH . '/navbar.php';
                         <div class="order-card-main">
                             <div class="order-card-top-row">
                                 <h3 class="order-number"><?= htmlspecialchars($order['order_number']) ?></h3>
-                                <span class="badge badge-<?= $order['status'] ?>"><?= ucfirst($order['status']) ?></span>
+                                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                                    <span class="badge badge-<?= $order['status'] ?>"><?= ucfirst($order['status']) ?></span>
+                                    <?php
+                                        $rr = $returnsByOrder[$order['id']] ?? null;
+                                        if ($rr && $rr['status'] !== 'rejected'):
+                                            $rrBadgeCls = match($rr['status']) {
+                                                'pending'   => 'return-badge--pending',
+                                                'approved'  => 'return-badge--approved',
+                                                'completed' => 'return-badge--refunded',
+                                                default     => 'return-badge--pending',
+                                            };
+                                            $rrBadgeLbl = match($rr['status']) {
+                                                'pending'   => 'Return Pending',
+                                                'approved'  => 'Return Approved',
+                                                'completed' => 'Refunded',
+                                                default     => 'Return Pending',
+                                            };
+                                    ?>
+                                        <span class="return-badge <?= $rrBadgeCls ?>" style="font-size:11px;">
+                                            <?= $rrBadgeLbl ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                             <div class="order-card-meta">
                                 <span class="order-meta-item"><i data-lucide="calendar"></i> <?= date('M d, Y', strtotime($order['created_at'])) ?></span>
@@ -35,6 +57,34 @@ require_once INCLUDES_PATH . '/navbar.php';
                         </div>
                     </div>
                     <div class="order-card-actions">
+                        <?php
+                            $pmLabel = '';
+                            $pmLogo  = '';
+                            if (!empty($order['payment_method'])) {
+                                $pmRaw = strtolower($order['payment_method']);
+                                if (str_contains($pmRaw, 'gcash')) {
+                                    $pmLabel = 'GCash';
+                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/gcashlogo.png';
+                                } elseif (str_contains($pmRaw, 'cod') || str_contains($pmRaw, 'cash')) {
+                                    $pmLabel = 'COD';
+                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/COD.png';
+                                } elseif (str_contains($pmRaw, 'card') || str_contains($pmRaw, 'paymongo')) {
+                                    $pmLabel = 'Card';
+                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/creditcard.png';
+                                } elseif (str_contains($pmRaw, 'ewallet') || str_contains($pmRaw, 'e-wallet')) {
+                                    $pmLabel = 'E-Wallet';
+                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/gcashlogo.png';
+                                } else {
+                                    $pmLabel = ucfirst($order['payment_method']);
+                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/creditcard.png';
+                                }
+                            }
+                        ?>
+                        <?php if ($pmLabel): ?>
+                        <span class="order-payment-badge">
+                            <img src="<?= $pmLogo ?>" alt="<?= $pmLabel ?>" class="payment-logo-icon"> <?= $pmLabel ?>
+                        </span>
+                        <?php endif; ?>
                         <a href="<?= APP_URL ?>/index.php?url=orders/<?= $order['id'] ?>" class="btn btn-outline btn-sm">
                             <i data-lucide="eye"></i> View Details
                         </a>

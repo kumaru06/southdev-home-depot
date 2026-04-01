@@ -11,6 +11,7 @@ require_once __DIR__ . '/../models/PriceHistory.php';
 require_once __DIR__ . '/../models/StockMovement.php';
 require_once __DIR__ . '/../models/PriceHistory.php';
 require_once __DIR__ . '/../models/StockMovement.php';
+require_once __DIR__ . '/../models/Review.php';
 
 class ProductController {
     private $productModel;
@@ -39,6 +40,14 @@ class ProductController {
         $totalProducts = $this->productModel->count($categoryId);
         $totalPages    = ceil($totalProducts / ITEMS_PER_PAGE);
 
+        // Load average ratings for the listed products
+        $productRatings = [];
+        if (!empty($products)) {
+            $reviewModel = new Review($this->pdo);
+            $productIds = array_column($products, 'id');
+            $productRatings = $reviewModel->getAvgRatingsByProductIds($productIds);
+        }
+
         $pageTitle = 'Products';
         $extraCss  = ['customer.css'];
         require_once VIEWS_PATH . '/customer/products.php';
@@ -56,6 +65,14 @@ class ProductController {
         $categories    = $this->categoryModel->getAll();
         $totalProducts = $this->productModel->count($categoryId);
         $totalPages    = ceil($totalProducts / ITEMS_PER_PAGE);
+
+        // Load average ratings for the listed products
+        $productRatings = [];
+        if (!empty($products)) {
+            $reviewModel = new Review($this->pdo);
+            $productIds = array_column($products, 'id');
+            $productRatings = $reviewModel->getAvgRatingsByProductIds($productIds);
+        }
 
         $pageTitle = 'Products';
         $extraCss  = ['customer.css'];

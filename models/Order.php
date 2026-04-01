@@ -46,13 +46,22 @@ class Order {
     }
 
     public function getByUserId($userId) {
-        $stmt = $this->pdo->prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC");
+        $stmt = $this->pdo->prepare(
+            "SELECT o.*, p.payment_method
+             FROM orders o
+             LEFT JOIN payments p ON p.order_id = o.id
+             WHERE o.user_id = ?
+             ORDER BY o.created_at DESC"
+        );
         $stmt->execute([$userId]);
         return $stmt->fetchAll();
     }
 
     public function getAll($status = null) {
-        $sql = "SELECT o.*, u.first_name, u.last_name FROM orders o JOIN users u ON o.user_id = u.id";
+        $sql = "SELECT o.*, u.first_name, u.last_name, p.payment_method
+                FROM orders o
+                JOIN users u ON o.user_id = u.id
+                LEFT JOIN payments p ON p.order_id = o.id";
         $params = [];
         if ($status) {
             $sql .= " WHERE o.status = ?";
@@ -178,10 +187,13 @@ class Order {
     }
 
     public function getTotalSales($startDate = null, $endDate = null) {
-        $sql = "SELECT SUM(total_amount) FROM orders WHERE status NOT IN ('cancelled')";
+        $sql = "SELECT SUM(o.total_amount) FROM orders o
+                LEFT JOIN payments p ON p.order_id = o.id
+                WHERE o.status NOT IN ('cancelled')
+                AND (p.status IS NULL OR p.status != 'refunded')";
         $params = [];
         if ($startDate && $endDate) {
-            $sql .= " AND created_at BETWEEN ? AND ?";
+            $sql .= " AND o.created_at BETWEEN ? AND ?";
             $params = [$startDate, $endDate];
         }
         $stmt = $this->pdo->prepare($sql);

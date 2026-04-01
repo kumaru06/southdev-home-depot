@@ -3,6 +3,14 @@
 require_once INCLUDES_PATH . '/header.php';
 require_once INCLUDES_PATH . '/navbar.php';
 
+// Load reviewed item IDs so we can show/hide the review button
+$reviewedItemIds = [];
+if ($order['status'] === 'delivered' && isset($_SESSION['user_id'])) {
+    require_once __DIR__ . '/../../models/Review.php';
+    $reviewModel = new Review($pdo);
+    $reviewedItemIds = $reviewModel->getReviewedOrderItemIds($_SESSION['user_id'], $order['id']);
+}
+
 $steps      = ['pending', 'processing', 'shipped', 'delivered'];
 $stepIcons  = ['clock', 'settings', 'truck', 'check-circle'];
 $currentIdx = array_search($order['status'], $steps);
@@ -38,6 +46,20 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
             </div>
             <div class="od-hero-status">
                 <span class="badge badge-<?= $order['status'] ?> badge-lg"><?= ucfirst($order['status']) ?></span>
+                <?php if (!empty($returnRequest) && $returnRequest['status'] !== 'rejected'): ?>
+                    <?php
+                        $returnStatusLabels = [
+                            'pending'   => ['label' => 'Return Pending',  'icon' => 'clock',        'class' => 'return-badge--pending'],
+                            'approved'  => ['label' => 'Return Approved', 'icon' => 'check-circle', 'class' => 'return-badge--approved'],
+                            'completed' => ['label' => 'Refunded',        'icon' => 'badge-check',  'class' => 'return-badge--refunded'],
+                        ];
+                        $rs = $returnStatusLabels[$returnRequest['status']] ?? $returnStatusLabels['pending'];
+                    ?>
+                    <span class="return-badge <?= $rs['class'] ?>">
+                        <i data-lucide="<?= $rs['icon'] ?>" style="width:13px;height:13px"></i>
+                        <?= $rs['label'] ?>
+                    </span>
+                <?php endif; ?>
                 <span class="od-hero-total">₱<?= number_format($order['total_amount'], 2) ?></span>
             </div>
         </div>
@@ -68,6 +90,60 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
         <?php endif; ?>
     </div>
 
+    <!-- ===== Return / Refund Status Banner ===== -->
+    <?php if (!empty($returnRequest) && $returnRequest['status'] !== 'rejected'): ?>
+    <?php
+        $rrClass = match($returnRequest['status']) {
+            'pending'   => 'refund-banner--pending',
+            'approved'  => 'refund-banner--approved',
+            'completed' => 'refund-banner--completed',
+            default     => 'refund-banner--pending',
+        };
+        $rrIcon = match($returnRequest['status']) {
+            'pending'   => 'clock',
+            'approved'  => 'check-circle',
+            'completed' => 'badge-check',
+            default     => 'clock',
+        };
+        $rrTitle = match($returnRequest['status']) {
+            'pending'   => 'Return Request Pending',
+            'approved'  => 'Return Approved — Refund Processing',
+            'completed' => 'Successfully Refunded',
+            default     => 'Return Request Submitted',
+        };
+        $rrDesc = match($returnRequest['status']) {
+            'pending'   => 'Your return request is under review. We\'ll notify you once a decision is made.',
+            'approved'  => 'Your return has been approved. The refund is being processed and will reflect in your account shortly.',
+            'completed' => 'Your refund has been completed. The amount has been returned to your original payment method.',
+            default     => 'Your return request has been submitted.',
+        };
+    ?>
+    <div class="refund-banner <?= $rrClass ?>">
+        <div class="refund-banner-icon">
+            <i data-lucide="<?= $rrIcon ?>"></i>
+        </div>
+        <div class="refund-banner-content">
+            <h4><?= $rrTitle ?></h4>
+            <p><?= $rrDesc ?></p>
+            <div class="refund-banner-meta">
+                <span><i data-lucide="calendar" style="width:13px;height:13px"></i> Requested <?= date('M d, Y', strtotime($returnRequest['created_at'])) ?></span>
+                <span><i data-lucide="tag" style="width:13px;height:13px"></i> <?= htmlspecialchars($returnRequest['reason']) ?></span>
+            </div>
+            <?php if (!empty($returnRequest['admin_notes'])): ?>
+            <div class="refund-banner-notes">
+                <i data-lucide="message-circle" style="width:13px;height:13px"></i>
+                <span><strong>Staff note:</strong> <?= htmlspecialchars($returnRequest['admin_notes']) ?></span>
+            </div>
+            <?php endif; ?>
+        </div>
+        <div class="refund-banner-badge">
+            <span class="return-badge <?= $rs['class'] ?? 'return-badge--pending' ?>">
+                <?= ucfirst($returnRequest['status']) ?>
+            </span>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Info Grid -->
     <div class="od-grid">
         <!-- Order Info -->
@@ -90,7 +166,34 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
                 </div>
                 <div class="od-detail-row">
                     <span class="od-detail-label">Payment</span>
-                    <span class="od-detail-value"><?= ucfirst($order['payment_method'] ?? 'N/A') ?></span>
+                    <span class="od-detail-value">
+                        <?php
+                            $pmLabel = 'N/A';
+                            $pmLogo  = APP_URL . '/assets/uploads/images/logo/creditcard.png';
+                            if (!empty($payment['payment_method'])) {
+                                $pmRaw = strtolower($payment['payment_method']);
+                                if (str_contains($pmRaw, 'gcash')) {
+                                    $pmLabel = 'GCash';
+                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/gcashlogo.png';
+                                } elseif (str_contains($pmRaw, 'cod') || str_contains($pmRaw, 'cash')) {
+                                    $pmLabel = 'Cash on Delivery';
+                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/COD.png';
+                                } elseif (str_contains($pmRaw, 'card') || str_contains($pmRaw, 'paymongo')) {
+                                    $pmLabel = 'Credit / Debit Card';
+                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/creditcard.png';
+                                } elseif (str_contains($pmRaw, 'ewallet') || str_contains($pmRaw, 'e-wallet')) {
+                                    $pmLabel = 'E-Wallet';
+                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/gcashlogo.png';
+                                } else {
+                                    $pmLabel = ucfirst($payment['payment_method']);
+                                }
+                            }
+                        ?>
+                        <span style="display:inline-flex;align-items:center;gap:5px;">
+                            <img src="<?= $pmLogo ?>" alt="<?= htmlspecialchars($pmLabel) ?>" class="payment-logo-icon">
+                            <?= htmlspecialchars($pmLabel) ?>
+                        </span>
+                    </span>
                 </div>
                 <?php if (!empty($order['notes'])): ?>
                 <div class="od-detail-row">
@@ -151,9 +254,16 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
             </div>
             <?php elseif ($order['status'] === 'delivered'): ?>
             <div class="od-card-action">
-                <a href="<?= APP_URL ?>/index.php?url=returns/request/<?= $order['id'] ?>" class="btn btn-outline btn-block">
-                    <i data-lucide="rotate-ccw"></i> Request Return
-                </a>
+                <?php if (!empty($returnRequest) && $returnRequest['status'] !== 'rejected'): ?>
+                    <div class="od-return-status-note">
+                        <i data-lucide="rotate-ccw" style="width:15px;height:15px;color:var(--accent);"></i>
+                        <span>Return request is <strong><?= $returnRequest['status'] === 'completed' ? 'refunded' : $returnRequest['status'] ?></strong></span>
+                    </div>
+                <?php else: ?>
+                    <a href="<?= APP_URL ?>/index.php?url=returns/request/<?= $order['id'] ?>" class="btn btn-outline btn-block">
+                        <i data-lucide="rotate-ccw"></i> Request Return
+                    </a>
+                <?php endif; ?>
             </div>
             <?php endif; ?>
         </div>
@@ -209,7 +319,11 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
                 <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
                     <span class="od-item-subtotal">₱<?= number_format($item['subtotal'], 2) ?></span>
                     <?php if ($order['status'] === 'delivered'): ?>
-                        <button class="btn btn-outline btn-sm js-open-review" data-product-id="<?= $item['product_id'] ?>" data-order-id="<?= $order['id'] ?>" data-order-item-id="<?= $item['id'] ?>">Write a Review</button>
+                        <?php if (in_array($item['id'], $reviewedItemIds)): ?>
+                            <span class="badge badge-success" style="font-size:11px;"><i data-lucide="check" style="width:12px;height:12px"></i> Reviewed</span>
+                        <?php else: ?>
+                            <button class="btn btn-outline btn-sm js-open-review" data-product-id="<?= $item['product_id'] ?>" data-order-id="<?= $order['id'] ?>" data-order-item-id="<?= $item['id'] ?>">Write a Review</button>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
             </div>
@@ -247,15 +361,16 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
             <input type="hidden" name="order_item_id" id="rv_order_item_id" value="">
 
             <div class="form-group">
-                <label for="rating">Rating</label>
-                <select name="rating" id="rating" class="form-control" required>
-                    <option value="">Select rating…</option>
-                    <option value="5">5 — Excellent</option>
-                    <option value="4">4 — Very Good</option>
-                    <option value="3">3 — Good</option>
-                    <option value="2">2 — Fair</option>
-                    <option value="1">1 — Poor</option>
-                </select>
+                <label>Rating</label>
+                <input type="hidden" name="rating" id="rating" value="" required>
+                <div class="star-rating-input" id="starRatingInput">
+                    <?php for ($i = 1; $i <= 5; $i++): ?>
+                    <button type="button" class="star-btn" data-value="<?= $i ?>" title="<?= $i ?> star<?= $i > 1 ? 's' : '' ?>">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </button>
+                    <?php endfor; ?>
+                    <span class="star-rating-label" id="starRatingLabel"></span>
+                </div>
             </div>
             <div class="form-group">
                 <label for="comment">Comment (optional)</label>
@@ -270,10 +385,64 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function(){
+    var ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+    var stars = document.querySelectorAll('#starRatingInput .star-btn');
+    var ratingInput = document.getElementById('rating');
+    var ratingLabel = document.getElementById('starRatingLabel');
+    var currentRating = 0;
+
+    function setStars(value, permanent) {
+        stars.forEach(function(s, i) {
+            if (i < value) {
+                s.classList.add('active');
+            } else {
+                s.classList.remove('active');
+            }
+        });
+        if (permanent) {
+            currentRating = value;
+            ratingInput.value = value;
+            ratingLabel.textContent = ratingLabels[value] || '';
+        }
+    }
+
+    stars.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            setStars(parseInt(this.dataset.value), true);
+        });
+        btn.addEventListener('mouseenter', function() {
+            setStars(parseInt(this.dataset.value), false);
+        });
+    });
+
+    document.getElementById('starRatingInput').addEventListener('mouseleave', function() {
+        setStars(currentRating, false);
+        if (currentRating > 0) ratingLabel.textContent = ratingLabels[currentRating];
+    });
+
+    // Form validation — require rating
+    document.getElementById('reviewForm').addEventListener('submit', function(e) {
+        if (!ratingInput.value) {
+            e.preventDefault();
+            ratingLabel.textContent = 'Please select a rating';
+            ratingLabel.style.color = '#EF4444';
+            setTimeout(function(){ ratingLabel.style.color = ''; }, 2000);
+        }
+    });
+
+    function resetStars() {
+        currentRating = 0;
+        ratingInput.value = '';
+        ratingLabel.textContent = '';
+        stars.forEach(function(s){ s.classList.remove('active'); });
+    }
+
     function openModal(productId, orderId, orderItemId){
         document.getElementById('rv_product_id').value = productId;
         document.getElementById('rv_order_id').value = orderId;
         document.getElementById('rv_order_item_id').value = orderItemId;
+        resetStars();
+        document.getElementById('comment').value = '';
         document.getElementById('reviewModal').style.display = 'flex';
     }
     function closeModal(){ document.getElementById('reviewModal').style.display = 'none'; }

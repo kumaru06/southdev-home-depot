@@ -223,7 +223,27 @@ class UserController {
 
         // Include username if supported and provided
         if ($this->userModel->hasColumn('username') && isset($_POST['username'])) {
-            $data['username'] = trim($_POST['username']);
+            $username = trim($_POST['username']);
+            if ($username !== '') {
+                if (strlen($username) < 3 || strlen($username) > 30) {
+                    flash('error', 'Username must be between 3 and 30 characters.');
+                    header('Location: ' . APP_URL . '/index.php?url=profile');
+                    exit;
+                }
+                if (!preg_match('/^[a-zA-Z0-9._-]+$/', $username)) {
+                    flash('error', 'Username can only contain letters, numbers, underscores, dashes and dots.');
+                    header('Location: ' . APP_URL . '/index.php?url=profile');
+                    exit;
+                }
+                // Check uniqueness (exclude current user)
+                $existing = $this->userModel->findByUsername($username);
+                if ($existing && (int)$existing['id'] !== (int)$_SESSION['user_id']) {
+                    flash('error', 'Username is already taken. Please choose another.');
+                    header('Location: ' . APP_URL . '/index.php?url=profile');
+                    exit;
+                }
+            }
+            $data['username'] = $username ?: null;
         }
 
         $this->userModel->update($_SESSION['user_id'], $data);

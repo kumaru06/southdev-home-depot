@@ -5,17 +5,15 @@ require_once INCLUDES_PATH . '/navbar.php';
 ?>
 
 <div class="container">
-    <h1 class="page-heading"><i data-lucide="user"></i> My Profile</h1>
-
-    <div class="profile-grid">
-        <!-- Left column: Profile card -->
-        <div class="profile-card-sidebar card">
-                <div class="profile-card-photo-area">
-                <?php
-                    $profileImage = $user['profile_image'] ?? '';
-                    $profileImageUrl = $profileImage ? (APP_URL . '/assets/uploads/profiles/' . rawurlencode($profileImage)) : '';
-                    $initials = strtoupper(substr($user['first_name'] ?? 'U', 0, 1) . substr($user['last_name'] ?? '', 0, 1));
-                ?>
+    <div class="profile-hero">
+        <div class="profile-hero-bg"></div>
+        <div class="profile-hero-content">
+            <?php
+                $profileImage = $user['profile_image'] ?? '';
+                $profileImageUrl = $profileImage ? (APP_URL . '/assets/uploads/profiles/' . rawurlencode($profileImage)) : '';
+                $initials = strtoupper(substr($user['first_name'] ?? 'U', 0, 1) . substr($user['last_name'] ?? '', 0, 1));
+            ?>
+            <div class="profile-hero-avatar">
                 <div class="profile-photo profile-photo--lg">
                     <?php if (!empty($profileImage)): ?>
                         <img src="<?= $profileImageUrl ?>" alt="Profile photo" class="profile-avatar-img">
@@ -23,40 +21,64 @@ require_once INCLUDES_PATH . '/navbar.php';
                         <div class="profile-avatar-fallback" aria-label="Profile initials"><?= htmlspecialchars($initials) ?></div>
                     <?php endif; ?>
                 </div>
-                <h3 class="profile-card-name"><?= htmlspecialchars(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?></h3>
-                <?php if (!empty($user['username'])): ?>
-                    <p class="profile-card-username"><i data-lucide="hash"></i> <?= htmlspecialchars($user['username']) ?></p>
-                <?php endif; ?>
-                <p class="profile-card-email"><i data-lucide="mail"></i> <?= htmlspecialchars($user['email']) ?></p>
-                <?php if (!empty($user['phone'])): ?>
-                    <p class="profile-card-phone"><i data-lucide="phone"></i> <?= htmlspecialchars($user['phone']) ?></p>
-                <?php endif; ?>
-            </div>
-            <div class="profile-card-upload">
-                <form action="<?= APP_URL ?>/index.php?url=profile" method="POST" enctype="multipart/form-data" id="photo-form">
+                <form action="<?= APP_URL ?>/index.php?url=profile" method="POST" enctype="multipart/form-data" id="photo-form" class="profile-photo-upload-btn">
                     <?= csrf_field() ?>
-                    <label class="profile-upload-label">
+                    <input type="hidden" name="first_name" value="<?= htmlspecialchars($user['first_name'] ?? '') ?>">
+                    <input type="hidden" name="last_name" value="<?= htmlspecialchars($user['last_name'] ?? '') ?>">
+                    <input type="hidden" name="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>">
+                    <input type="hidden" name="phone" value="<?= htmlspecialchars($user['phone'] ?? '') ?>">
+                    <?php if (!empty($usernameEnabled)): ?>
+                    <input type="hidden" name="username" value="<?= htmlspecialchars($user['username'] ?? '') ?>">
+                    <?php endif; ?>
+                    <input type="hidden" name="address" value="<?= htmlspecialchars($user['address'] ?? '') ?>">
+                    <input type="hidden" name="city" value="<?= htmlspecialchars($user['city'] ?? '') ?>">
+                    <input type="hidden" name="state" value="<?= htmlspecialchars($user['state'] ?? '') ?>">
+                    <input type="hidden" name="zip_code" value="<?= htmlspecialchars($user['zip_code'] ?? '') ?>">
+                    <label class="profile-camera-btn" title="Change photo">
                         <i data-lucide="camera"></i>
-                        <span>Change Photo</span>
                         <input type="file" name="profile_image" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="this.form.submit()">
                     </label>
-                    <p class="profile-upload-hint">JPG, PNG or WebP. Max 2MB.</p>
                 </form>
             </div>
+            <div class="profile-hero-info">
+                <h1 class="profile-hero-name"><?= htmlspecialchars(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?></h1>
+                <div class="profile-hero-meta">
+                    <?php if (!empty($user['username'])): ?>
+                        <span class="profile-meta-tag"><i data-lucide="at-sign"></i><?= htmlspecialchars($user['username']) ?></span>
+                    <?php endif; ?>
+                    <span class="profile-meta-tag"><i data-lucide="mail"></i><?= htmlspecialchars($user['email']) ?></span>
+                    <?php if (!empty($user['phone'])): ?>
+                        <span class="profile-meta-tag"><i data-lucide="phone"></i><?= htmlspecialchars($user['phone']) ?></span>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
+    </div>
 
-        <!-- Right column: Forms -->
-        <div class="profile-forms">
+    <div class="profile-nav-tabs">
+        <button class="profile-tab active" data-target="personal-section"><i data-lucide="user"></i> Personal Info</button>
+        <button class="profile-tab" data-target="address-section"><i data-lucide="map-pin"></i> Address</button>
+        <button class="profile-tab" data-target="security-section"><i data-lucide="shield"></i> Security</button>
+    </div>
+
+    <div class="profile-sections">
+        <!-- Personal Information -->
+        <div class="profile-section-block" id="personal-section">
             <div class="card profile-section-card">
                 <div class="profile-section-header">
-                    <i data-lucide="user-circle"></i>
+                    <div class="profile-section-icon"><i data-lucide="user-circle"></i></div>
                     <div>
                         <h3>Personal Information</h3>
-                        <p>Update your personal details and contact information.</p>
+                        <p>Update your name, username, and contact details.</p>
                     </div>
                 </div>
                 <form action="<?= APP_URL ?>/index.php?url=profile" method="POST" id="profile-form">
                     <?= csrf_field() ?>
+                    <!-- Carry address fields as hidden so they don't get blanked -->
+                    <input type="hidden" name="address" value="<?= htmlspecialchars($user['address'] ?? '') ?>">
+                    <input type="hidden" name="city" value="<?= htmlspecialchars($user['city'] ?? '') ?>">
+                    <input type="hidden" name="state" value="<?= htmlspecialchars($user['state'] ?? '') ?>">
+                    <input type="hidden" name="zip_code" value="<?= htmlspecialchars($user['zip_code'] ?? '') ?>">
 
                     <div class="form-row">
                         <div class="form-group form-col">
@@ -72,15 +94,18 @@ require_once INCLUDES_PATH . '/navbar.php';
                     <?php if (!empty($usernameEnabled)): ?>
                     <div class="form-group">
                         <label for="username">Username</label>
-                        <input type="text" id="username" name="username" class="form-control" value="<?= htmlspecialchars($user['username'] ?? '') ?>">
-                        <small class="text-muted">Letters, numbers, underscore, dash or dot (3-30 chars).</small>
+                        <div class="input-icon-wrap">
+                            <span class="input-icon-prefix">@</span>
+                            <input type="text" id="username" name="username" class="form-control form-control--prefixed" value="<?= htmlspecialchars($user['username'] ?? '') ?>">
+                        </div>
+                        <small class="text-muted">Letters, numbers, underscore, dash or dot (3–30 chars).</small>
                     </div>
                     <?php endif; ?>
 
                     <div class="form-row">
                         <div class="form-group form-col">
                             <label for="email">Email <span class="required">*</span></label>
-                            <div class="input-with-action" style="display:flex;gap:8px;align-items:center;">
+                            <div class="input-with-action">
                                 <input type="text" id="email" name="email" class="form-control" value="<?= htmlspecialchars($user['email']) ?>" required readonly aria-readonly="true">
                                 <button type="button" id="change-email-btn" class="btn btn-outline small">Change</button>
                             </div>
@@ -88,31 +113,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                         </div>
                         <div class="form-group form-col">
                             <label for="phone">Phone</label>
-                            <input type="text" id="phone" name="phone" class="form-control" value="<?= htmlspecialchars($user['phone'] ?? '') ?>">
-                        </div>
-                    </div>
-
-                    <div class="form-divider"></div>
-
-                    <div class="form-section-label"><i data-lucide="map-pin"></i> Shipping Address</div>
-
-                    <div class="form-group">
-                        <label for="address">Address</label>
-                        <textarea id="address" name="address" class="form-control" rows="2"><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group form-col">
-                            <label for="city">City</label>
-                            <input type="text" id="city" name="city" class="form-control" value="<?= htmlspecialchars($user['city'] ?? '') ?>">
-                        </div>
-                        <div class="form-group form-col">
-                            <label for="state">Province</label>
-                            <input type="text" id="state" name="state" class="form-control" value="<?= htmlspecialchars($user['state'] ?? '') ?>">
-                        </div>
-                        <div class="form-group form-col">
-                            <label for="zip_code">Zip Code</label>
-                            <input type="text" id="zip_code" name="zip_code" class="form-control" value="<?= htmlspecialchars($user['zip_code'] ?? '') ?>">
+                            <input type="text" id="phone" name="phone" class="form-control" value="<?= htmlspecialchars($user['phone'] ?? '') ?>" placeholder="e.g. 09123456789">
                         </div>
                     </div>
 
@@ -121,10 +122,61 @@ require_once INCLUDES_PATH . '/navbar.php';
                     </div>
                 </form>
             </div>
+        </div>
 
+        <!-- Shipping Address -->
+        <div class="profile-section-block" id="address-section">
             <div class="card profile-section-card">
                 <div class="profile-section-header">
-                    <i data-lucide="shield"></i>
+                    <div class="profile-section-icon"><i data-lucide="map-pin"></i></div>
+                    <div>
+                        <h3>Shipping Address</h3>
+                        <p>Manage your default delivery address.</p>
+                    </div>
+                </div>
+                <form action="<?= APP_URL ?>/index.php?url=profile" method="POST" id="address-form">
+                    <?= csrf_field() ?>
+                    <!-- Carry personal info fields as hidden so they don't get blanked -->
+                    <input type="hidden" name="first_name" value="<?= htmlspecialchars($user['first_name']) ?>">
+                    <input type="hidden" name="last_name" value="<?= htmlspecialchars($user['last_name']) ?>">
+                    <input type="hidden" name="email" value="<?= htmlspecialchars($user['email']) ?>">
+                    <?php if (!empty($usernameEnabled)): ?>
+                    <input type="hidden" name="username" value="<?= htmlspecialchars($user['username'] ?? '') ?>">
+                    <?php endif; ?>
+                    <input type="hidden" name="phone" value="<?= htmlspecialchars($user['phone'] ?? '') ?>">
+
+                    <div class="form-group">
+                        <label for="address">Street Address</label>
+                        <textarea id="address" name="address" class="form-control" rows="2" placeholder="House/Unit No., Street, Barangay"><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group form-col">
+                            <label for="city">City / Municipality</label>
+                            <input type="text" id="city" name="city" class="form-control" value="<?= htmlspecialchars($user['city'] ?? '') ?>" placeholder="e.g. Manila">
+                        </div>
+                        <div class="form-group form-col">
+                            <label for="state">Province</label>
+                            <input type="text" id="state" name="state" class="form-control" value="<?= htmlspecialchars($user['state'] ?? '') ?>" placeholder="e.g. Metro Manila">
+                        </div>
+                        <div class="form-group form-col">
+                            <label for="zip_code">Zip Code</label>
+                            <input type="text" id="zip_code" name="zip_code" class="form-control" value="<?= htmlspecialchars($user['zip_code'] ?? '') ?>" placeholder="e.g. 1000">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-accent"><i data-lucide="save"></i> Save Address</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Security -->
+        <div class="profile-section-block" id="security-section">
+            <div class="card profile-section-card">
+                <div class="profile-section-header">
+                    <div class="profile-section-icon profile-section-icon--security"><i data-lucide="shield"></i></div>
                     <div>
                         <h3>Security</h3>
                         <p>Change your password to keep your account secure.</p>
@@ -136,17 +188,26 @@ require_once INCLUDES_PATH . '/navbar.php';
 
                     <div class="form-group">
                         <label for="current_password">Current Password <span class="required">*</span></label>
-                        <input type="password" id="current_password" name="current_password" class="form-control" autocomplete="current-password" required>
+                        <div class="input-password-wrap">
+                            <input type="password" id="current_password" name="current_password" class="form-control" autocomplete="current-password" required>
+                            <button type="button" class="password-toggle" data-target="current_password" tabindex="-1"><i data-lucide="eye"></i></button>
+                        </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group form-col">
                             <label for="new_password">New Password <span class="required">*</span></label>
-                            <input type="password" id="new_password" name="new_password" class="form-control" autocomplete="new-password" minlength="8" required>
+                            <div class="input-password-wrap">
+                                <input type="password" id="new_password" name="new_password" class="form-control" autocomplete="new-password" minlength="8" required>
+                                <button type="button" class="password-toggle" data-target="new_password" tabindex="-1"><i data-lucide="eye"></i></button>
+                            </div>
                         </div>
                         <div class="form-group form-col">
                             <label for="confirm_password">Confirm New Password <span class="required">*</span></label>
-                            <input type="password" id="confirm_password" name="confirm_password" class="form-control" autocomplete="new-password" minlength="8" required>
+                            <div class="input-password-wrap">
+                                <input type="password" id="confirm_password" name="confirm_password" class="form-control" autocomplete="new-password" minlength="8" required>
+                                <button type="button" class="password-toggle" data-target="confirm_password" tabindex="-1"><i data-lucide="eye"></i></button>
+                            </div>
                         </div>
                     </div>
 
@@ -158,6 +219,44 @@ require_once INCLUDES_PATH . '/navbar.php';
         </div>
     </div>
 </div>
+
+<!-- Profile Tab Navigation & Password Toggle -->
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    // Tab navigation
+    var tabs = document.querySelectorAll('.profile-tab');
+    var sections = document.querySelectorAll('.profile-section-block');
+    tabs.forEach(function(tab){
+        tab.addEventListener('click', function(){
+            var target = this.dataset.target;
+            tabs.forEach(function(t){ t.classList.remove('active'); });
+            this.classList.add('active');
+            sections.forEach(function(s){
+                if (s.id === target) {
+                    s.style.display = '';
+                    s.classList.add('fade-in');
+                } else {
+                    s.style.display = 'none';
+                    s.classList.remove('fade-in');
+                }
+            });
+        });
+    });
+
+    // Password visibility toggle
+    document.querySelectorAll('.password-toggle').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            var input = document.getElementById(this.dataset.target);
+            if (!input) return;
+            var isPass = input.type === 'password';
+            input.type = isPass ? 'text' : 'password';
+            var icon = this.querySelector('i, svg');
+            if (icon) icon.setAttribute('data-lucide', isPass ? 'eye-off' : 'eye');
+            if (window.lucide) lucide.createIcons();
+        });
+    });
+});
+</script>
 
 <!-- Email change modal (hidden by default) -->
 <div id="email-change-modal" class="ec-modal" aria-hidden="true" style="display:none;">

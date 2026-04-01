@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SouthDev Home Depot — System Process Flowcharts</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+    --accent: #F97316;
+    --accent-dark: #EA580C;
+    --charcoal: #1B2A4A;
+    --surface: #F8F9FB;
+    --white: #FFFFFF;
+    --border: #E8ECF1;
+    --text-muted: #8896A6;
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(27,42,74,.06);
+    --font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: var(--font);
+    background: var(--surface);
+    color: var(--charcoal);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ============ HEADER ============ */
+.page-header {
+    background: linear-gradient(135deg, #F97316 0%, #EA580C 40%, #1B2A4A 100%);
+    padding: 48px 32px 56px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.page-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.page-header h1 {
+    font-size: 36px;
+    font-weight: 900;
+    color: #fff;
+    position: relative;
+    margin-bottom: 8px;
+}
+.page-header p {
+    font-size: 15px;
+    color: rgba(255,255,255,.75);
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+}
+.header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,.15);
+    backdrop-filter: blur(8px);
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    position: relative;
+}
+
+/* ============ LAYOUT ============ */
+.main-wrap {
+    max-width: 1400px;
+    margin: -32px auto 60px;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+}
+.layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+/* ============ SIDEBAR NAV ============ */
+.sidebar {
+    position: sticky;
+    top: 24px;
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    padding: 16px 12px;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+}
+.sidebar-title {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    padding: 8px 12px 6px;
+}
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.sidebar-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: none;
+    background: none;
+    border-radius: 10px;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--charcoal);
+    cursor: pointer;
+    transition: all .2s;
+    text-align: left;
+    width: 100%;
+    line-height: 1.3;
+}
+.sidebar-btn:hover {
+    background: var(--surface);
+}
+.sidebar-btn.active {
+    background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
+    color: var(--accent-dark);
+    font-weight: 700;
+}
+.sidebar-btn .num {
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+.sidebar-btn.active .num {
+    background: var(--accent);
+    color: #fff;
+}
+
+/* ============ CONTENT ============ */
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.chart-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    display: none;
+}
+.chart-card.visible {
+    display: block;
+    animation: fadeSlide .35s ease-out;
+}
+@keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.chart-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+}
+.chart-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+.chart-icon.orange { background: linear-gradient(135deg, #FFF7ED, #FFEDD5); }
+.chart-icon.blue { background: linear-gradient(135deg, #EFF6FF, #DBEAFE); }
+.chart-icon.green { background: linear-gradient(135deg, #F0FDF4, #DCFCE7); }
+.chart-icon.purple { background: linear-gradient(135deg, #FAF5FF, #F3E8FF); }
+.chart-icon.red { background: linear-gradient(135deg, #FEF2F2, #FEE2E2); }
+.chart-icon.teal { background: linear-gradient(135deg, #F0FDFA, #CCFBF1); }
+.chart-icon.yellow { background: linear-gradient(135deg, #FEFCE8, #FEF9C3); }
+
+.chart-header h2 {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--charcoal);
+    margin: 0 0 2px;
+}
+.chart-header p {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0;
+}
+.chart-body {
+    padding: 28px 24px;
+    overflow-x: auto;
+}
+.chart-body .mermaid {
+    display: flex;
+    justify-content: center;
+}
+.chart-body .mermaid svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ============ LEGEND ============ */
+.legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 14px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+}
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+}
+
+/* ============ PRINT ============ */
+.print-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    border-radius: 10px;
+    font-family: var(--font);
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--charcoal);
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+    margin-bottom: 8px;
+}
+.print-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.print-all-btn {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+.print-all-btn:hover {
+    background: var(--accent-dark);
+    border-color: var(--accent-dark);
+    color: #fff;
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar {
+        position: static;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 12px;
+        max-height: none;
+    }
+    .sidebar-title { width: 100%; }
+    .sidebar-btn { width: auto; padding: 8px 14px; }
+    .sidebar-btn .num { width: 20px; height: 20px; font-size: 10px; }
+    .page-header { padding: 32px 16px 44px; }
+    .page-header h1 { font-size: 26px; }
+    .chart-body { padding: 16px; }
+}
+
+@media print {
+    .sidebar, .page-header, .print-btn, .print-all-btn { display: none !important; }
+    .layout { grid-template-columns: 1fr; }
+    .chart-card { display: block !important; page-break-inside: avoid; margin-bottom: 24px; box-shadow: none; border: 1px solid #ddd; }
+    .main-wrap { margin-top: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+    <div class="header-badge">📊 System Documentation</div>
+    <h1>Process Flowcharts</h1>
+    <p>Complete visual documentation of all business processes in the SouthDev Home Depot system.</p>
+</div>
+
+<div class="main-wrap">
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:8px;flex-wrap:wrap;">
+        <button class="print-btn print-all-btn" onclick="showAll()">📋 Show All Flowcharts</button>
+        <button class="print-btn" onclick="window.print()">🖨️ Print / Export PDF</button>
+    </div>
+    <div class="layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-title">Process Flows</div>
+            <div class="sidebar-nav" id="sidebarNav">
+                <button class="sidebar-btn active" data-target="fc-1"><span class="num">1</span> Registration &amp; Verification</button>
+                <button class="sidebar-btn" data-target="fc-2"><span class="num">2</span> Login &amp; Authentication</button>
+                <button class="sidebar-btn" data-target="fc-3"><span class="num">3</span> Password Reset</button>
+                <button class="sidebar-btn" data-target="fc-4"><span class="num">4</span> Shopping &amp; Cart</button>
+                <button class="sidebar-btn" data-target="fc-5"><span class="num">5</span> Checkout &amp; Order Placement</button>
+                <button class="sidebar-btn" data-target="fc-6"><span class="num">6</span> Payment Processing</button>
+                <button class="sidebar-btn" data-target="fc-7"><span class="num">7</span> Order Management</button>
+                <button class="sidebar-btn" data-target="fc-8"><span class="num">8</span> Order Cancellation</button>
+                <button class="sidebar-btn" data-target="fc-9"><span class="num">9</span> Return &amp; Refund</button>
+                <button class="sidebar-btn" data-target="fc-10"><span class="num">10</span> Review System</button>
+                <button class="sidebar-btn" data-target="fc-11"><span class="num">11</span> Profile Management</button>
+                <button class="sidebar-btn" data-target="fc-12"><span class="num">12</span> Product Management</button>
+                <button class="sidebar-btn" data-target="fc-13"><span class="num">13</span> Inventory Management</button>
+                <button class="sidebar-btn" data-target="fc-14"><span class="num">14</span> User Management</button>
+                <button class="sidebar-btn" data-target="fc-15"><span class="num">15</span> Reports &amp; Analytics</button>
+            </div>
+        </nav>
+
+        <!-- Flowchart Content -->
+        <div class="content" id="content">
+
+            <!-- 1. Registration & Verification -->
+            <div class="chart-card visible" id="fc-1">
+                <div class="chart-header">
+                    <div class="chart-icon orange">🔐</div>
+                    <div>
+                        <h2>Customer Registration &amp; Email Verification</h2>
+                        <p>New customer account creation with OTP/link email verification process.</p>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <div class="mermaid">
+flowchart TD
+    A([🟢 START]) --> B[Visit /register]
+    B --> C{Already logged in?}
+    C -->|Yes| D[Redirect to homepage]
+    C -->|No| E[Display registration form]
+    E --> F[/Submit: name, username,\nemail, password, birthdate/]
+    F --> G{Required fields\nfilled?}
+    G -->|No| H[❌ Show error message]
+    H --> E
+    G -->|Yes| I{Username\nprovided?}
+    I -->|Yes| J{Valid format?\n3-30 chars, a-z 0-9 . _ -}
+    J -->|No| H
+    J -->|Yes| K{Username\navailable?}
+    K -->|No| H
+    K -->|Yes| L{Password\n≥ 8 chars?}
+    I -->|No| L
+    L -->|No| H
+    L -->|Yes| M{Email already\nregistered?}
+    M -->|Yes| H
+    M -->|No| N[Generate verification\ntoken + 6-digit OTP]
+    N --> O[Create user in database\nrole = Customer]
+    O --> P[Send verification email\nwith link + OTP]
+    P --> Q{Email sent\nsuccessfully?}
+    Q -->|Yes| R[✅ Flash: Please verify email]
+    Q -->|No| S[⚠️ Flash: Check storage/mails]
+    R --> T[Redirect to /verify-email]
+    S --> T
+    T --> U{Verification\nmethod?}
+    U -->|Click Link| V[Visit link with token]
+    V --> W{Token valid?}
+    W -->|No| X[❌ Invalid token error]
+    W -->|Yes| Y[Mark email verified]
+    U -->|Enter OTP| Z[Enter email + OTP code]
+    Z --> AA{Account\nlocked?}
+    AA -->|Yes| AB[❌ Wait X minutes]
+    AA -->|No| AC{OTP matches\n& not expired?}
+    AC -->|No| AD[Increment attempts]
+    AD --> AE{Attempts ≥ 5?}
+    AE -->|Yes| AF[🔒 Lock account 15 min]
+    AE -->|No| AG[❌ Invalid OTP error]
+    AC -->|Yes| Y
+    Y --> AH[✅ Email verified!]
+    AH --> AI[Redirect to /login]
+    AI --> AJ([🔵 END])
+
+    style A fill:#22c55e,color:#fff,stroke:none
+    style AJ fill:#3b82f6,color:#fff,stroke:none
+    style H fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style X fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style AB fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style AF fill:#fef3c7,color:#92400e,stroke:#fde68a
+    style AG fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style R fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style AH fill:#dcfce7,color:#166534,stroke:#bbf7d0
+                    </div>
+                </div>
+                <div class="legend">
+                    <span class="legend-item"><span class="legend-dot" style="background:#22c55e"></span> Start</span>
+                    <span class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span> End</span>
+                    <span class="legend-item"><span class="legend-dot" style="background:#dcfce7;border:1px solid #bbf7d0"></span> Success</span>
+                    <span class="legend-item"><span class="legend-dot" style="background:#fecaca;border:1px solid #fca5a5"></span> Error</span>
+                    <span class="legend-item"><span class="legend-dot" style="background:#fef3c7;border:1px solid #fde68a"></span> Warning</span>
+                </div>
+            </div>
+
+            <!-- 2. Login & Authentication -->
+            <div class="chart-card" id="fc-2">
+                <div class="chart-header">
+                    <div class="chart-icon blue">🔑</div>
+                    <div>
+                        <h2>Login &amp; Authentication</h2>
+                        <p>Customer and Admin/Staff login flows with validation and role-based redirection.</p>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <div class="mermaid">
+flowchart TD
+    A([🟢 START]) --> B{Login type?}
+    B -->|Customer| C[Visit /login]
+    B -->|Staff/Admin| D[Visit /admin-login]
+    C --> E[/Enter email or username\n+ password/]
+    D --> F[/Enter email or username\n+ password/]
+    E --> G{Fields empty?}
+    F --> G
+    G -->|Yes| H[❌ Required fields error]
+    H --> C
+    G -->|No| I[Look up user by email]
+    I --> J{User found?}
+    J -->|No| K[Look up user by username]
+    K --> L{User found?}
+    L -->|No| M[❌ Invalid credentials]
+    L -->|Yes| N{Password\nverify OK?}
+    J -->|Yes| N
+    N -->|No| M
+    N -->|Yes| O{Account\nactive?}
+    O -->|No| P[❌ Account deactivated]
+    O -->|Yes| Q{Email\nverified?}
+    Q -->|No| R[❌ Please verify email]
+    R --> S[Redirect to /verify-email]
+    Q -->|Yes| T{Staff-only\nlogin page?}
+    T -->|Yes| U{Role =\nCustomer?}
+    U -->|Yes| V[❌ Staff only portal]
+    U -->|No| W[Set session variables]
+    T -->|No| W
+    W --> X[Log LOGIN event]
+    X --> Y{User role?}
+    Y -->|Customer| Z[Redirect to /products]
+    Y -->|Staff/Admin/Inventory| AA[Redirect to /dashboard]
+    Z --> AB([🔵 END])
+    AA --> AB
+
+    style A fill:#22c55e,color:#fff,stroke:none
+    style AB fill:#3b82f6,color:#fff,stroke:none
+    style H fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style M fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style P fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style R fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style V fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style W fill:#dcfce7,color:#166534,stroke:#bbf7d0
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Password Reset -->
+            <div class="chart-card" id="fc-3">
+                <div class="chart-header">
+                    <div class="chart-icon purple">🔄</div>
+                    <div>
+                        <h2>Password Reset Flow</h2>
+                        <p>Forgot password process with email token verification.</p>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <div class="mermaid">
+flowchart TD
+    A([🟢 START]) --> B[Visit /forgot-password]
+    B --> C[/Enter email address/]
+    C --> D{Email\nprovided?}
+    D -->|No| E[❌ Email required]
+    E --> B
+    D -->|Yes| F[Look up user by email]
+    F --> G{User\nfound?}
+    G -->|No| H[Flash: If email exists\nwe sent a link]
+    G -->|Yes| I{Account\nactive?}
+    I -->|No| J[❌ Account deactivated]
+    I -->|Yes| K[Generate 64-char token\nExpiry = 1 hour]
+    K --> L[Delete old tokens\nfor this email]
+    L --> M[Create password_resets record]
+    M --> N[Send reset email with link]
+    N --> H
+    H --> O[Redirect to /forgot-password]
+    O --> P[User clicks email link]
+    P --> Q[Visit /reset-password?token=...]
+    Q --> R[/Enter new password\n+ confirm password/]
+    R --> S{All fields\nfilled?}
+    S -->|No| T[❌ Fill all fields]
+    T --> Q
+    S -->|Yes| U{Passwords\nmatch?}
+    U -->|No| V[❌ Passwords don't match]
+    V --> Q
+    U -->|Yes| W{Password\n≥ 8 chars?}
+    W -->|No| X[❌ Min 8 characters]
+    X --> Q
+    W -->|Yes| Y[Look up token in DB]
+    Y --> Z{Token\nfound?}
+    Z -->|No| AA[❌ Invalid or expired]
+    Z -->|Yes| AB{Token\nexpired?}
+    AB -->|Yes| AC[Delete token]
+    AC --> AA
+    AB -->|No| AD[Hash new password]
+    AD --> AE[Update user password]
+    AE --> AF[Delete all tokens for email]
+    AF --> AG[Log PASSWORD_UPDATE]
+    AG --> AH[✅ Password updated!]
+    AH --> AI[Redirect to /login]
+    AI --> AJ([🔵 END])
+
+    style A fill:#22c55e,color:#fff,stroke:none
+    style AJ fill:#3b82f6,color:#fff,stroke:none
+    style E fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style J fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style T fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style V fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style X fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style AA fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style AH fill:#dcfce7,color:#166534,stroke:#bbf7d0
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Shopping & Cart -->
+            <div class="chart-card" id="fc-4">
+                <div class="chart-header">
+                    <div class="chart-icon green">🛒</div>
+                    <div>
+                        <h2>Shopping &amp; Cart Flow</h2>
+                        <p>Product browsing, searching, and cart management operations.</p>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <div class="mermaid">
+flowchart TD
+    A([🟢 START]) --> B{Entry point?}
+    B -->|Browse| C[Visit /products]
+    B -->|Search| D[/Enter search keywords/]
+    B -->|Category| E[Select category filter]
+    C --> F[Load product grid\nwith avg ratings]
+    D --> G[Search products by keyword]
+    E --> H[Filter products by category]
+    F --> I[Display product cards]
+    G --> I
+    H --> I
+    I --> J{Action?}
+    J -->|View Details| K[Visit /products/ID]
+    J -->|Add to Cart| L{User\nlogged in?}
+    K --> M[Display product detail\npage with reviews]
+    M --> J
+    L -->|No| N[Show login prompt]
+    L -->|Yes| O{Stock\navailable?}
+    O -->|No| P[❌ Out of stock]
+    O -->|Yes| Q[AJAX: POST /cart/add\nproduct_id + quantity]
+    Q --> R{Product\nexists?}
+    R -->|No| S[❌ Product not found]
+    R -->|Yes| T{Sufficient\nstock?}
+    T -->|No| U[❌ Insufficient stock]
+    T -->|Yes| V[Add/update cart item]
+    V --> W[✅ Update cart badge count]
+    W --> I
+    J -->|View Cart| X[GET /cart]
+    X --> Y[Display cart items + total]
+    Y --> Z{Action?}
+    Z -->|Update qty| AA[AJAX: POST /cart/update]
+    AA --> Y
+    Z -->|Remove item| AB[AJAX: POST /cart/remove]
+    AB --> Y
+    Z -->|Continue shopping| I
+    Z -->|Checkout| AC[Proceed to Checkout]
+    AC --> AD([🔵 TO CHECKOUT FLOW])
+
+    style A fill:#22c55e,color:#fff,stroke:none
+    style AD fill:#3b82f6,color:#fff,stroke:none
+    style P fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style S fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style U fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style W fill:#dcfce7,color:#166534,stroke:#bbf7d0
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Checkout & Order Placement -->
+            <div class="chart-card" id="fc-5">
+                <div class="chart-header">
+                    <div class="chart-icon orange">📦</div>
+                    <div>
+                        <h2>Checkout &amp; Order Placement</h2>
+                        <p>From cart to order creation with stock deduction and order number generation.</p>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <div class="mermaid">
+flowchart TD
+    A([🟢 FROM CART]) --> B[GET /checkout]
+    B --> C{Cart empty?}
+    C -->|Yes| D[❌ Redirect to /cart]
+    C -->|No| E[Load cart items + total]
+    E --> F[Display checkout form:\nshipping address, notes,\npayment method]
+    F --> G[/Customer fills form\nselects payment method/]
+    G --> H[POST /orders/create]
+    H --> I[CSRF check]
+    I --> J{Cart still\nhas items?}
+    J -->|No| D
+    J -->|Yes| K[🔄 BEGIN DB TRANSACTION]
+    K --> L[Calculate total from cart]
+    L --> M[Generate order number\nSHD-YYYYMMDD-XXXXXX]
+    M --> N[Create order record\nstatus = pending]
+    N --> O[For each cart item:]
+    O --> P[Add to order_items table]
+    P --> Q[Deduct stock\nadjustQuantity -qty]
+    Q --> R{More\nitems?}
+    R -->|Yes| O
+    R -->|No| S[Clear user's cart]
+    S --> T[✅ COMMIT TRANSACTION]
+    T --> U[Log ORDER_CREATE]
+    U --> V[Flash: Order placed!]
+    V --> W[Redirect to order detail]
+    W --> X([🔵 TO PAYMENT FLOW])
+
+    K -.->|Exception| Y[🔴 ROLLBACK]
+    Y --> Z[❌ Flash error]
+    Z --> AA[Redirect to /checkout]
+    AA --> AB([🔵 END])
+
+    style A fill:#22c55e,color:#fff,stroke:none
+    style X fill:#3b82f6,color:#fff,stroke:none
+    style AB fill:#3b82f6,color:#fff,stroke:none
+    style D fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style Y fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style Z fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style T fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style V fill:#dcfce7,color:#166534,stroke:#bbf7d0
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Payment Processing -->
+            <div class="chart-card" id="fc-6">
+                <div class="chart-header">
+                    <div class="chart-icon green">💳</div>
+                    <div>
+                        <h2>Payment Processing Flow</h2>
+                        <p>COD, GCash (PayMongo), and Bank Transfer payment methods with webhook handling.</p>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <div class="mermaid">
+flowchart TD
+    A([🟢 FROM ORDER]) --> B[POST /payment\norder_id + method]
+    B --> C[Create payment record\nstatus = pending]
+    C --> D[Redirect to\npayment gateway page]
+    D --> E{Payment\nmethod?}
+
+    E -->|COD| F[Display order summary\nCash on Delivery]
+    F --> G[Customer clicks\nConfirm Order]
+    G --> H[Payment → completed\nOrder → processing]
+    H --> I[✅ Success page]
+
+    E -->|GCash| J{PayMongo\nenabled?}
+    J -->|No| K[❌ GCash unavailable]
+    J -->|Yes| L[Auto-trigger\nGCash payment init]
+    L --> M[POST /payment/create-source\nvia PayMongo API]
+    M --> N{Already\npaid?}
+    N -->|Yes| O[❌ Already paid error]
+    N -->|No| P[Create PayMongo Source\ntype = gcash]
+    P --> Q[Receive checkout_url]
+    Q --> R[🔗 Redirect to\nGCash checkout]
+    R --> S{GCash\nresult?}
+    S -->|Success redirect| T[Payment → completed\nOrder → processing]
+    T --> I
+    S -->|Failed redirect| U[Payment → failed]
+    U --> V[❌ Failed page\nRetry option]
+
+    R -.->|Async| W[📨 PayMongo Webhook]
+    W --> X[Verify HMAC signature]
+    X --> Y{Event type?}
+    Y -->|payment.succeeded| Z[Find payment by source_id\nPayment → completed\nOrder → processing]
+    Y -->|payment.failed| AA[Find payment by source_id\nPayment → failed]
+
+    E -->|Bank Transfer| AB[Display bank details\nBDO account info]
+    AB --> AC[/Customer enters\ntransaction reference/]
+    AC --> AD[Payment → completed\nStore transaction_id\nOrder → processing]
+    AD --> I
+
+    I --> AE([🔵 END])
+    V --> AE
+
+    style A fill:#22c55e,color:#fff,stroke:none
+    style AE fill:#3b82f6,color:#fff,stroke:none
+    style K fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style O fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style U fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style V fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style I fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style H fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style T fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style AD fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style W fill:#e0f2fe,color:#075985,stroke:#bae6fd
+                    </div>
+                </div>
+                <div class="legend">
+                    <span class="legend-item"><span class="legend-dot" style="background:#dcfce7;border:1px solid #bbf7d0"></span> Success</span>
+                    <span class="legend-item"><span class="legend-dot" style="background:#fecaca;border:1px solid #fca5a5"></span> Error/Failed</span>
+                    <span class="legend-item"><span class="legend-dot" style="background:#e0f2fe;border:1px solid #bae6fd"></span> Webhook (Async)</span>
+                </div>
+            </div>
+
+            <!-- 7. Order Management -->
+            <div class="chart-card" id="fc-7">
+                <div class="chart-header">
+                    <div class="chart-icon blue">📋</div>
+                    <div>
+                        <h2>Order Status Management</h2>
+                        <p>Order lifecycle and staff/admin status updates from pending to delivered.</p>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <div class="mermaid">
+flowchart TD
+    A([🟢 ORDER CREATED]) --> B["📦 PENDING\n(Awaiting payment)"]
+    B -->|Payment confirmed| C["⚙️ PROCESSING\n(Being prepared)"]
+    B -->|Customer cancels| D["❌ CANCELLED"]
+    C -->|Staff ships order| E["🚚 SHIPPED\n(In transit)"]
+    C -->|Cancel request approved| D
+    E -->|Delivery confirmed| F["✅ DELIVERED\n(Complete)"]
+    F -->|Customer requests| G["↩️ RETURN REQUEST"]
+
+    H([👨‍💼 STAFF / ADMIN]) --> I[View all orders\nFilter by status]
+    I --> J[Select order]
+    J --> K[Update status via form]
+    K --> L{New status?}
+    L -->|processing| C
+    L -->|shipped| E
+    L -->|delivered| F
+    L -->|cancelled| D
+
+    M([👤 CUSTOMER]) --> N[View my orders]
+    N --> O[View order detail]
+    O --> P{Order status?}
+    P -->|pending| Q[Can cancel directly]
+    P -->|processing| R[Can request cancel]
+    P -->|delivered| S[Can request return\nCan write reviews]
+
+    style A fill:#22c55e,color:#fff,stroke:none
+    style B fill:#fef3c7,color:#92400e,stroke:#fde68a
+    style C fill:#e0f2fe,color:#075985,stroke:#bae6fd
+    style D fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style E fill:#dbeafe,color:#1e40af,stroke:#93c5fd
+    style F fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style G fill:#f3e8ff,color:#6b21a8,stroke:#d8b4fe
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8. Order Cancellation -->
+            <div class="chart-card" id="fc-8">
+                <div class="chart-header">
+                    <div class="chart-icon red">🚫</div>
+                    <div>
+                        <h2>Order Cancellation Flow</h2>
+                        <p>Direct cancellation for pending orders and request-based cancellation for processing orders.</p>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <div class="mermaid">
+flowchart TD
+    A([🟢 CUSTOMER WANTS\nTO CANCEL]) --> B{Order\nstatus?}
+
+    B -->|pending| C["Direct Cancel Path"]
+    C --> D[POST /orders/ID/cancel]
+    D --> E{Order belongs\nto user?}
+    E -->|No| F[❌ Forbidden]
+    E -->|Yes| G[/Select cancel reason/]
+    G --> H[🔄 BEGIN TRANSACTION]
+    H --> I[For each order item:\nRestore stock to inventory]
+    I --> J[Set status = cancelled\nStore cancel_reason]
+    J --> K[✅ COMMIT]
+    K --> L[Log ORDER_CANCEL]
+    L --> M[✅ Order cancelled]
+
+    B -->|processing| N["Cancel Request Path"]
+    N --> O[POST /orders/request-cancel/ID]
+    O --> P{Existing pending\nrequest?}
+    P -->|Yes| Q[⚠️ Already requested]
+    P -->|No| R[/Enter cancellation reason/]
+    R --> S[Create cancel_request\nstatus = pending]
+    S --> T[Log CANCEL_REQUEST]
+    T --> U[✅ Request submitted\nAwaiting approval]
+
+    U --> V([👨‍💼 STAFF / ADMIN])
+    V --> W[View cancel requests]
+    W --> X{Decision?}
+    X -->|Approve| Y[Set request → approved]
+    Y --> Z[Cancel order +\nRestore stock]
+    Z --> AA[Log CANCEL_APPROVE]
+    AA --> AB[✅ Order cancelled]
+    X -->|Reject| AC[Set request → rejected\nAdd admin notes]
+    AC --> AD[Log CANCEL_REJECT]
+    AD --> AE[Order continues\nprocessing]
+
+    M --> AF([🔵 END])
+    AB --> AF
+    AE --> AF
+
+    style A fill:#22c55e,color:#fff,stroke:none
+    style AF fill:#3b82f6,color:#fff,stroke:none
+    style F fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style M fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style AB fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style Q fill:#fef3c7,color:#92400e,stroke:#fde68a
+    style U fill:#e0f2fe,color:#075985,stroke:#bae6fd
+                    </div>
+                </div>
+            </div>
+
+            <!-- 9. Return & Refund -->
+            <div class="chart-card" id="fc-9">
+                <div class="chart-header">
+                    <div class="chart-icon purple">↩️</div>
+                    <div>
+                        <h2>Return &amp; Refund Request Flow</h2>
+                        <p>Customer initiates return on delivered orders, staff/admin reviews and processes.</p>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <div class="mermaid">
+flowchart TD
+    A([🟢 CUSTOMER]) --> B[View delivered order]
+    B --> C[Click Request Return]
+    C --> D{Order belongs\nto user?}
+    D -->|No| E[❌ Forbidden]
+    D -->|Yes| F{Order status\n= delivered?}
+    F -->|No| G[❌ Not eligible for return]
+    F -->|Yes| H{Existing return\nrequest?}
+    H -->|Yes, non-rejected| I[⚠️ Already requested]
+    H -->|No or rejected| J[Display return form]
+    J --> K[/Enter return reason/]
+    K --> L[POST /returns/submit]
+    L --> M[Create return_request\nstatus = pending]
+    M --> N[Log RETURN_REQUEST]
+    N --> O["✅ Request submitted\n⏳ Awaiting review"]
+
+    O --> P([👨‍💼 STAFF / ADMIN])
+    P --> Q[View return requests\nFilter by status]
+    Q --> R[Select request to review]
+    R --> S{Decision?}
+    S -->|Approve| T[Update status → approved\nAdd admin notes]
+    T --> U[Log RETURN_UPDATE]
+    U --> V{Process\ncomplete?}
+    V -->|Yes| W[Update status → completed]
+    V -->|Not yet| X[Return in progress]
+    S -->|Reject| Y[Update status → rejected\nAdd admin notes]
+    Y --> Z[Log RETURN_UPDATE]
+    Z --> AA[❌ Return rejected\nNotify customer]
+
+    W --> AB([🔵 END])
+    AA --> AB
+
+    style A fill:#22c55e,color:#fff,stroke:none
+    style AB fill:#3b82f6,color:#fff,stroke:none
+    style E fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style G fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style AA fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style I fill:#fef3c7,color:#92400e,stroke:#fde68a
+    style O fill:#e0f2fe,color:#075985,stroke:#bae6fd
+    style W fill:#dcfce7,color:#166534,stroke:#bbf7d0
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10. Review System -->
+            <div class="chart-card" id="fc-10">
+                <div class="chart-header">
+                    <div class="chart-icon yellow">⭐</div>
+                    <div>
+                        <h2>Review System Flow</h2>
+                        <p>Customer writes reviews for delivered orders, ratings displayed on product cards.</p>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <div class="mermaid">
+flowchart TD
+    A([🟢 CUSTOMER]) --> B[View delivered order details]
+    B --> C{Item already\nreviewed?}
+    C -->|Yes| D["✅ Shows 'Reviewed' badge"]
+    C -->|No| E[Click Write a Review]
+    E --> F[Open review modal]
+    F --> G[/Select star rating 1-5\nOptional comment/]
+    G --> H[POST /reviews/submit]
+    H --> I{Product ID valid\n& rating 1-5?}
+    I -->|No| J[❌ Validation error]
+    I -->|Yes| K{Order belongs\nto user?}
+    K -->|No| L[❌ Forbidden]
+    K -->|Yes| M{Order\ndelivered?}
+    M -->|No| N[❌ Only delivered orders]
+    M -->|Yes| O{Already\nreviewed?}
+    O -->|Yes| P[⚠️ Already reviewed]
+    O -->|No| Q[Save review to database]
+    Q --> R[✅ Review submitted!]
+    R --> S[Redirect to order detail]
+
+    T([📊 RATING DISPLAY]) --> U[Product cards load\navg ratings]
+    U --> V[Show ★ stars + count\non browse/search pages]
+
+    W([👨‍💼 STAFF / ADMIN]) --> X[View all reviews]
+    X --> Y{Action?}
+    Y -->|Delete inappropriate| Z[POST reviews/delete/ID]
+    Z --> AA[Remove review from DB]
+
+    S --> AB([🔵 END])
+
+    style A fill:#22c55e,color:#fff,stroke:none
+    style AB fill:#3b82f6,color:#fff,stroke:none
+    style J fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style L fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style N fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style P fill:#fef3c7,color:#92400e,stroke:#fde68a
+    style D fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style R fill:#dcfce7,color:#166534,stroke:#bbf7d0
+                    </div>
+                </div>
+            </div>
+
+            <!-- 11. Profile Management -->
+            <div class="chart-card" id="fc-11">
+                <div class="chart-header">
+                    <div class="chart-icon teal">👤</div>
+                    <div>
+                        <h2>Profile Management Flow</h2>
+                        <p>Personal info updates, photo upload, password change, and two-step email change.</p>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <div class="mermaid">
+flowchart TD
+    A([🟢 USER]) --> B[Visit /profile]
+    B --> C{User role?}
+    C -->|Customer| D[Customer profile view]
+    C -->|Staff/Admin| E[Staff profile view]
+    D --> F{Action?}
+
+    F -->|Update Info| G[Edit name, username,\nemail, phone]
+    G --> H[POST /profile]
+    H --> I{Username\nvalid?}
+    I -->|Invalid| J[❌ Validation error]
+    I -->|Valid/empty| K[Update user in DB]
+    K --> L[✅ Profile updated]
+
+    F -->|Change Photo| M[Click camera button]
+    M --> N[Select image file]
+    N --> O{File valid?\nJPG/PNG/WebP ≤ 2MB}
+    O -->|No| P[❌ Invalid file]
+    O -->|Yes| Q[Generate unique filename]
+    Q --> R[Move to uploads/profiles/]
+    R --> S[Update profile_image in DB]
+    S --> T[✅ Photo updated]
+
+    F -->|Change Password| U[Enter current + new\n+ confirm password]
+    U --> V{Current password\ncorrect?}
+    V -->|No| W[❌ Incorrect password]
+    V -->|Yes| X{New ≥ 8 chars\n& matches confirm?}
+    X -->|No| Y[❌ Validation error]
+    X -->|Yes| Z[Hash & save new password]
+    Z --> AA[✅ Password updated]
+
+    F -->|Change Email| AB[Click Change button]
+    AB --> AC[Send OTP to\ncurrent email]
+    AC --> AD[/Enter OTP to authorize/]
+    AD --> AE{OTP valid?}
+    AE -->|No| AF[❌ Invalid OTP]
+    AE -->|Yes| AG[/Enter new email/]
+    AG --> AH[Send OTP to\nnew email]
+    AH --> AI[/Enter new email OTP/]
+    AI --> AJ{OTP valid?}
+    AJ -->|No| AK[❌ Invalid OTP]
+    AJ -->|Yes| AL[Update email in DB]
+    AL --> AM[✅ Email changed!]
+
+    L --> AN([🔵 END])
+    T --> AN
+    AA --> AN
+    AM --> AN
+
+    style A fill:#22c55e,color:#fff,stroke:none
+    style AN fill:#3b82f6,color:#fff,stroke:none
+    style J fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style P fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style W fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style Y fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style AF fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style AK fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style L fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style T fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style AA fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style AM fill:#dcfce7,color:#166534,stroke:#bbf7d0
+                    </div>
+                </div>
+            </div>
+
+            <!-- 12. Product Management -->
+            <div class="chart-card" id="fc-12">
+                <div class="chart-header">
+                    <div class="chart-icon orange">🏷️</div>
+                    <div>
+                        <h2>Product Management Flow</h2>
+                        <p>Super Admin CRUD operations for products, categories, and price/stock tracking.</p>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <div class="mermaid">
+flowchart TD
+    A([🟢 SUPER ADMIN]) --> B[View /admin/products]
+    B --> C[Display all products\nwith categories]
+    C --> D{Action?}
+
+    D -->|Create| E[Fill product form:\nname, category, price,\nSKU, image, initial qty]
+    E --> F{Image\nuploaded?}
+    F -->|Yes| G[Validate type + size\nGenerate filename\nMove to uploads]
+    F -->|No| H[Continue without image]
+    G --> I{SKU unique?}
+    H --> I
+    I -->|No| J[❌ SKU already exists]
+    I -->|Yes| K[Create product in DB]
+    K --> L[Set initial inventory qty]
+    L --> M{Qty > 0?}
+    M -->|Yes| N[Record stock movement\ntype = initial]
+    M -->|No| O[Skip movement]
+    N --> P[Log PRODUCT_CREATE]
+    O --> P
+    P --> Q[✅ Product created]
+
+    D -->|Edit| R[Load product + categories]
+    R --> S[Display edit form]
+    S --> T[POST update]
+    T --> U{Price\nchanged?}
+    U -->|Yes| V[Record in price_history\nLog PRICE_UPDATE]
+    U -->|No| W[Continue]
+    V --> X{Stock\nchanged?}
+    W --> X
+    X -->|Yes| Y[Update inventory\nRecord stock_movement\nLog STOCK_MOVEMENT]
+    X -->|No| Z[Continue]
+    Y --> AA[Update product record]
+    Z --> AA
+    AA --> AB[Log PRODUCT_UPDATE]
+    AB --> AC[✅ Product updated]
+
+    D -->|Delete| AD[POST products/ID/delete]
+    AD --> AE[Delete from DB]
+    AE --> AF[Log PRODUCT_DELETE]
+    AF --> AG[✅ Product deleted]
+
+    Q --> AH([🔵 END])
+    AC --> AH
+    AG --> AH
+
+    style A fill:#22c55e,color:#fff,stroke:none
+    style AH fill:#3b82f6,color:#fff,stroke:none
+    style J fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style Q fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style AC fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style AG fill:#dcfce7,color:#166534,stroke:#bbf7d0
+                    </div>
+                </div>
+            </div>
+
+            <!-- 13. Inventory Management -->
+            <div class="chart-card" id="fc-13">
+                <div class="chart-header">
+                    <div class="chart-icon teal">📊</div>
+                    <div>
+                        <h2>Inventory Management Flow</h2>
+                        <p>Stock updates, additions, supplier requests, and movement tracking.</p>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <div class="mermaid">
+flowchart TD
+    A([🟢 STAFF / ADMIN /\nINVENTORY]) --> B[View inventory dashboard]
+    B --> C[Display all items\n+ low stock alerts]
+    C --> D{Action?}
+
+    D -->|Update Stock| E[/Enter product_id,\nnew quantity, reason/]
+    E --> F[Calculate diff from\ncurrent quantity]
+    F --> G[Set new absolute quantity]
+    G --> H{Diff ≠ 0?}
+    H -->|Yes| I[Record stock_movement\ntype = adjustment]
+    H -->|No| J[No change needed]
+    I --> K[Log STOCK_MOVEMENT]
+    K --> L[✅ Stock updated]
+
+    D -->|Add Stock| M[/Enter product_id,\nadd quantity, reason/]
+    M --> N{Quantity > 0?}
+    N -->|No| O[❌ Must be positive]
+    N -->|Yes| P[Increment inventory\nby add_quantity]
+    P --> Q[Record stock_movement\ntype = purchase]
+    Q --> R[Log STOCK_ADD]
+    R --> S[✅ Stock added]
+
+    D -->|Request Supplier| T[/Enter product_id,\nrequest qty, notes/]
+    T --> U{Quantity > 0?}
+    U -->|No| V[❌ Must be positive]
+    U -->|Yes| W[Create supplier_request\nstatus = pending]
+    W --> X[Log SUPPLIER_REQUEST]
+    X --> Y[✅ Request submitted]
+
+    D -->|View Movements| Z[Filter by type,\nproduct, date range]
+    Z --> AA[Display paginated\nmovement history]
+
+    D -->|Price History| AB[Filter by product]
+    AB --> AC[Display price\nchange history]
+
+    L --> AD([🔵 END])
+    S --> AD
+    Y --> AD
+
+    style A fill:#22c55e,color:#fff,stroke:none
+    style AD fill:#3b82f6,color:#fff,stroke:none
+    style O fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style V fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style L fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style S fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style Y fill:#dcfce7,color:#166534,stroke:#bbf7d0
+                    </div>
+                </div>
+            </div>
+
+            <!-- 14. User Management -->
+            <div class="chart-card" id="fc-14">
+                <div class="chart-header">
+                    <div class="chart-icon purple">👥</div>
+                    <div>
+                        <h2>User Management Flow</h2>
+                        <p>Super Admin operations: create, update, toggle, and delete user accounts.</p>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <div class="mermaid">
+flowchart TD
+    A([🟢 SUPER ADMIN]) --> B[View /admin/users]
+    B --> C[Display all user accounts]
+    C --> D{Action?}
+
+    D -->|Create User| E[/Fill: role, name,\nemail, password, phone/]
+    E --> F[Create user in DB]
+    F --> G{Role = Staff\nor Inventory?}
+    G -->|Yes| H[Auto-verify email]
+    G -->|No| I[Email unverified]
+    H --> J[Log USER_CREATE]
+    I --> J
+    J --> K[✅ User created]
+
+    D -->|Update User| L[/Edit user fields/]
+    L --> M[Update user record]
+    M --> N[Log USER_UPDATE]
+    N --> O[✅ User updated]
+
+    D -->|Toggle Active| P[POST users/ID/toggle]
+    P --> Q[Flip is_active flag]
+    Q --> R{Now active?}
+    R -->|Yes| S[✅ Account activated]
+    R -->|No| T[🔒 Account deactivated]
+
+    D -->|Delete User| U[POST users/ID/delete]
+    U --> V{Deleting\nself?}
+    V -->|Yes| W[❌ Cannot delete\nown account]
+    V -->|No| X{User has\norders?}
+    X -->|Yes| Y[❌ Has orders,\ndeactivate instead]
+    X -->|No| Z[Delete user from DB]
+    Z --> AA[Log USER_DELETE]
+    AA --> AB[✅ User deleted]
+
+    K --> AC([🔵 END])
+    O --> AC
+    S --> AC
+    T --> AC
+    AB --> AC
+
+    style A fill:#22c55e,color:#fff,stroke:none
+    style AC fill:#3b82f6,color:#fff,stroke:none
+    style W fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style Y fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style K fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style O fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style AB fill:#dcfce7,color:#166534,stroke:#bbf7d0
+    style T fill:#fef3c7,color:#92400e,stroke:#fde68a
+                    </div>
+                </div>
+            </div>
+
+            <!-- 15. Reports & Analytics -->
+            <div class="chart-card" id="fc-15">
+                <div class="chart-header">
+                    <div class="chart-icon red">📈</div>
+                    <div>
+                        <h2>Reports &amp; Analytics Flow</h2>
+                        <p>Dashboard statistics, sales/inventory/returns reports, CSV exports, and system logs.</p>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <div class="mermaid">
+flowchart TD
+    A([🟢 STAFF / ADMIN /\nINVENTORY]) --> B{View?}
+
+    B -->|Dashboard| C[GET /dashboard]
+    C --> D[Load stat cards:\nTotal sales, Orders,\nCustomers, Products]
+    D --> E[Load charts:\nMonthly sales, Daily sales,\nOrders by status,\nTop categories]
+    E --> F[Display interactive\nChart.js dashboard]
+
+    B -->|Reports| G[GET /reports]
+    G --> H{Report tab?}
+
+    H -->|Sales| I[Total sales, Top 10 products,\nMonthly trend, Status breakdown]
+    I --> J{Export?}
+    J -->|Raw CSV| K[Download order-item\nlevel detail]
+    J -->|Daily CSV| L[Download aggregated\nby day]
+    J -->|Monthly CSV| M[Download aggregated\nby month]
+    J -->|No| N[View in browser]
+
+    H -->|Inventory| O[All items, Low stock,\nTotal value, Stock units,\nOut-of-stock count]
+    O --> P{Export?}
+    P -->|Yes| Q[Download inventory\nCSV with stock levels]
+    P -->|No| R[View in browser]
+
+    H -->|Returns| S[Status breakdown,\nTotal returns, Recent 10,\nMonthly trend]
+
+    B -->|System Logs| T{Role =\nSuper Admin?}
+    T -->|No| U[❌ Access denied]
+    T -->|Yes| V[GET /admin/logs]
+    V --> W[Filter by: action type,\nuser, date range, search]
+    W --> X[Display paginated\nlog entries]
+
+    F --> Y([🔵 END])
+    N --> Y
+    R --> Y
+    S --> Y
+    X --> Y
+
+    style A fill:#22c55e,color:#fff,stroke:none
+    style Y fill:#3b82f6,color:#fff,stroke:none
+    style U fill:#fecaca,color:#991b1b,stroke:#fca5a5
+    style F fill:#dcfce7,color:#166534,stroke:#bbf7d0
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize Mermaid
+mermaid.initialize({
+    startOnLoad: false,
+    theme: 'base',
+    themeVariables: {
+        primaryColor: '#FFF7ED',
+        primaryTextColor: '#1B2A4A',
+        primaryBorderColor: '#F97316',
+        lineColor: '#94A3B8',
+        secondaryColor: '#EFF6FF',
+        tertiaryColor: '#F0FDF4',
+        fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
+        fontSize: '13px',
+        nodeBorder: '#E8ECF1',
+        mainBkg: '#FFFFFF',
+        clusterBkg: '#F8F9FB'
+    },
+    flowchart: {
+        curve: 'basis',
+        padding: 16,
+        htmlLabels: true,
+        useMaxWidth: true
+    }
+});
+
+// Render all mermaid diagrams
+async function renderCharts() {
+    const els = document.querySelectorAll('.mermaid');
+    for (let i = 0; i < els.length; i++) {
+        const el = els[i];
+        const id = 'mermaid-' + i;
+        try {
+            const { svg } = await mermaid.render(id, el.textContent.trim());
+            el.innerHTML = svg;
+        } catch (e) {
+            console.error('Mermaid render error for chart ' + i, e);
+            el.innerHTML = '<p style="color:red">Failed to render chart: ' + e.message + '</p>';
+        }
+    }
+}
+renderCharts();
+
+// Sidebar navigation
+document.getElementById('sidebarNav').addEventListener('click', function(e) {
+    const btn = e.target.closest('.sidebar-btn');
+    if (!btn) return;
+    const target = btn.dataset.target;
+
+    // Update active state
+    document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Show target card
+    document.querySelectorAll('.chart-card').forEach(c => c.classList.remove('visible'));
+    const card = document.getElementById(target);
+    if (card) {
+        card.classList.add('visible');
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+});
+
+// Show all
+function showAll() {
+    document.querySelectorAll('.chart-card').forEach(c => c.classList.add('visible'));
+    document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.add('active'));
+}
+</script>
+
+</body>
+</html>
