@@ -16,8 +16,8 @@ require_once INCLUDES_PATH . '/navbar.php';
 .loc-hero::before {
     content: '';
     position: absolute; inset: 0;
-    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
-    opacity: .5;
+    background: url("<?= APP_URL ?>/assets/uploads/images/image.png") center/cover no-repeat;
+    opacity: .15;
 }
 .loc-hero-inner {
     max-width: 700px;
@@ -62,10 +62,12 @@ require_once INCLUDES_PATH . '/navbar.php';
     background: #fff;
     border: 1px solid var(--border);
     border-radius: 14px;
-    padding: 1.5rem;
+    padding: 1.75rem 1.5rem;
     display: flex;
-    align-items: flex-start;
-    gap: 1rem;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: .75rem;
     box-shadow: var(--shadow-md);
     transition: transform .2s, box-shadow .2s;
 }
@@ -74,31 +76,37 @@ require_once INCLUDES_PATH . '/navbar.php';
     box-shadow: var(--shadow-hover);
 }
 .loc-card-icon {
-    width: 44px; height: 44px;
-    border-radius: 12px;
+    width: 48px; height: 48px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
 }
-.loc-card-icon svg { width: 22px; height: 22px; }
+.loc-card-icon svg { width: 24px; height: 24px; }
 .loc-card-icon.orange  { background: rgba(249,115,22,.1); color: #F97316; }
 .loc-card-icon.blue    { background: rgba(59,130,246,.1);  color: #3B82F6; }
 .loc-card-icon.green   { background: rgba(22,163,74,.1);   color: #16A34A; }
 .loc-card-text h3 {
-    font-size: .8rem;
-    font-weight: 600;
+    font-size: .75rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .08em;
     color: var(--text-secondary);
-    margin: 0 0 .3rem;
+    margin: 0 0 .4rem;
 }
 .loc-card-text p {
-    font-size: .95rem;
+    font-size: .88rem;
     font-weight: 600;
     color: var(--charcoal);
     margin: 0;
-    line-height: 1.4;
+    line-height: 1.5;
+}
+.loc-card-text .sub {
+    font-size: .82rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-top: .25rem;
 }
 
 /* ── Map Section ───────────────────────────────────── */
@@ -117,6 +125,7 @@ require_once INCLUDES_PATH . '/navbar.php';
 .loc-map-header {
     display: flex;
     align-items: center;
+    justify-content: flex-start;
     gap: .75rem;
     padding: 1.25rem 1.5rem;
     border-bottom: 1px solid var(--border);
@@ -130,6 +139,11 @@ require_once INCLUDES_PATH . '/navbar.php';
 @keyframes pulse-dot {
     0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(22,163,74,.4); }
     50%      { opacity: .8; box-shadow: 0 0 0 6px rgba(22,163,74,0); }
+}
+.loc-map-header-logo {
+    width: 28px; height: 28px;
+    object-fit: contain;
+    border-radius: 6px;
 }
 .loc-map-header h2 {
     font-size: 1rem;
@@ -201,8 +215,6 @@ require_once INCLUDES_PATH . '/navbar.php';
 <!-- Hero Banner -->
 <div class="loc-hero">
     <div class="loc-hero-inner">
-        <img src="<?= APP_URL ?>/assets/uploads/images/logo/location.png"
-             alt="Location" class="loc-hero-logo">
         <h1>Visit Our Store</h1>
         <p>Davao City's Premier Tiles &amp; Construction Supply</p>
     </div>
@@ -225,7 +237,7 @@ require_once INCLUDES_PATH . '/navbar.php';
         </div>
         <div class="loc-card-text">
             <h3>Store Hours</h3>
-            <p>Mon – Sat: 7:30 AM – 6:00 PM<br>Sunday: 8:00 AM – 5:00 PM</p>
+            <p>Mon – Sat: 8:00 AM – 5:00 PM<br>Sunday: Closed</p>
         </div>
     </div>
     <div class="loc-card">
@@ -234,7 +246,8 @@ require_once INCLUDES_PATH . '/navbar.php';
         </div>
         <div class="loc-card-text">
             <h3>Contact</h3>
-            <p>(082) 123-4567<br>info@southdevhomedepot.ph</p>
+            <p>+63 (939) 939 8250</p>
+            <p class="sub">southdevhomedepo2020@gmail.com</p>
         </div>
     </div>
 </div>
@@ -243,7 +256,7 @@ require_once INCLUDES_PATH . '/navbar.php';
 <div class="loc-map-section">
     <div class="loc-map-wrapper">
         <div class="loc-map-header">
-            <span class="dot"></span>
+            <img src="<?= APP_URL ?>/assets/uploads/images/logo/location.png" alt="" class="loc-map-header-logo">
             <h2><?= htmlspecialchars(APP_NAME) ?></h2>
             <span><i data-lucide="navigation" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px;"></i><?= htmlspecialchars(APP_LOCATION) ?></span>
         </div>
