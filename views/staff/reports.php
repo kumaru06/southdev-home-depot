@@ -30,23 +30,66 @@ $activeTab = $_GET['tab'] ?? 'sales';
 
         <!-- ===== SALES TAB ===== -->
         <?php if ($activeTab === 'sales'): ?>
-        <div style="display:flex;justify-content:flex-end;margin-bottom:12px;gap:8px;">
-            <?php
-                $qs = $_GET;
-                $qs['tab'] = 'sales';
-                // raw rows export
-                $qs['export'] = 'sales';
-                $rawExportUrl = 'index.php?' . http_build_query($qs);
-                // daily aggregated
-                $qs['period'] = 'daily';
-                $dailyExportUrl = 'index.php?' . http_build_query($qs);
-                // monthly aggregated
-                $qs['period'] = 'monthly';
-                $monthlyExportUrl = 'index.php?' . http_build_query($qs);
-            ?>
-            <a href="<?= htmlspecialchars($rawExportUrl) ?>" class="btn btn-outline btn-sm">Export Rows CSV</a>
-            <a href="<?= htmlspecialchars($dailyExportUrl) ?>" class="btn btn-outline btn-sm">Export Daily CSV</a>
-            <a href="<?= htmlspecialchars($monthlyExportUrl) ?>" class="btn btn-outline btn-sm">Export Monthly CSV</a>
+        <!-- Download Section -->
+        <div class="export-panel">
+            <div class="export-panel-header">
+                <i data-lucide="download" style="width:18px;height:18px;"></i>
+                <h3>Download Reports</h3>
+            </div>
+            <div class="export-grid">
+                <div class="export-group">
+                    <h4><i data-lucide="trending-up" style="width:14px;height:14px;"></i> Sales Reports</h4>
+                    <div class="export-buttons">
+                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($_GET['url'] ?? 'staff/reports') ?>&export=sales_rows" class="export-btn export-btn--sales">
+                            <i data-lucide="file-text" style="width:16px;height:16px;"></i>
+                            <span>
+                                <strong>Detailed Sales</strong>
+                                <small>All transactions row by row</small>
+                            </span>
+                        </a>
+                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($_GET['url'] ?? 'staff/reports') ?>&export=sales_daily" class="export-btn export-btn--sales">
+                            <i data-lucide="calendar" style="width:16px;height:16px;"></i>
+                            <span>
+                                <strong>Daily Sales</strong>
+                                <small>Aggregated per day</small>
+                            </span>
+                        </a>
+                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($_GET['url'] ?? 'staff/reports') ?>&export=sales_monthly" class="export-btn export-btn--sales">
+                            <i data-lucide="bar-chart-3" style="width:16px;height:16px;"></i>
+                            <span>
+                                <strong>Monthly Sales</strong>
+                                <small>Aggregated per month</small>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+                <div class="export-group">
+                    <h4><i data-lucide="warehouse" style="width:14px;height:14px;"></i> Inventory Reports</h4>
+                    <div class="export-buttons">
+                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($_GET['url'] ?? 'staff/reports') ?>&export=current_inventory" class="export-btn export-btn--inv">
+                            <i data-lucide="package" style="width:16px;height:16px;"></i>
+                            <span>
+                                <strong>Current Inventory</strong>
+                                <small>Stock levels, values, status</small>
+                            </span>
+                        </a>
+                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($_GET['url'] ?? 'staff/reports') ?>&export=inventory_added" class="export-btn export-btn--inv">
+                            <i data-lucide="plus-circle" style="width:16px;height:16px;"></i>
+                            <span>
+                                <strong>Inventory Added</strong>
+                                <small>All stock-in movements</small>
+                            </span>
+                        </a>
+                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($_GET['url'] ?? 'staff/reports') ?>&export=damaged_inventory" class="export-btn export-btn--dmg">
+                            <i data-lucide="alert-octagon" style="width:16px;height:16px;"></i>
+                            <span>
+                                <strong>Damaged Inventory</strong>
+                                <small>Damaged items & estimated loss</small>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="stat-cards">
             <div class="stat-card">
@@ -121,31 +164,13 @@ $activeTab = $_GET['tab'] ?? 'sales';
 
         <!-- ===== INVENTORY TAB ===== -->
         <?php elseif ($activeTab === 'inventory'): ?>
-        <div style="display:flex;justify-content:flex-end;margin-bottom:12px;gap:8px;">
-            <?php
-                $qs = $_GET;
-                $qs['tab'] = 'inventory';
-                $qs['export'] = 'inventory';
-                // keep any existing date filters from querystring
-                $inventoryExportUrl = 'index.php?' . http_build_query($qs);
-            ?>
-            <form method="GET" action="index.php" style="display:flex;gap:.5rem;align-items:center;">
-                <input type="hidden" name="url" value="<?= htmlspecialchars($_GET['url'] ?? 'staff/reports') ?>">
-                <input type="hidden" name="tab" value="inventory">
-                <input type="hidden" name="export" value="inventory">
-                <input type="date" name="date_from" value="<?= htmlspecialchars($_GET['date_from'] ?? '') ?>" style="height:34px;padding:.25rem;border-radius:4px;border:1px solid var(--border);">
-                <input type="date" name="date_to" value="<?= htmlspecialchars($_GET['date_to'] ?? '') ?>" style="height:34px;padding:.25rem;border-radius:4px;border:1px solid var(--border);">
-                <button class="btn btn-outline btn-sm" type="submit">Export Inventory CSV</button>
-                <a href="<?= htmlspecialchars($inventoryExportUrl) ?>" class="btn btn-outline btn-sm">Quick Export</a>
-            </form>
-        </div>
         <div class="stat-cards">
             <div class="stat-card">
                 <div class="stat-info">
                     <span class="stat-label">Total Inventory Value</span>
                     <span class="stat-value">₱<?= number_format($totalInventoryValue ?? 0, 2) ?></span>
                 </div>
-                <div class="stat-icon"><i data-lucide="dollar-sign"></i></div>
+                <div class="stat-icon"><span style="font-size:1.5rem;font-weight:700;color:var(--accent);">₱</span></div>
             </div>
             <div class="stat-card">
                 <div class="stat-info">
@@ -345,6 +370,86 @@ $activeTab = $_GET['tab'] ?? 'sales';
     border-bottom-color: var(--accent);
 }
 .row-danger { background: var(--danger-bg) !important; }
+
+/* ── Export Panel ── */
+.export-panel {
+    background: var(--white, #fff);
+    border: 1.5px solid var(--border, #E8ECF1);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.export-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1rem;
+    color: var(--charcoal, #1B2A4A);
+}
+.export-panel-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+}
+.export-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+}
+@media (max-width: 768px) {
+    .export-grid { grid-template-columns: 1fr; }
+}
+.export-group h4 {
+    font-size: .8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--text-secondary, #64748B);
+    margin: 0 0 .6rem 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.export-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.export-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border, #E8ECF1);
+    border-radius: 8px;
+    background: var(--light, #F8FAFC);
+    color: var(--charcoal, #1B2A4A);
+    text-decoration: none;
+    transition: all .2s ease;
+    cursor: pointer;
+}
+.export-btn:hover {
+    border-color: var(--accent, #F97316);
+    background: rgba(249,115,22,.04);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(249,115,22,.1);
+}
+.export-btn span {
+    display: flex;
+    flex-direction: column;
+}
+.export-btn strong {
+    font-size: .85rem;
+    font-weight: 600;
+}
+.export-btn small {
+    font-size: .72rem;
+    color: var(--text-secondary, #64748B);
+    margin-top: 1px;
+}
+.export-btn--sales i { color: #10B981; }
+.export-btn--inv i { color: #3B82F6; }
+.export-btn--dmg i { color: #EF4444; }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
