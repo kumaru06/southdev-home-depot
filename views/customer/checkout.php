@@ -91,7 +91,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                                 <input type="radio" name="payment_method" value="cod" checked>
                                 <div class="co-pay-inner">
                                     <span class="co-pay-radio"></span>
-                                    <span class="co-pay-icon"><i data-lucide="banknote"></i></span>
+                                    <span class="co-pay-icon"><img src="<?= APP_URL ?>/assets/uploads/images/logo/COD2.png" alt="COD" class="co-pay-logo"></span>
                                     <span class="co-pay-text">
                                         <strong>Cash on Delivery</strong>
                                         <small>Pay when you receive your order</small>
@@ -102,7 +102,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                                 <input type="radio" name="payment_method" value="gcash">
                                 <div class="co-pay-inner">
                                     <span class="co-pay-radio"></span>
-                                    <span class="co-pay-icon co-pay-icon--blue"><i data-lucide="smartphone"></i></span>
+                                    <span class="co-pay-icon"><img src="<?= APP_URL ?>/assets/uploads/images/logo/gcashlogo.png" alt="GCash" class="co-pay-logo"></span>
                                     <span class="co-pay-text">
                                         <strong>GCash</strong>
                                         <small>Pay via GCash (PayMongo)</small>
@@ -113,7 +113,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                                 <input type="radio" name="payment_method" value="card">
                                 <div class="co-pay-inner">
                                     <span class="co-pay-radio"></span>
-                                    <span class="co-pay-icon co-pay-icon--purple"><i data-lucide="credit-card"></i></span>
+                                    <span class="co-pay-icon"><img src="<?= APP_URL ?>/assets/uploads/images/logo/creditcard.png" alt="Credit Card" class="co-pay-logo"></span>
                                     <span class="co-pay-text">
                                         <strong>Credit / Debit Card</strong>
                                         <small>Visa, Mastercard, JCB, Amex</small>

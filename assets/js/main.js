@@ -274,13 +274,13 @@
             var submitBtn= document.getElementById('loginModalSubmit');
             var emailIn  = document.getElementById('loginModalEmail');
 
-            // Intercept all "Login" nav links that go to ?url=login
+            // Intercept ALL links that go to ?url=login (nav links, buttons, "sign in to purchase", etc.)
             document.addEventListener('click', function (e) {
                 var link = findClosestAnchor(e.target);
                 if (!link) return;
 
                 var href = link.getAttribute('href') || '';
-                var isLogin = /\burl=login\b/.test(href) && !link.classList.contains('btn');
+                var isLogin = /\burl=login\b/.test(href);
                 if (!isLogin) return;
 
                 e.preventDefault();

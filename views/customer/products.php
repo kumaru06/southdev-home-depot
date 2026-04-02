@@ -34,7 +34,7 @@ if (!file_exists($display2Full)) {
                 </div>
                 <nav class="sidebar-nav">
                     <a href="<?= APP_URL ?>/index.php?url=products" class="<?= !isset($_GET['category']) ? 'active' : '' ?>">
-                        <span><i data-lucide="layers" style="width:15px;height:15px"></i> All Products</span>
+                        <span><img src="<?= APP_URL ?>/assets/uploads/images/png-icon/tile.png" alt="All Products" style="width:15px;height:15px"> All Products</span>
                         <?php if (!empty($products) && !isset($_GET['category'])): ?>
                             <span class="sidebar-count"><?= count($products) ?></span>
                         <?php endif; ?>
@@ -90,14 +90,14 @@ if (!file_exists($display2Full)) {
             <?php if ((isset($_GET['url']) && strpos($_GET['url'], 'products') === 0) || (isset($currentUrl) && strpos($currentUrl, 'products') === 0)): ?>
             <!-- Section heading -->
             <div class="section-heading">
-                <span class="section-badge"><i data-lucide="package" style="width:13px;height:13px;"></i> OUR PRODUCTS</span>
+                <span class="section-badge"><img src="<?= APP_URL ?>/assets/uploads/images/png-icon/product.png" alt="Products" style="width:17px;height:17px;"> OUR PRODUCTS</span>
                 <h2 class="section-title">Everything You Need in <span class="accent-text">One Place</span></h2>
                 <p class="section-subtitle">Browse our complete range of premium building materials, fixtures, and finishes.</p>
             </div>
 
             <div class="category-bar storefront-chips">
                 <a href="<?= APP_URL ?>/index.php?url=products" class="<?= !isset($_GET['category']) ? 'active' : '' ?>">
-                    <i data-lucide="grid-3x3" style="width:14px;height:14px"></i> All Products
+                    <img src="<?= APP_URL ?>/assets/uploads/images/png-icon/tile.png" alt="All Products" style="width:14px;height:14px"> All Products
                 </a>
                 <!-- Category select for quick filtering / mobile users -->
                 <div class="category-select" style="margin-left:12px; display:inline-block; vertical-align:middle;">

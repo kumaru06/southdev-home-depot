@@ -177,7 +177,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
                                     $pmLogo  = APP_URL . '/assets/uploads/images/logo/gcashlogo.png';
                                 } elseif (str_contains($pmRaw, 'cod') || str_contains($pmRaw, 'cash')) {
                                     $pmLabel = 'Cash on Delivery';
-                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/COD.png';
+                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/COD2.png';
                                 } elseif (str_contains($pmRaw, 'card') || str_contains($pmRaw, 'paymongo')) {
                                     $pmLabel = 'Credit / Debit Card';
                                     $pmLogo  = APP_URL . '/assets/uploads/images/logo/creditcard.png';

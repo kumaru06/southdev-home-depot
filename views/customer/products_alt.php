@@ -6,14 +6,14 @@ require_once INCLUDES_PATH . '/navbar.php';
 
 <div class="container">
     <div class="section-heading" style="margin-top:1rem;">
-        <span class="section-badge"><i data-lucide="package" style="width:13px;height:13px;"></i> OUR PRODUCTS</span>
+        <span class="section-badge"><img src="<?= APP_URL ?>/assets/uploads/images/png-icon/product.png" alt="Products" style="width:17px;height:17px;"> OUR PRODUCTS</span>
         <h2 class="section-title">Everything You Need in <span class="accent-text">One Place</span></h2>
         <p class="section-subtitle">Browse our complete range of premium building materials, fixtures, and finishes.</p>
     </div>
 
     <div class="category-bar storefront-chips" style="margin-bottom:18px;">
         <a href="<?= APP_URL ?>/index.php?url=products" class="<?= !isset($_GET['category']) ? 'active' : '' ?>">
-            <i data-lucide="grid-3x3" style="width:14px;height:14px"></i> All Products
+            <img src="<?= APP_URL ?>/assets/uploads/images/png-icon/tile.png" alt="All Products" style="width:14px;height:14px"> All Products
         </a>
         <?php if (isset($categories)): foreach ($categories as $cat): ?>
             <a href="<?= APP_URL ?>/index.php?url=products&category=<?= $cat['id'] ?>" class="<?= (isset($_GET['category']) && $_GET['category'] == $cat['id']) ? 'active' : '' ?>">

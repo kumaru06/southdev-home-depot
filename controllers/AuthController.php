@@ -21,8 +21,19 @@ class AuthController {
     }
 
     public function showLogin() {
-        $pageTitle = 'Login';
-        require_once VIEWS_PATH . '/auth/login.php';
+        // Instead of rendering a blank login page, redirect to the referring
+        // page (or home) so the login modal opens over real content.
+        $referer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
+        $appBase = rtrim(APP_URL, '/');
+
+        // Only use referer if it's on the same site and not already a login URL
+        if ($referer && strpos($referer, $appBase) === 0 && strpos($referer, 'url=login') === false) {
+            $sep = (strpos($referer, '?') !== false) ? '&' : '?';
+            header('Location: ' . $referer . $sep . 'login_modal=1');
+        } else {
+            header('Location: ' . APP_URL . '?login_modal=1');
+        }
+        exit;
     }
 
     public function showAdminLogin() {
@@ -184,6 +195,31 @@ class AuthController {
 
         flash('error', 'Invalid email or password.');
         header('Location: ' . APP_URL . '/index.php?url=admin-login');
+        exit;
+    }
+
+    /**
+     * AJAX endpoint: check if a username is already taken.
+     */
+    public function checkUsername() {
+        header('Content-Type: application/json');
+        $username = trim($_GET['username'] ?? $_POST['username'] ?? '');
+
+        if (empty($username) || strlen($username) < 3) {
+            echo json_encode(['available' => false, 'message' => 'Username must be at least 3 characters.']);
+            exit;
+        }
+
+        if (!preg_match('/^[a-zA-Z0-9._-]+$/', $username)) {
+            echo json_encode(['available' => false, 'message' => 'Invalid characters in username.']);
+            exit;
+        }
+
+        $taken = $this->userModel->hasColumn('username') && $this->userModel->findByUsername($username);
+        echo json_encode([
+            'available' => !$taken,
+            'message'   => $taken ? 'Username is already taken.' : 'Username is available.'
+        ]);
         exit;
     }
 

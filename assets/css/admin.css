@@ -28,8 +28,9 @@
 .sidebar.collapsed { width: 68px; min-width: 68px; transform: none; }
 
 .sidebar .brand {
-    /* Reduce top padding so the brand vertically aligns with the top-bar (64px height) */
-    padding: 14px 22px;
+    /* Match top-bar height (56px) for alignment */
+    padding: 0 22px;
+    height: 56px;
     border-bottom: 1px solid rgba(255,255,255,.06);
     display: flex;
     align-items: center;

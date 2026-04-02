@@ -29,9 +29,9 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
                     style="--auth-image: <?= $authImage ? "url('" . htmlspecialchars($authImage) . "')" : 'none' ?>;">
                     <div class="auth-media-overlay"></div>
                     <div class="auth-media-content">
-                        <div class="auth-media-badge">Staff Access</div>
+                        <div class="auth-media-badge">Staff Admin Access</div>
                         <div class="auth-media-title"><?= APP_NAME ?></div>
-                        <div class="auth-media-subtitle">Administrative login</div>
+                        <div class="auth-media-subtitle">Admin login</div>
                     </div>
                 </div>
 
@@ -39,7 +39,7 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
                     <div class="auth-brand">
                         <i data-lucide="hard-hat" class="auth-icon"></i>
                         <div>
-                            <h2><?= APP_NAME ?> Admin/Staff</h2>
+                            <h2><?= APP_NAME ?> <br>Admin/Staff</h2>
                             <p class="auth-tagline">Sign in to admin/staff</p>
                         </div>
                     </div>
@@ -69,7 +69,6 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
                     </form>
 
                     <div class="auth-footer">
-                        <p>Need a staff account? Contact your administrator.</p>
                         <p>Return to <a href="<?= APP_URL ?>/index.php?url=login">customer login</a></p>
                     </div>
                 </div>

@@ -153,11 +153,11 @@ require_once INCLUDES_PATH . '/navbar.php';
                     <div class="form-row">
                         <div class="form-group form-col">
                             <label for="city">City / Municipality</label>
-                            <input type="text" id="city" name="city" class="form-control" value="<?= htmlspecialchars($user['city'] ?? '') ?>" placeholder="e.g. Manila">
+                            <input type="text" id="city" name="city" class="form-control" value="<?= htmlspecialchars($user['city'] ?? '') ?>" placeholder="e.g. Davao">
                         </div>
                         <div class="form-group form-col">
                             <label for="state">Province</label>
-                            <input type="text" id="state" name="state" class="form-control" value="<?= htmlspecialchars($user['state'] ?? '') ?>" placeholder="e.g. Metro Manila">
+                            <input type="text" id="state" name="state" class="form-control" value="<?= htmlspecialchars($user['state'] ?? '') ?> " placeholder="e.g. Davao Del Sur">
                         </div>
                         <div class="form-group form-col">
                             <label for="zip_code">Zip Code</label>

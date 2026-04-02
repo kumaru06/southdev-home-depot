@@ -48,10 +48,12 @@ body:not(.admin-layout) .form-control {
     background: linear-gradient(135deg, #1B2A4A 0%, #2D4A7A 40%, #F97316 100%);
     min-height: 280px;
 }
-/* If hero follows the site header, ensure a small top gap */
-.site-header + .hero-banner,
-.site-header + .products-hero {
-    margin-top: 8px;
+/* Gap between nav and hero (hero is nested inside .container, not a direct sibling) */
+.hero-banner {
+    margin-top: 20px;
+}
+.products-hero {
+    margin-top: 20px;
 }
 /* ---------- Products page hero (image.png background) ---------- */
 .products-hero {
@@ -545,13 +547,13 @@ body:not(.admin-layout) .form-control {
 .section-badge {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 16px;
+    gap: 8px;
+    padding: 8px 20px;
     border-radius: 999px;
     border: 1.5px solid rgba(249,115,22,.25);
     background: rgba(249,115,22,.06);
     color: var(--accent);
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .6px;
@@ -2644,13 +2646,19 @@ body:not(.admin-layout) .form-control {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(249,115,22,.08);
+    background: rgba(0,0,0,.04);
     flex-shrink: 0;
 }
 .co-pay-icon i, .co-pay-icon svg {
     width: 18px;
     height: 18px;
     color: var(--accent);
+}
+.co-pay-logo {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    border-radius: 4px;
 }
 .co-pay-icon--blue { background: rgba(59,130,246,.08); }
 .co-pay-icon--blue i, .co-pay-icon--blue svg { color: #3b82f6; }

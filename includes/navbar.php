@@ -52,21 +52,24 @@ try {
 
             <form action="<?= APP_URL ?>/index.php" method="GET" class="search-inline" role="search">
                 <input type="hidden" name="url" value="products/search">
-                <input type="text" name="q" class="form-control" placeholder="Search tiles, vinyl, tools..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
-                <button type="submit" class="search-icon" aria-label="Search">
-                    <i data-lucide="search"></i>
-                </button>
+                <div class="search-box">
+                    <i data-lucide="search" class="search-box-icon"></i>
+                    <input type="text" name="q" class="form-control" placeholder="Search products, tiles, tools..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
+                    <button type="submit" class="search-btn" aria-label="Search">
+                        <i data-lucide="search"></i>
+                    </button>
+                </div>
             </form>
 
             <div class="auth-links">
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <?php if ($_SESSION['role_id'] == ROLE_CUSTOMER): ?>
-                        <a href="<?= APP_URL ?>/index.php?url=cart" class="nav-cart"><i data-lucide="shopping-cart"></i>
+                        <a href="<?= APP_URL ?>/index.php?url=cart" class="nav-cart-btn" title="Shopping Cart">
+                            <i data-lucide="shopping-cart"></i>
                             <?php $cc = isset($cartCount) ? (int)$cartCount : 0; ?>
                             <span class="cart-count" style="<?= $cc > 0 ? '' : 'display:none' ?>"><?= $cc ?></span>
                         </a>
                     <?php endif; ?>
-                    <!-- Topbar PROFILE and Logout removed: use main navigation PROFILE dropdown instead -->
                 <?php else: ?>
                     <a href="<?= APP_URL ?>/index.php?url=login" class="auth-link"><i data-lucide="log-in" style="width:15px;height:15px;"></i> Login</a>
                     <a href="<?= APP_URL ?>/index.php?url=register" class="btn btn-accent"><i data-lucide="user-plus" style="width:15px;height:15px;"></i> Register</a>
@@ -195,7 +198,7 @@ try {
     </nav>
 </header>
 
-<?php if (!isset($_SESSION['user_id']) && $currentUrl !== 'login'): ?>
+<?php if (!isset($_SESSION['user_id'])): ?>
 <!-- Login Modal Overlay (blur background like logout dialog) -->
 <div class="login-modal-overlay" id="loginModalOverlay" role="dialog" aria-modal="true" aria-label="Sign in">
     <div class="login-modal">
@@ -223,7 +226,7 @@ try {
 
             <div class="login-modal-form-panel">
                 <div class="login-modal-brand">
-                    <i data-lucide="grid-3x3" class="login-modal-icon"></i>
+                    <img src="<?= APP_URL ?>/assets/uploads/images/png-icon/tile.png" alt="Tile" class="login-modal-icon" style="width:38px;height:38px;">
                     <div>
                         <h2><?= APP_NAME ?></h2>
                         <p>Sign in to your account</p>
