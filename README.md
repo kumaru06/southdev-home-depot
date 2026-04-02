@@ -20,15 +20,6 @@ A PHP-based e-commerce platform for home improvement products.
 5. Point your web server to the project root
 6. Access via browser
 
-## Developer
-- **Errant Kram Perez**
-- **?**
-- **?**
-
-## Description
-A PHP-based e-commerce platform for Southdev Home Depot, Home Improvement
-
-
 ## Roles
 - **Customer** - Browse, order, track, return
 - **StaffAdmin(Staff)** - Manage orders, returns, reports, cashier
