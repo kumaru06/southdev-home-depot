@@ -25,6 +25,10 @@ A PHP-based e-commerce platform for home improvement products.
 - **?**
 - **?**
 
+## Description
+A PHP-based e-commerce platform for Southdev Home Depot, Home Improvement
+
+
 ## Roles
 - **Customer** - Browse, order, track, return
 - **Staff** - Manage orders, returns, reports, cashier
