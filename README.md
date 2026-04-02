@@ -22,8 +22,9 @@ A PHP-based e-commerce platform for home improvement products.
 
 ## Roles
 - **Customer** - Browse, order, track, return
-- **Staff** - Manage orders, inventory, returns, reports
+- **Staff** - Manage orders, returns, reports
 - **Super Admin** - Manage users, products, categories, settings
+- **Inventory In-charge** - Manage Stock, Inventory Monitoring
 
 ## Local Demo Accounts
 For security, this repo does not store plain-text passwords.
