@@ -21,6 +21,7 @@ A PHP-based e-commerce platform for home improvement products.
 6. Access via browser
 
 #Kram Dreyan Perez / PHP-based e-commerce platform
+
 ## Roles
 - **Customer** - Browse, order, track, return
 - **Staff** - Manage orders, returns, reports, cashier
