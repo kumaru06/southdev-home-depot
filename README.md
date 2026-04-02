@@ -22,6 +22,8 @@ A PHP-based e-commerce platform for home improvement products.
 
 ## Developer
 - **Errant Kram Perez**
+- **?**
+- **?**
 
 ## Roles
 - **Customer** - Browse, order, track, return
