@@ -20,7 +20,8 @@ A PHP-based e-commerce platform for home improvement products.
 5. Point your web server to the project root
 6. Access via browser
 
-#Kram Dreyan Perez / PHP-based e-commerce platform
+## Developer
+- **Errant Kram Perez**
 
 ## Roles
 - **Customer** - Browse, order, track, return
