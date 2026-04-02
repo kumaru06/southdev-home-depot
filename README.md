@@ -20,6 +20,7 @@ A PHP-based e-commerce platform for home improvement products.
 5. Point your web server to the project root
 6. Access via browser
 
+#Kram Dreyan Perez / PHP-based e-commerce platform
 ## Roles
 - **Customer** - Browse, order, track, return
 - **Staff** - Manage orders, returns, reports, cashier
@@ -27,6 +28,6 @@ A PHP-based e-commerce platform for home improvement products.
 - **Inventory In-charge** - Manage stock, Inventory monitoring
 
 ## Local Demo Accounts
-For security, this repo does not store plain-text passwords.
+For security, My repo does not store plain-text passwords.
 
 If you need local demo accounts (customer/staff/super admin/inventory in-charge), create them in your local database and set your own passwords.
