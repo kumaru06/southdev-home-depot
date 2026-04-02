@@ -31,9 +31,9 @@ A PHP-based e-commerce platform for Southdev Home Depot, Home Improvement
 
 ## Roles
 - **Customer** - Browse, order, track, return
-- **Staff** - Manage orders, returns, reports, cashier
-- **Super Admin** - Manage users, products, categories, settings
-- **Inventory In-charge** - Manage stock, Inventory monitoring
+- **StaffAdmin(Staff)** - Manage orders, returns, reports, cashier
+- **Super Admin(Owner** - Manage users, products, categories, settings
+- **Inventory In-charge(Staff)** - Manage stock, Inventory monitoring
 
 ## Local Demo Accounts
 For security, My repo does not store plain-text passwords.
