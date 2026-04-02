@@ -23,7 +23,7 @@ A PHP-based e-commerce platform for home improvement products.
 ## Roles
 - **Customer** - Browse, order, track, return
 - **StaffAdmin(Staff)** - Manage orders, returns, reports, cashier
-- **Super Admin(Owner** - Manage users, products, categories, settings
+- **Super Admin(Owner)** - Manage users, products, categories, settings
 - **Inventory In-charge(Staff)** - Manage stock, Inventory monitoring
 
 ## Local Demo Accounts
