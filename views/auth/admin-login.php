@@ -37,10 +37,13 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
 
                 <div class="auth-panel">
                     <div class="auth-brand">
-                        <i data-lucide="hard-hat" class="auth-icon"></i>
-                        <div>
-                            <h2><?= APP_NAME ?> <br>Admin/Staff</h2>
-                            <p class="auth-tagline">Sign in to admin/staff</p>
+                        <div class="auth-icon-wrap">
+                            <i data-lucide="shield" class="auth-icon"></i>
+                        </div>
+                        <div class="auth-brand-text">
+                            <h2><?= APP_NAME ?></h2>
+                            <span class="auth-role-badge">Admin / Staff</span>
+                            <p class="auth-tagline">Sign in to admin/staff portal</p>
                         </div>
                     </div>
 
@@ -51,7 +54,7 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
                             <label for="email">Email Address</label>
                             <div class="input-icon-wrap">
                                 <i data-lucide="mail" class="input-icon"></i>
-                                <input type="email" id="email" name="email" class="form-control" placeholder="you@example.com" required autofocus>
+                                <input type="email" id="email" name="email" class="form-control" placeholder="you@example.com" autocomplete="username" required autofocus>
                             </div>
                         </div>
 
@@ -59,7 +62,10 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
                             <label for="password">Password</label>
                             <div class="input-icon-wrap">
                                 <i data-lucide="lock" class="input-icon"></i>
-                                <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+                                <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" autocomplete="current-password" required>
+                                <button type="button" class="auth-pw-toggle" onclick="(function(b){var i=b.previousElementSibling;var isP=i.type==='password';i.type=isP?'text':'password';b.innerHTML=isP?'<i data-lucide=\'eye-off\'></i>':'<i data-lucide=\'eye\'></i>';if(window.lucide)lucide.createIcons();})(this)" aria-label="Toggle password visibility">
+                                    <i data-lucide="eye"></i>
+                                </button>
                             </div>
                         </div>
 

@@ -226,8 +226,10 @@ try {
 
             <div class="login-modal-form-panel">
                 <div class="login-modal-brand">
-                    <img src="<?= APP_URL ?>/assets/uploads/images/png-icon/tile.png" alt="Tile" class="login-modal-icon" style="width:38px;height:38px;">
-                    <div>
+                    <div class="login-modal-icon-wrap">
+                        <img src="<?= APP_URL ?>/assets/uploads/images/png-icon/tile.png" alt="Tile" class="login-modal-icon">
+                    </div>
+                    <div class="login-modal-brand-text">
                         <h2><?= APP_NAME ?></h2>
                         <p>Sign in to your account</p>
                     </div>
@@ -242,7 +244,7 @@ try {
                         <label for="loginModalEmail">Email or Username</label>
                         <div class="input-icon-wrap">
                             <i data-lucide="user" class="input-icon"></i>
-                            <input type="text" id="loginModalEmail" name="email" class="form-control" placeholder="you@example.com or username" required>
+                            <input type="text" id="loginModalEmail" name="email" class="form-control" placeholder="you@example.com or username" autocomplete="username" required>
                         </div>
                     </div>
 
@@ -250,7 +252,10 @@ try {
                         <label for="loginModalPassword">Password</label>
                         <div class="input-icon-wrap">
                             <i data-lucide="lock" class="input-icon"></i>
-                            <input type="password" id="loginModalPassword" name="password" class="form-control" placeholder="Enter your password" required>
+                            <input type="password" id="loginModalPassword" name="password" class="form-control" placeholder="Enter your password" autocomplete="current-password" required>
+                            <button type="button" class="login-pw-toggle" onclick="(function(b){var i=b.previousElementSibling;var isP=i.type==='password';i.type=isP?'text':'password';b.innerHTML=isP?'<i data-lucide=\'eye-off\'></i>':'<i data-lucide=\'eye\'></i>';if(window.lucide)lucide.createIcons();})(this)" aria-label="Toggle password visibility">
+                                <i data-lucide="eye"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -262,7 +267,10 @@ try {
                 <div class="login-modal-footer">
                     <p>Need to verify your email? <a href="<?= APP_URL ?>/index.php?url=verify-email">Resend verification</a></p>
                     <p><a href="<?= APP_URL ?>/index.php?url=forgot-password">Forgot password?</a></p>
-                    <p><a href="<?= APP_URL ?>/index.php?url=admin-login">Continue as administrator</a></p>
+                    <div class="login-modal-divider">
+                        <span>or</span>
+                    </div>
+                    <p style="text-align:center;"><a href="<?= APP_URL ?>/index.php?url=admin-login" class="login-admin-link"><i data-lucide="shield" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i>Continue as administrator</a></p>
                 </div>
             </div>
         </div>

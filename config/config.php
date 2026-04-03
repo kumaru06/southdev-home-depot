@@ -10,7 +10,7 @@ session_start();
 
 // Application settings
 define('APP_NAME', 'Southdev Home Depot');
-define('APP_TAGLINE', 'Davao City\'s Premier Tiles & Construction Supply');
+define('APP_TAGLINE', 'Davao City\'s Premier Tiles & Hardware Supply');
 define('APP_URL', 'http://localhost/southdev-home-depot');
 define('APP_VERSION', '1.0.0');
 define('APP_LOCATION', 'Davao City, Philippines');
