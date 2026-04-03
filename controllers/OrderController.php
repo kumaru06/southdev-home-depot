@@ -80,6 +80,7 @@ class OrderController {
         $payment = (new Payment($this->pdo))->getByOrderId($id);
         $returnModel = new ReturnRequest($this->pdo);
         $returnRequest = $returnModel->getByOrderId($id);
+        $cancelRequest = $this->cancelModel->getByOrderId($id);
         $pageTitle = 'Order ' . $order['order_number'];
 
         if ($_SESSION['role_id'] == ROLE_CUSTOMER) {

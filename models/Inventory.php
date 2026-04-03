@@ -18,7 +18,7 @@ class Inventory {
 
     public function getAll() {
         // Include product cost if present (nullable column). Cost may be NULL if not populated.
-        return $this->pdo->query("SELECT i.*, p.name as product_name, p.sku, p.price, p.cost FROM inventory i JOIN products p ON i.product_id = p.id WHERE p.is_active = 1 ORDER BY p.name")->fetchAll();
+        return $this->pdo->query("SELECT i.*, p.name as product_name, p.sku, p.price, p.cost, p.image, p.category_id, c.name as category_name FROM inventory i JOIN products p ON i.product_id = p.id LEFT JOIN categories c ON p.category_id = c.id WHERE p.is_active = 1 ORDER BY p.name")->fetchAll();
     }
 
     public function updateQuantity($productId, $quantity) {

@@ -4,145 +4,233 @@ $extraJs = ['cart.js'];
 require_once INCLUDES_PATH . '/header.php';
 require_once INCLUDES_PATH . '/navbar.php';
 $inStock = ($product['stock'] ?? 0) > 0;
+
+// Load reviews for this product
+require_once __DIR__ . '/../../models/Review.php';
+$reviewModel = new Review($pdo);
+$reviews = $reviewModel->getByProductId($product['id'] ?? 0, 50);
+$reviewCount = count($reviews);
+$avgRating = 0;
+if ($reviewCount) {
+    $sum = 0;
+    foreach ($reviews as $r) $sum += intval($r['rating']);
+    $avgRating = round($sum / $reviewCount, 2);
+}
+
+if (!function_exists('mask_name')) {
+    function mask_name($first, $last) {
+        $parts = [];
+        foreach ([$first, $last] as $p) {
+            $p = trim($p);
+            if ($p === '') continue;
+            $len = mb_strlen($p);
+            if ($len <= 2) {
+                $parts[] = mb_substr($p,0,1) . str_repeat('*', max(0,$len-1));
+            } else {
+                $firstChar = mb_substr($p,0,1);
+                $lastChar  = mb_substr($p,-1);
+                $midLen    = max(1, $len - 2);
+                $parts[]   = $firstChar . str_repeat('*', $midLen) . $lastChar;
+            }
+        }
+        return implode(' ', $parts);
+    }
+}
+
+// Rating distribution for summary
+$ratingDist = [5=>0,4=>0,3=>0,2=>0,1=>0];
+foreach ($reviews as $r) { $ratingDist[intval($r['rating'])]++; }
 ?>
 
 <div class="container">
+    <!-- Breadcrumb -->
     <nav class="breadcrumb">
         <a href="<?= APP_URL ?>/index.php?url=products">Products</a>
-        <i class="lucide-chevron-right"></i>
+        <i data-lucide="chevron-right"></i>
         <span><?= htmlspecialchars($product['category_name'] ?? '') ?></span>
-        <i class="lucide-chevron-right"></i>
+        <i data-lucide="chevron-right"></i>
         <span><?= htmlspecialchars($product['name']) ?></span>
     </nav>
 
-    <div class="product-detail">
-        <div class="product-detail-img">
+    <!-- ========== Product Detail Grid ========== -->
+    <div class="pd-grid">
+        <!-- Left: Image Gallery -->
+        <div class="pd-gallery">
+            <div class="pd-gallery__badge"><?= htmlspecialchars($product['category_name'] ?? 'Product') ?></div>
             <?php if ($inStock): ?>
-            <img src="<?= APP_URL ?>/assets/uploads/<?= $product['image'] ?: 'placeholder.svg' ?>" alt="<?= htmlspecialchars($product['name']) ?>">
+                <img class="pd-gallery__img" src="<?= APP_URL ?>/assets/uploads/<?= $product['image'] ?: 'placeholder.svg' ?>" alt="<?= htmlspecialchars($product['name']) ?>">
             <?php else: ?>
-            <div style="position:relative;">
-                <img src="<?= APP_URL ?>/assets/uploads/<?= $product['image'] ?: 'placeholder.svg' ?>" alt="<?= htmlspecialchars($product['name']) ?>" style="opacity:.4;">
-                <div class="product-detail-unavailable-badge">
-                    <i data-lucide="x-circle" style="width:32px;height:32px;margin-bottom:6px;"></i>
+                <img class="pd-gallery__img pd-gallery__img--oos" src="<?= APP_URL ?>/assets/uploads/<?= $product['image'] ?: 'placeholder.svg' ?>" alt="<?= htmlspecialchars($product['name']) ?>">
+                <div class="pd-gallery__oos-overlay">
+                    <i data-lucide="x-circle"></i>
                     <span>Not Available</span>
                 </div>
-            </div>
             <?php endif; ?>
         </div>
-        <div class="product-detail-info">
-            <span class="product-category"><?= htmlspecialchars($product['category_name'] ?? '') ?></span>
-            <h1><?= htmlspecialchars($product['name']) ?></h1>
-            <div class="product-detail-price">₱<?= number_format($product['price'], 2) ?></div>
 
-            <p class="product-description"><?= nl2br(htmlspecialchars($product['description'])) ?></p>
-
-            <?php
-            // Load reviews for this product
-            require_once __DIR__ . '/../../models/Review.php';
-            $reviewModel = new Review($pdo);
-            $reviews = $reviewModel->getByProductId($product['id'] ?? 0, 50);
-            $reviewCount = count($reviews);
-            $avgRating = 0;
-            if ($reviewCount) {
-                $sum = 0;
-                foreach ($reviews as $r) $sum += intval($r['rating']);
-                $avgRating = round($sum / $reviewCount, 2);
-            }
-
-            function mask_name($first, $last) {
-                $parts = [];
-                foreach ([$first, $last] as $p) {
-                    $p = trim($p);
-                    if ($p === '') continue;
-                    $len = mb_strlen($p);
-                    if ($len <= 2) {
-                        $parts[] = mb_substr($p,0,1) . str_repeat('*', max(0,$len-1));
-                    } else {
-                        $firstChar = mb_substr($p,0,1);
-                        $lastChar = mb_substr($p,-1);
-                        $midLen = max(1, $len - 2);
-                        // keep at most 3 visible stars pattern by showing some letters if short
-                        $parts[] = $firstChar . str_repeat('*', $midLen) . $lastChar;
-                    }
-                }
-                return implode(' ', $parts);
-            }
-            ?>
-
-            <div class="product-reviews" style="margin-top:18px;padding-top:12px;border-top:1px dashed var(--border);">
-                <h3 style="margin:0 0 8px 0;">Reviews <?php if($reviewCount): ?> — <?= htmlspecialchars($avgRating) ?>/5 (<?= $reviewCount ?>)<?php endif; ?></h3>
-                <?php if (empty($reviews)): ?>
-                    <p class="text-muted">Be the first to review this product.</p>
+        <!-- Right: Product Info -->
+        <div class="pd-info">
+            <!-- Title & Rating Summary -->
+            <div class="pd-info__header">
+                <h1 class="pd-info__title"><?= htmlspecialchars($product['name']) ?></h1>
+                <?php if ($reviewCount): ?>
+                    <a href="#pd-reviews" class="pd-info__rating-link">
+                        <span class="pd-stars pd-stars--sm">
+                            <?php for ($i=1;$i<=5;$i++): ?>
+                                <span class="<?= $i <= round($avgRating) ? 'pd-star--filled' : 'pd-star--empty' ?>">★</span>
+                            <?php endfor; ?>
+                        </span>
+                        <span class="pd-info__rating-text"><?= $avgRating ?> (<?= $reviewCount ?> review<?= $reviewCount > 1 ? 's' : '' ?>)</span>
+                    </a>
                 <?php else: ?>
-                    <div style="display:flex;flex-direction:column;gap:12px;">
-                        <?php foreach ($reviews as $rv): ?>
-                            <div style="background:var(--white);padding:12px;border-radius:8px;box-shadow:var(--shadow-sm);">
-                                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-                                    <div style="display:flex;align-items:center;gap:10px">
-                                        <div style="width:40px;height:40px;border-radius:999px;background:#eef2f7;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--text-primary);">
-                                            <?= htmlspecialchars(mb_substr($rv['first_name'] ?? '',0,1) . mb_substr($rv['last_name'] ?? '',0,1)) ?>
-                                        </div>
-                                        <div>
-                                            <div style="font-weight:700;"><?= htmlspecialchars(mask_name($rv['first_name'] ?? '', $rv['last_name'] ?? '')) ?></div>
-                                            <div style="font-size:13px;color:var(--text-muted)"><?= date('M d, Y', strtotime($rv['created_at'])) ?></div>
-                                        </div>
-                                    </div>
-                                    <div style="font-size:16px;color:var(--accent);font-weight:700">
-                                        <?php for ($i=1;$i<=5;$i++): ?>
-                                            <?php if ($i <= intval($rv['rating'])): ?><span>★</span><?php else: ?><span style="color:#e6e6e6">★</span><?php endif; ?>
-                                        <?php endfor; ?>
-                                    </div>
-                                </div>
-                                <?php if (!empty($rv['comment'])): ?>
-                                    <p style="margin-top:8px;color:var(--text-primary)"><?= nl2br(htmlspecialchars($rv['comment'])) ?></p>
-                                <?php endif; ?>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
+                    <span class="pd-info__rating-text pd-info__rating-text--none">No reviews yet</span>
                 <?php endif; ?>
             </div>
 
-            <div class="product-meta">
-                <div class="meta-item">
-                    <i data-lucide="hash"></i>
-                    <span>SKU: <?= htmlspecialchars($product['sku'] ?? 'N/A') ?></span>
+            <!-- Price & Stock Badge -->
+            <div class="pd-price-row">
+                <span class="pd-price">₱<?= number_format($product['price'], 2) ?></span>
+                <?php if ($inStock): ?>
+                    <span class="pd-stock-badge pd-stock-badge--in">
+                        <i data-lucide="check-circle"></i> <?= $product['stock'] ?> in stock
+                    </span>
+                <?php else: ?>
+                    <span class="pd-stock-badge pd-stock-badge--out">
+                        <i data-lucide="x-circle"></i> Out of stock
+                    </span>
+                <?php endif; ?>
+            </div>
+
+            <hr class="pd-divider">
+
+            <!-- Description -->
+            <div class="pd-description">
+                <h3 class="pd-section-label"><i data-lucide="file-text"></i> Description</h3>
+                <p><?= nl2br(htmlspecialchars($product['description'])) ?></p>
+            </div>
+
+            <hr class="pd-divider">
+
+            <!-- Meta Info -->
+            <div class="pd-meta">
+                <div class="pd-meta__item">
+                    <span class="pd-meta__label"><i data-lucide="hash"></i> SKU</span>
+                    <span class="pd-meta__value"><?= htmlspecialchars($product['sku'] ?? 'N/A') ?></span>
                 </div>
-                <div class="meta-item">
-                    <i data-lucide="layers"></i>
-                    <span>Category: <?= htmlspecialchars($product['category_name'] ?? 'Uncategorized') ?></span>
+                <div class="pd-meta__item">
+                    <span class="pd-meta__label"><i data-lucide="layers"></i> Category</span>
+                    <span class="pd-meta__value"><?= htmlspecialchars($product['category_name'] ?? 'Uncategorized') ?></span>
                 </div>
-                <div class="meta-item">
-                    <i data-lucide="package"></i>
+                <div class="pd-meta__item">
+                    <span class="pd-meta__label"><i data-lucide="package"></i> Availability</span>
                     <?php if ($inStock): ?>
-                        <span class="text-success"><?= $product['stock'] ?> in stock</span>
+                        <span class="pd-meta__value pd-meta__value--success">Available</span>
                     <?php else: ?>
-                        <span class="text-danger">Out of stock — Not Available</span>
+                        <span class="pd-meta__value pd-meta__value--danger">Unavailable</span>
                     <?php endif; ?>
                 </div>
             </div>
 
+            <!-- Add to Cart -->
             <?php if (isset($_SESSION['user_id']) && $_SESSION['role_id'] == ROLE_CUSTOMER && $inStock): ?>
-                <div class="product-actions">
+                <div class="pd-actions">
                     <div class="qty-stepper">
                         <button type="button" class="qty-btn" onclick="this.nextElementSibling.stepDown(); this.nextElementSibling.dispatchEvent(new Event('change'))">−</button>
                         <input type="number" id="quantity" value="1" min="1" max="<?= $product['stock'] ?>" class="qty-input">
                         <button type="button" class="qty-btn" onclick="this.previousElementSibling.stepUp(); this.previousElementSibling.dispatchEvent(new Event('change'))">+</button>
                     </div>
-                    <button onclick="addToCart(<?= $product['id'] ?>, document.getElementById('quantity').value)" class="btn btn-accent btn-lg">
+                    <button onclick="addToCart(<?= $product['id'] ?>, document.getElementById('quantity').value)" class="btn btn-accent btn-lg pd-btn-cart">
                         <i data-lucide="shopping-cart"></i> Add to Cart
                     </button>
                 </div>
             <?php elseif (!isset($_SESSION['user_id'])): ?>
-                <a href="<?= APP_URL ?>/index.php?url=login" class="btn btn-accent btn-lg">
-                    <i data-lucide="log-in"></i> Sign in to purchase
-                </a>
+                <div class="pd-actions">
+                    <a href="<?= APP_URL ?>/index.php?url=login" class="btn btn-accent btn-lg pd-btn-cart">
+                        <i data-lucide="log-in"></i> Sign in to purchase
+                    </a>
+                </div>
             <?php endif; ?>
 
-            <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-outline" style="margin-top: 12px;">
+            <a href="<?= APP_URL ?>/index.php?url=products" class="pd-back-link">
                 <i data-lucide="arrow-left"></i> Back to Products
             </a>
         </div>
     </div>
+
+    <!-- ========== Reviews Section (Full Width) ========== -->
+    <section class="pd-reviews" id="pd-reviews">
+        <div class="pd-reviews__header">
+            <h2 class="pd-reviews__title">
+                <i data-lucide="message-square"></i> Customer Reviews
+            </h2>
+            <?php if ($reviewCount): ?>
+                <span class="pd-reviews__count"><?= $reviewCount ?> review<?= $reviewCount > 1 ? 's' : '' ?></span>
+            <?php endif; ?>
+        </div>
+
+        <?php if ($reviewCount): ?>
+        <!-- Rating Summary Bar -->
+        <div class="pd-reviews__summary">
+            <div class="pd-reviews__avg">
+                <span class="pd-reviews__avg-num"><?= $avgRating ?></span>
+                <div>
+                    <div class="pd-stars">
+                        <?php for ($i=1;$i<=5;$i++): ?>
+                            <span class="<?= $i <= round($avgRating) ? 'pd-star--filled' : 'pd-star--empty' ?>">★</span>
+                        <?php endfor; ?>
+                    </div>
+                    <span class="pd-reviews__avg-sub">Based on <?= $reviewCount ?> review<?= $reviewCount > 1 ? 's' : '' ?></span>
+                </div>
+            </div>
+            <div class="pd-reviews__bars">
+                <?php for ($s=5; $s>=1; $s--): ?>
+                    <?php $pct = $reviewCount ? round(($ratingDist[$s] / $reviewCount) * 100) : 0; ?>
+                    <div class="pd-reviews__bar-row">
+                        <span class="pd-reviews__bar-label"><?= $s ?> <span class="pd-star--filled">★</span></span>
+                        <div class="pd-reviews__bar-track">
+                            <div class="pd-reviews__bar-fill" style="width:<?= $pct ?>%"></div>
+                        </div>
+                        <span class="pd-reviews__bar-count"><?= $ratingDist[$s] ?></span>
+                    </div>
+                <?php endfor; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Review Cards -->
+        <div class="pd-reviews__list">
+            <?php if (empty($reviews)): ?>
+                <div class="pd-reviews__empty">
+                    <i data-lucide="star"></i>
+                    <p>No reviews yet. Be the first to review this product!</p>
+                </div>
+            <?php else: ?>
+                <?php foreach ($reviews as $rv): ?>
+                    <div class="pd-review-card">
+                        <div class="pd-review-card__top">
+                            <div class="pd-review-card__author">
+                                <div class="pd-review-card__avatar">
+                                    <?= htmlspecialchars(mb_substr($rv['first_name'] ?? '',0,1) . mb_substr($rv['last_name'] ?? '',0,1)) ?>
+                                </div>
+                                <div>
+                                    <div class="pd-review-card__name"><?= htmlspecialchars(mask_name($rv['first_name'] ?? '', $rv['last_name'] ?? '')) ?></div>
+                                    <div class="pd-review-card__date"><?= date('M d, Y', strtotime($rv['created_at'])) ?></div>
+                                </div>
+                            </div>
+                            <div class="pd-stars">
+                                <?php for ($i=1;$i<=5;$i++): ?>
+                                    <span class="<?= $i <= intval($rv['rating']) ? 'pd-star--filled' : 'pd-star--empty' ?>">★</span>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+                        <?php if (!empty($rv['comment'])): ?>
+                            <p class="pd-review-card__comment"><?= nl2br(htmlspecialchars($rv['comment'])) ?></p>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+    </section>
 </div>
 
 <?php require_once INCLUDES_PATH . '/footer.php'; ?>

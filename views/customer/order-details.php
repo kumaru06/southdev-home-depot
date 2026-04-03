@@ -268,6 +268,43 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
             <?php endif; ?>
         </div>
 
+        <!-- Cancel Request Status & Staff Reply -->
+        <?php if (!empty($cancelRequest)): ?>
+        <div class="od-card od-card--cancel-status">
+            <div class="od-card-header">
+                <div class="od-card-icon" style="background:<?= $cancelRequest['status'] === 'approved' ? 'rgba(22,163,74,.1)' : ($cancelRequest['status'] === 'rejected' ? 'rgba(239,68,68,.1)' : 'rgba(249,115,22,.1)') ?>;color:<?= $cancelRequest['status'] === 'approved' ? '#16A34A' : ($cancelRequest['status'] === 'rejected' ? '#EF4444' : '#F97316') ?>;">
+                    <i data-lucide="<?= $cancelRequest['status'] === 'approved' ? 'check-circle' : ($cancelRequest['status'] === 'rejected' ? 'x-circle' : 'clock') ?>"></i>
+                </div>
+                <div>
+                    <h3>Cancellation Request</h3>
+                    <p>Status: <strong><?= ucfirst($cancelRequest['status']) ?></strong></p>
+                </div>
+            </div>
+            <div class="od-card-body" style="display:flex;flex-direction:column;gap:.75rem;">
+                <div>
+                    <span style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);">Your Reason</span>
+                    <p style="margin:.25rem 0 0;font-size:.9rem;color:var(--charcoal);"><?= htmlspecialchars($cancelRequest['reason']) ?></p>
+                </div>
+                <?php if (!empty($cancelRequest['admin_notes'])): ?>
+                <div class="od-staff-reply">
+                    <span style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);">
+                        <i data-lucide="message-circle" style="width:13px;height:13px;vertical-align:-2px;margin-right:3px;"></i>Staff Reply
+                    </span>
+                    <div class="od-staff-reply-bubble">
+                        <?= htmlspecialchars($cancelRequest['admin_notes']) ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+                <div style="font-size:.78rem;color:var(--text-secondary);">
+                    Requested on <?= date('M d, Y \a\t g:i A', strtotime($cancelRequest['created_at'])) ?>
+                    <?php if ($cancelRequest['status'] !== 'pending' && !empty($cancelRequest['updated_at'])): ?>
+                        &middot; Responded on <?= date('M d, Y \a\t g:i A', strtotime($cancelRequest['updated_at'])) ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <!-- Shipping Address -->
         <div class="od-card od-card--shipping">
             <div class="od-card-header">

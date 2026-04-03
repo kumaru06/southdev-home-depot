@@ -40,6 +40,10 @@
     .product-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
     .product-detail { grid-template-columns: 1fr; gap: 24px; }
     .product-detail .product-gallery img { height: 350px; }
+    .pd-grid { grid-template-columns: 1fr; gap: 24px; }
+    .pd-gallery__img { height: 380px; }
+    .pd-reviews__summary { flex-direction: column; gap: 20px; align-items: flex-start; }
+    .pd-reviews__list { grid-template-columns: 1fr 1fr; }
     .stat-cards { grid-template-columns: repeat(2, 1fr); }
     
     /* Tablet-specific product-card adjustments */
@@ -174,6 +178,13 @@
 
     .product-detail .product-gallery img { height: 250px; }
     .product-detail .product-meta .price-tag { font-size: 26px; }
+    .pd-gallery__img { height: 260px; }
+    .pd-price { font-size: 28px; }
+    .pd-info__title { font-size: 22px; }
+    .pd-reviews__list { grid-template-columns: 1fr; }
+    .pd-reviews__avg-num { font-size: 36px; }
+    .pd-actions { flex-direction: column; }
+    .pd-btn-cart { width: 100%; }
 
     .quick-actions { flex-wrap: wrap; }
     .quick-actions .btn { flex: 1; min-width: 120px; }

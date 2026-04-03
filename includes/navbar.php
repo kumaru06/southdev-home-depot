@@ -115,7 +115,7 @@ try {
                     </div>
                 </li>
                 <li><a href="#">Styles &amp; Ideas <span class="caret">▾</span></a></li>
-                <li><a href="<?= APP_URL ?>/index.php?url=locations">Locations</a></li>
+                <li><a href="<?= APP_URL ?>/index.php?url=locations">Location</a></li>
                 <li><a href="#">Contact Us <span class="caret">▾</span></a></li>
                     <?php if (isset($_SESSION['user_id']) && isset($_SESSION['role_id']) && $_SESSION['role_id'] === ROLE_CUSTOMER): ?>
                         <li class="menu-has-dropdown">

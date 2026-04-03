@@ -76,6 +76,18 @@ class CancelRequest {
         return $stmt->rowCount() > 0;
     }
 
+    public function getByOrderId($orderId) {
+        $stmt = $this->pdo->prepare(
+            "SELECT cr.*, u.first_name as staff_first_name, u.last_name as staff_last_name
+             FROM cancel_requests cr
+             LEFT JOIN users u ON u.id = (SELECT user_id FROM logs WHERE action LIKE '%cancel%' AND description LIKE CONCAT('%#', cr.id, '%') LIMIT 1)
+             WHERE cr.order_id = ?
+             ORDER BY cr.created_at DESC LIMIT 1"
+        );
+        $stmt->execute([$orderId]);
+        return $stmt->fetch();
+    }
+
     public function hasExistingRequest($orderId) {
         $stmt = $this->pdo->prepare(
             "SELECT COUNT(*) FROM cancel_requests WHERE order_id = ? AND status = 'pending'"

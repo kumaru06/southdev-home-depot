@@ -10,6 +10,7 @@ require_once __DIR__ . '/../models/Log.php';
 require_once __DIR__ . '/../models/StockMovement.php';
 require_once __DIR__ . '/../models/PriceHistory.php';
 require_once __DIR__ . '/../models/DamagedProduct.php';
+require_once __DIR__ . '/../models/Category.php';
 
 class InventoryController {
     private $inventoryModel;
@@ -42,11 +43,13 @@ class InventoryController {
 
     public function index() {
         AuthMiddleware::adminOrStaffOrInventory();
-        $inventory = $this->inventoryModel->getAll();
-        $lowStock  = $this->inventoryModel->getLowStock();
-        $pageTitle = 'Inventory Management';
-        $isAdmin   = true;
-        $extraCss  = ['admin.css'];
+        $inventory  = $this->inventoryModel->getAll();
+        $lowStock   = $this->inventoryModel->getLowStock();
+        $categoryModel = new Category($this->pdo);
+        $categories = $categoryModel->getAll();
+        $pageTitle  = 'Inventory Management';
+        $isAdmin    = true;
+        $extraCss   = ['admin.css'];
         require_once VIEWS_PATH . '/staff/inventory.php';
     }
 

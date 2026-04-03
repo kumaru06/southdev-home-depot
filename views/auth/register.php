@@ -210,6 +210,9 @@ require_once INCLUDES_PATH . '/header.php';
     margin-top: 14px;
     padding: 10px;
     font-size: 14px;
+    max-width: 260px;
+    margin-left: auto;
+    margin-right: auto;
 }
 .register-panel .auth-footer a {
     color: var(--accent);

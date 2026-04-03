@@ -50,11 +50,41 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
             </div>
         <?php endif; ?>
 
+        <!-- Category Filter -->
+        <div class="card filter-bar" style="margin-bottom:16px;">
+            <div class="inv-filter-row">
+                <div class="inv-filter-group">
+                    <label for="categoryFilter" class="inv-filter-label"><i data-lucide="layers" style="width:15px;height:15px;"></i> Category</label>
+                    <select id="categoryFilter" class="form-control inv-filter-select">
+                        <option value="">All Categories</option>
+                        <?php if (!empty($categories)): ?>
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?> (<?= $cat['product_count'] ?>)</option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
+                <div class="inv-filter-group">
+                    <label for="stockFilter" class="inv-filter-label"><i data-lucide="bar-chart-2" style="width:15px;height:15px;"></i> Stock Status</label>
+                    <select id="stockFilter" class="form-control inv-filter-select">
+                        <option value="">All Statuses</option>
+                        <option value="in-stock">In Stock</option>
+                        <option value="low-stock">Low Stock</option>
+                        <option value="out-of-stock">Out of Stock</option>
+                    </select>
+                </div>
+                <div class="inv-filter-count">
+                    <span id="filterCount"></span>
+                </div>
+            </div>
+        </div>
+
         <div class="data-table-wrap">
             <table class="data-table">
                 <thead>
                     <tr>
                         <th>SKU</th>
+                        <th>Image</th>
                         <th>Product</th>
                         <th>Price</th>
                         <th>Quantity</th>
@@ -74,8 +104,15 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
                                 $isLow = $qty <= $reorder && $qty > 0;
                                 $isOut = $qty <= 0;
                             ?>
-                            <tr class="<?= $isOut ? 'row-danger' : ($isLow ? 'row-warning' : '') ?>">
+                            <tr class="<?= $isOut ? 'row-danger' : ($isLow ? 'row-warning' : '') ?>" data-category="<?= $item['category_id'] ?? '' ?>" data-stock="<?= $isOut ? 'out-of-stock' : ($isLow ? 'low-stock' : 'in-stock') ?>">
                                 <td><code><?= htmlspecialchars($item['sku'] ?? 'N/A') ?></code></td>
+                                <td>
+                                    <?php if (!empty($item['image'])): ?>
+                                        <img src="<?= APP_URL ?>/assets/uploads/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['product_name']) ?>" style="width:48px;height:48px;object-fit:cover;border-radius:6px;">
+                                    <?php else: ?>
+                                        <div style="width:48px;height:48px;background:#f1f5f9;border-radius:6px;display:flex;align-items:center;justify-content:center;"><i data-lucide="image" style="width:20px;height:20px;color:#94a3b8;"></i></div>
+                                    <?php endif; ?>
+                                </td>
                                 <td><?= htmlspecialchars($item['product_name']) ?></td>
                                 <td>₱<?= number_format($item['price'], 2) ?></td>
                                 <td>
@@ -120,8 +157,9 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr><td colspan="<?= $canManageStock ? 7 : 6 ?>" class="text-center">No inventory records found.</td></tr>
+                        <tr><td colspan="<?= $canManageStock ? 8 : 7 ?>" class="text-center">No inventory records found.</td></tr>
                     <?php endif; ?>
+                    <tr id="noFilterResults" style="display:none;"><td colspan="<?= $canManageStock ? 8 : 7 ?>" class="text-center" style="padding:2rem;color:var(--text-secondary);"><i data-lucide="search-x" style="width:24px;height:24px;margin-bottom:6px;"></i><br>No products match the selected filters.</td></tr>
                 </tbody>
             </table>
         </div>
@@ -234,7 +272,98 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
 }
 .modal-close:hover { color: var(--danger); }
 .row-danger { background: var(--danger-bg) !important; }
+
+/* ====== Inventory Filter Bar ====== */
+.inv-filter-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.inv-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 180px;
+}
+.inv-filter-label {
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+}
+.inv-filter-select {
+    padding: 8px 12px;
+    font-size: .88rem;
+    border-radius: 8px;
+    border: 1.5px solid #e2e8f0;
+    background: #fff;
+    transition: border-color .2s, box-shadow .2s;
+    cursor: pointer;
+    min-width: 200px;
+}
+.inv-filter-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(249,115,22,.15);
+    outline: none;
+}
+.inv-filter-count {
+    margin-left: auto;
+    font-size: .82rem;
+    color: var(--text-secondary);
+    align-self: flex-end;
+    padding-bottom: 10px;
+}
+.inv-filter-count span {
+    background: #f1f5f9;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+@media (max-width: 640px) {
+    .inv-filter-row { flex-direction: column; align-items: stretch; }
+    .inv-filter-select { min-width: 100%; }
+    .inv-filter-count { margin-left: 0; text-align: center; }
+}
 </style>
+
+<script>
+/* ====== Inventory Filter ====== */
+(function() {
+    'use strict';
+    var catFilter   = document.getElementById('categoryFilter');
+    var stockFilter = document.getElementById('stockFilter');
+    var countEl     = document.getElementById('filterCount');
+    var noResults   = document.getElementById('noFilterResults');
+
+    function applyFilters() {
+        var cat   = catFilter ? catFilter.value : '';
+        var stock = stockFilter ? stockFilter.value : '';
+        var rows  = document.querySelectorAll('.data-table tbody tr[data-category]');
+        var shown = 0;
+        rows.forEach(function(row) {
+            var matchCat   = !cat   || row.getAttribute('data-category') === cat;
+            var matchStock = !stock || row.getAttribute('data-stock') === stock;
+            if (matchCat && matchStock) {
+                row.style.display = '';
+                shown++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        if (noResults) noResults.style.display = (rows.length > 0 && shown === 0) ? '' : 'none';
+        if (countEl) countEl.textContent = shown + ' of ' + rows.length + ' products';
+    }
+
+    if (catFilter)   catFilter.addEventListener('change', applyFilters);
+    if (stockFilter) stockFilter.addEventListener('change', applyFilters);
+    applyFilters();
+})();
+</script>
 
 <script>
 /* ====== Inventory Modal – event-delegation approach ====== */
