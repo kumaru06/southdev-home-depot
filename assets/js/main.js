@@ -139,6 +139,25 @@
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
 
+                // Determine context-aware title and message from button/row
+                var itemTitle = btn.getAttribute('data-confirm-title') || btn.getAttribute('title') || '';
+                var dlgTitle = 'Delete item?';
+                var dlgMessage = 'Are you sure? This action cannot be undone.';
+
+                if (itemTitle.toLowerCase().indexOf('user') !== -1 || btn.closest('[data-entity="user"]')) {
+                    dlgTitle = 'Delete user?';
+                    dlgMessage = 'Are you sure you want to delete this user? This action cannot be undone.';
+                } else if (itemTitle.toLowerCase().indexOf('product') !== -1 || btn.closest('[data-entity="product"]')) {
+                    dlgTitle = 'Delete product?';
+                    dlgMessage = 'Are you sure you want to delete this product? This action cannot be undone.';
+                } else if (itemTitle.toLowerCase().indexOf('categor') !== -1 || btn.closest('[data-entity="category"]')) {
+                    dlgTitle = 'Delete category?';
+                    dlgMessage = 'Are you sure you want to delete this category? This action cannot be undone.';
+                } else if (itemTitle) {
+                    dlgTitle = 'Delete ' + itemTitle + '?';
+                    dlgMessage = 'Are you sure you want to delete this ' + itemTitle.toLowerCase() + '? This action cannot be undone.';
+                }
+
                 var proceed = function () {
                     // Anchor
                     if (btn.tagName === 'A' && btn.href) {
@@ -154,15 +173,15 @@
 
                 if (typeof window.confirmDialog === 'function') {
                     window.confirmDialog({
-                        title: 'Delete user?',
-                        message: 'Are you sure you want to delete this user? This action cannot be undone.',
+                        title: dlgTitle,
+                        message: dlgMessage,
                         confirmText: 'Delete',
                         confirmVariant: 'danger'
                     }).then(function (ok) {
                         if (ok) proceed();
                     });
                 } else {
-                    if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+                    if (confirm(dlgMessage)) {
                         proceed();
                     }
                 }

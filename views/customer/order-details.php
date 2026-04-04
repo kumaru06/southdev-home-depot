@@ -46,7 +46,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
             </div>
             <div class="od-hero-status">
                 <span class="badge badge-<?= $order['status'] ?> badge-lg"><?= ucfirst($order['status']) ?></span>
-                <?php if (!empty($returnRequest) && $returnRequest['status'] !== 'rejected'): ?>
+                <?php if (!empty($returnRequest) && $returnRequest['status'] !== 'rejected' && $order['status'] === 'delivered'): ?>
                     <?php
                         $returnStatusLabels = [
                             'pending'   => ['label' => 'Return Pending',  'icon' => 'clock',        'class' => 'return-badge--pending'],
@@ -91,7 +91,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
     </div>
 
     <!-- ===== Return / Refund Status Banner ===== -->
-    <?php if (!empty($returnRequest) && $returnRequest['status'] !== 'rejected'): ?>
+    <?php if (!empty($returnRequest) && $returnRequest['status'] !== 'rejected' && $order['status'] === 'delivered'): ?>
     <?php
         $rrClass = match($returnRequest['status']) {
             'pending'   => 'refund-banner--pending',
@@ -229,6 +229,13 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
             </div>
             <?php elseif ($order['status'] === 'processing'): ?>
             <div class="od-card-action">
+                <?php if (!empty($cancelRequest)): ?>
+                    <div class="od-return-status-note">
+                        <i data-lucide="<?= $cancelRequest['status'] === 'approved' ? 'check-circle' : ($cancelRequest['status'] === 'rejected' ? 'x-circle' : 'clock') ?>"
+                           style="width:15px;height:15px;color:<?= $cancelRequest['status'] === 'approved' ? '#16A34A' : ($cancelRequest['status'] === 'rejected' ? '#EF4444' : '#F97316') ?>;"></i>
+                        <span>Cancellation request is <strong><?= $cancelRequest['status'] ?></strong></span>
+                    </div>
+                <?php else: ?>
                 <div class="od-cancel-section">
                     <h4><i data-lucide="alert-triangle" style="width:15px;height:15px"></i> Need to cancel?</h4>
                     <p class="od-cancel-note">Since this order is being processed, cancellation requires approval.</p>
@@ -251,6 +258,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
                         <button type="submit" class="btn btn-warning"><i data-lucide="alert-triangle"></i> Request Cancellation</button>
                     </form>
                 </div>
+                <?php endif; ?>
             </div>
             <?php elseif ($order['status'] === 'delivered'): ?>
             <div class="od-card-action">

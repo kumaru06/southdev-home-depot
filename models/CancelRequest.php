@@ -80,8 +80,10 @@ class CancelRequest {
         $stmt = $this->pdo->prepare(
             "SELECT cr.*, u.first_name as staff_first_name, u.last_name as staff_last_name
              FROM cancel_requests cr
+             JOIN orders o ON cr.order_id = o.id AND cr.user_id = o.user_id
              LEFT JOIN users u ON u.id = (SELECT user_id FROM logs WHERE action LIKE '%cancel%' AND description LIKE CONCAT('%#', cr.id, '%') LIMIT 1)
              WHERE cr.order_id = ?
+               AND cr.created_at >= o.created_at
              ORDER BY cr.created_at DESC LIMIT 1"
         );
         $stmt->execute([$orderId]);
@@ -90,7 +92,11 @@ class CancelRequest {
 
     public function hasExistingRequest($orderId) {
         $stmt = $this->pdo->prepare(
-            "SELECT COUNT(*) FROM cancel_requests WHERE order_id = ? AND status = 'pending'"
+            "SELECT COUNT(*) FROM cancel_requests cr
+             JOIN orders o ON cr.order_id = o.id AND cr.user_id = o.user_id
+             WHERE cr.order_id = ?
+               AND cr.status = 'pending'
+               AND cr.created_at >= o.created_at"
         );
         $stmt->execute([$orderId]);
         return $stmt->fetchColumn() > 0;
@@ -98,5 +104,33 @@ class CancelRequest {
 
     public function countPending() {
         return $this->pdo->query("SELECT COUNT(*) FROM cancel_requests WHERE status = 'pending'")->fetchColumn();
+    }
+
+    /**
+     * Get cancel requests indexed by order_id for a list of order IDs.
+     * Validates user ownership and creation timing to prevent orphaned records.
+     */
+    public function getByOrderIds(array $orderIds, $userId = null) {
+        if (empty($orderIds)) return [];
+        $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+        $sql = "SELECT cr.* FROM cancel_requests cr
+                JOIN orders o ON cr.order_id = o.id AND cr.user_id = o.user_id
+                WHERE cr.order_id IN ($placeholders)
+                  AND cr.created_at >= o.created_at";
+        $params = $orderIds;
+        if ($userId) {
+            $sql .= " AND cr.user_id = ?";
+            $params[] = $userId;
+        }
+        $sql .= " ORDER BY cr.created_at DESC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $results = [];
+        while ($row = $stmt->fetch()) {
+            if (!isset($results[$row['order_id']])) {
+                $results[$row['order_id']] = $row;
+            }
+        }
+        return $results;
     }
 }

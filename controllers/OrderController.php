@@ -55,7 +55,10 @@ class OrderController {
         // Load return request data for all orders so we can show refund badges
         $returnModel = new ReturnRequest($this->pdo);
         $orderIds = array_column($orders, 'id');
-        $returnsByOrder = $returnModel->getByOrderIds($orderIds);
+        $returnsByOrder = $returnModel->getByOrderIds($orderIds, $_SESSION['user_id']);
+
+        // Load cancel request data for processing orders
+        $cancelsByOrder = $this->cancelModel->getByOrderIds($orderIds, $_SESSION['user_id']);
 
         $extraCss = ['customer.css'];
         require_once VIEWS_PATH . '/customer/orders.php';
@@ -297,6 +300,13 @@ class OrderController {
         $isAdmin = true;
         $status = $_GET['status'] ?? null;
         $orders = $this->orderModel->getAll($status);
+
+        // Load return & cancel request data for all orders
+        $orderIds = array_column($orders, 'id');
+        $returnModel = new ReturnRequest($this->pdo);
+        $returnsByOrder = $returnModel->getByOrderIds($orderIds);
+        $cancelsByOrder = $this->cancelModel->getByOrderIds($orderIds);
+
         $extraCss = ['admin.css'];
         require_once VIEWS_PATH . '/staff/manage-orders.php';
     }

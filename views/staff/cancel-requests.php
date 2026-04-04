@@ -57,7 +57,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                                 data-action="approve">
                                                 <i data-lucide="check"></i>
                                             </button>
-                                            <button type="button" class="action-btn delete cr-reply-btn" title="Reject with reply"
+                                            <button type="button" class="action-btn reject cr-reply-btn" title="Reject with reply"
                                                 data-id="<?= $req['id'] ?>"
                                                 data-name="<?= htmlspecialchars(($req['first_name'] ?? '') . ' ' . ($req['last_name'] ?? ''), ENT_QUOTES) ?>"
                                                 data-order="<?= htmlspecialchars($req['order_number'] ?? '', ENT_QUOTES) ?>"

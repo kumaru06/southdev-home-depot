@@ -76,7 +76,47 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                         <?= $pmText ?>
                                     </span>
                                 </td>
-                                <td><span class="badge badge-<?= $order['status'] ?>"><?= ucfirst($order['status']) ?></span></td>
+                                <td>
+                                    <span class="badge badge-<?= $order['status'] ?>"><?= ucfirst($order['status']) ?></span>
+                                    <?php
+                                        // Show return request badge for delivered orders
+                                        $rr = $returnsByOrder[$order['id']] ?? null;
+                                        if ($rr && $order['status'] === 'delivered'):
+                                            $rrBadgeCls = match($rr['status']) {
+                                                'pending'   => 'return-badge--pending',
+                                                'approved'  => 'return-badge--approved',
+                                                'completed' => 'return-badge--refunded',
+                                                default     => 'return-badge--pending',
+                                            };
+                                            $rrBadgeLbl = match($rr['status']) {
+                                                'pending'   => 'Return Pending',
+                                                'approved'  => 'Return Approved',
+                                                'completed' => 'Refunded',
+                                                default     => 'Return ' . ucfirst($rr['status']),
+                                            };
+                                    ?>
+                                        <span class="return-badge <?= $rrBadgeCls ?>" style="font-size:11px;"><?= $rrBadgeLbl ?></span>
+                                    <?php endif; ?>
+                                    <?php
+                                        // Show cancel request badge for processing orders
+                                        $cr = $cancelsByOrder[$order['id']] ?? null;
+                                        if ($cr && $order['status'] === 'processing'):
+                                            $crBadgeCls = match($cr['status']) {
+                                                'pending'  => 'return-badge--pending',
+                                                'approved' => 'return-badge--approved',
+                                                'rejected' => 'return-badge--rejected',
+                                                default    => 'return-badge--pending',
+                                            };
+                                            $crBadgeLbl = match($cr['status']) {
+                                                'pending'  => 'Cancel Pending',
+                                                'approved' => 'Cancel Approved',
+                                                'rejected' => 'Cancel Rejected',
+                                                default    => 'Cancel ' . ucfirst($cr['status']),
+                                            };
+                                    ?>
+                                        <span class="return-badge <?= $crBadgeCls ?>" style="font-size:11px;"><?= $crBadgeLbl ?></span>
+                                    <?php endif; ?>
+                                </td>
                                 <td>
                                     <?php if (($order['status'] ?? '') === 'cancelled' && !empty($order['cancel_reason'])): ?>
                                         <span title="<?= htmlspecialchars($order['cancel_reason']) ?>">

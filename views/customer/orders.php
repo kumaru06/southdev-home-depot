@@ -26,7 +26,8 @@ require_once INCLUDES_PATH . '/navbar.php';
                                     <span class="badge badge-<?= $order['status'] ?>"><?= ucfirst($order['status']) ?></span>
                                     <?php
                                         $rr = $returnsByOrder[$order['id']] ?? null;
-                                        if ($rr && $rr['status'] !== 'rejected'):
+                                        // Only show return badges on delivered orders (returns don't apply to other statuses)
+                                        if ($rr && $rr['status'] !== 'rejected' && $order['status'] === 'delivered'):
                                             $rrBadgeCls = match($rr['status']) {
                                                 'pending'   => 'return-badge--pending',
                                                 'approved'  => 'return-badge--approved',
@@ -94,13 +95,29 @@ require_once INCLUDES_PATH . '/navbar.php';
                                 <button class="btn btn-danger btn-sm"><i data-lucide="x-circle"></i> Cancel</button>
                             </form>
                         <?php elseif ($order['status'] === 'processing'): ?>
+                            <?php
+                                $cr = $cancelsByOrder[$order['id']] ?? null;
+                                $hasActiveCancel = $cr && in_array($cr['status'], ['pending', 'approved']);
+                            ?>
+                            <?php if ($hasActiveCancel): ?>
+                                <span class="badge badge-<?= $cr['status'] === 'approved' ? 'cancelled' : 'pending' ?>" style="font-size:11px;">
+                                    <?= $cr['status'] === 'pending' ? 'Cancel Pending' : 'Cancel Approved' ?>
+                                </span>
+                            <?php else: ?>
                             <a href="<?= APP_URL ?>/index.php?url=orders/request-cancel/<?= $order['id'] ?>" class="btn btn-warning btn-sm">
                                 <i data-lucide="alert-triangle"></i> Request Cancellation
                             </a>
+                            <?php endif; ?>
                         <?php elseif ($order['status'] === 'delivered'): ?>
+                            <?php
+                                // Only show "Request Return" if no active return request exists
+                                $hasActiveReturn = isset($rr) && $rr && $rr['status'] !== 'rejected';
+                            ?>
+                            <?php if (!$hasActiveReturn): ?>
                             <a href="<?= APP_URL ?>/index.php?url=returns/request/<?= $order['id'] ?>" class="btn btn-outline btn-sm">
                                 <i data-lucide="rotate-ccw"></i> Request Return
                             </a>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 </div>

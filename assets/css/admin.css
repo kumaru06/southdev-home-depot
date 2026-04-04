@@ -745,6 +745,7 @@
 .action-btn.view:hover { color: var(--info); border-color: var(--info); }
 .action-btn.edit:hover { color: var(--primary); border-color: rgba(11,61,145,.35); }
 .action-btn.delete:hover { color: var(--danger); border-color: var(--danger); }
+.action-btn.reject:hover { color: var(--danger); border-color: var(--danger); }
 .action-btn.approve:hover { color: var(--success); border-color: var(--success); }
 .action-btn.deactivate:hover { color: var(--danger); border-color: var(--danger); }
 
@@ -877,4 +878,37 @@
     object-fit: contain;
     flex-shrink: 0;
     border-radius: 3px;
+}
+
+/* ===== Return / Cancel Request Badges ===== */
+.return-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+}
+.return-badge--pending {
+    background: #FFF7ED;
+    color: #C2410C;
+    border: 1px solid #FDBA74;
+}
+.return-badge--approved {
+    background: #EFF6FF;
+    color: #1D4ED8;
+    border: 1px solid #93C5FD;
+}
+.return-badge--refunded {
+    background: #F0FDF4;
+    color: #15803D;
+    border: 1px solid #86EFAC;
+}
+.return-badge--rejected {
+    background: #FEF2F2;
+    color: #DC2626;
+    border: 1px solid #FCA5A5;
 }

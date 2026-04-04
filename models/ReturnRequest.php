@@ -46,30 +46,55 @@ class ReturnRequest {
     }
 
     public function hasExistingRequest($orderId) {
-        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM return_requests WHERE order_id = ? AND status NOT IN ('rejected')");
+        $stmt = $this->pdo->prepare(
+            "SELECT COUNT(*) FROM return_requests rr
+             JOIN orders o ON rr.order_id = o.id
+             WHERE rr.order_id = ?
+               AND rr.status IN ('pending','approved','completed')
+               AND rr.created_at >= o.created_at"
+        );
         $stmt->execute([$orderId]);
         return $stmt->fetchColumn() > 0;
     }
 
     /**
      * Get the latest return request for a specific order.
+     * Validates that the return was created after the order (prevents orphaned records).
      */
     public function getByOrderId($orderId) {
-        $stmt = $this->pdo->prepare("SELECT * FROM return_requests WHERE order_id = ? ORDER BY created_at DESC LIMIT 1");
+        $stmt = $this->pdo->prepare(
+            "SELECT rr.* FROM return_requests rr
+             JOIN orders o ON rr.order_id = o.id AND rr.user_id = o.user_id
+             WHERE rr.order_id = ?
+               AND rr.status IN ('pending','approved','completed')
+               AND rr.created_at >= o.created_at
+             ORDER BY rr.created_at DESC LIMIT 1"
+        );
         $stmt->execute([$orderId]);
         return $stmt->fetch();
     }
 
     /**
      * Get return requests indexed by order_id for a list of order IDs.
+     * Joins with orders to ensure the return request belongs to the same user
+     * and was created after the order itself (prevents orphaned records).
      */
-    public function getByOrderIds(array $orderIds) {
+    public function getByOrderIds(array $orderIds, $userId = null) {
         if (empty($orderIds)) return [];
         $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
-        $stmt = $this->pdo->prepare(
-            "SELECT * FROM return_requests WHERE order_id IN ($placeholders) AND status NOT IN ('rejected') ORDER BY created_at DESC"
-        );
-        $stmt->execute($orderIds);
+        $sql = "SELECT rr.* FROM return_requests rr
+                JOIN orders o ON rr.order_id = o.id AND rr.user_id = o.user_id
+                WHERE rr.order_id IN ($placeholders)
+                  AND rr.status IN ('pending','approved','completed')
+                  AND rr.created_at >= o.created_at";
+        $params = $orderIds;
+        if ($userId) {
+            $sql .= " AND rr.user_id = ?";
+            $params[] = $userId;
+        }
+        $sql .= " ORDER BY rr.created_at DESC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
         $results = [];
         while ($row = $stmt->fetch()) {
             if (!isset($results[$row['order_id']])) {

@@ -65,6 +65,21 @@ class ReturnController {
             'reason'   => trim($_POST['reason'])
         ];
 
+        // Validate: only delivered orders can have return requests
+        $order = $this->orderModel->findById($data['order_id']);
+        if (!$order || $order['user_id'] != $_SESSION['user_id'] || $order['status'] !== 'delivered') {
+            flash('error', 'This order is not eligible for a return request.');
+            header('Location: ' . APP_URL . '/index.php?url=orders');
+            exit;
+        }
+
+        // Prevent duplicate return requests
+        if ($this->returnModel->hasExistingRequest($data['order_id'])) {
+            flash('warning', 'A return request already exists for this order.');
+            header('Location: ' . APP_URL . '/index.php?url=orders/' . $data['order_id']);
+            exit;
+        }
+
         if ($this->returnModel->create($data)) {
             $this->logModel->create(LOG_RETURN_REQUEST, "Return request submitted for Order #{$data['order_id']}");
             flash('success', 'Return request submitted successfully.');
@@ -102,9 +117,12 @@ class ReturnController {
             $isDamaged = $this->isDamageReason($return['reason']);
             $orderItems = $this->orderItemModel->getByOrderId($return['order_id']);
 
+            // Check once before the loop so every item in the order is processed
+            $alreadyRecordedDamage = $isDamaged && $this->damagedModel->existsForReturn($id);
+
             foreach ($orderItems as $item) {
-                if ($isDamaged && !$this->damagedModel->existsForReturn($id)) {
-                    // Create damaged product record
+                if ($isDamaged && !$alreadyRecordedDamage) {
+                    // Create damaged product record (inventory is NOT restored)
                     $this->damagedModel->create([
                         'product_id'        => $item['product_id'],
                         'order_id'          => $return['order_id'],
@@ -114,18 +132,8 @@ class ReturnController {
                         'reported_by'       => $_SESSION['user_id']
                     ]);
 
-                    // Record a stock movement for the damage
-                    $this->stockMovementModel->record(
-                        $item['product_id'],
-                        'adjustment',
-                        -$item['quantity'],
-                        $id,
-                        'Damaged product from return #' . $id . ': ' . substr($return['reason'], 0, 200),
-                        $_SESSION['user_id']
-                    );
-
                     $this->logModel->create(LOG_STOCK_MOVEMENT,
-                        "Damaged product recorded: {$item['product_name']} (qty: {$item['quantity']}) from Return #{$id}"
+                        "Damaged product recorded: {$item['product_name']} (qty: {$item['quantity']}) from Return #{$id} — not restored to inventory"
                     );
                 } elseif (!$isDamaged) {
                     // Non-damaged returns: restore inventory
