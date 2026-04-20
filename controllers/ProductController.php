@@ -116,9 +116,12 @@ class ProductController {
         ];
 
         if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
+            // Validate using actual file contents, not client-provided MIME type
+            $imageInfo = @getimagesize($_FILES['image']['tmp_name']);
             $allowed = ['image/jpeg','image/png','image/webp'];
-            if (in_array($_FILES['image']['type'], $allowed)) {
-                $fileName   = time() . '_' . uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($_FILES['image']['name']));
+            if ($imageInfo && in_array($imageInfo['mime'], $allowed)) {
+                $ext = match($imageInfo['mime']) { 'image/jpeg' => '.jpg', 'image/png' => '.png', 'image/webp' => '.webp', default => '.jpg' };
+                $fileName   = time() . '_' . uniqid() . $ext;
                 $targetPath = UPLOADS_PATH . '/' . $fileName;
                 if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
                     $data['image'] = $fileName;
@@ -185,9 +188,12 @@ class ProductController {
         ];
 
         if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
+            // Validate using actual file contents, not client-provided MIME type
+            $imageInfo = @getimagesize($_FILES['image']['tmp_name']);
             $allowed = ['image/jpeg','image/png','image/webp'];
-            if (in_array($_FILES['image']['type'], $allowed)) {
-                $fileName   = time() . '_' . uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($_FILES['image']['name']));
+            if ($imageInfo && in_array($imageInfo['mime'], $allowed)) {
+                $ext = match($imageInfo['mime']) { 'image/jpeg' => '.jpg', 'image/png' => '.png', 'image/webp' => '.webp', default => '.jpg' };
+                $fileName   = time() . '_' . uniqid() . $ext;
                 $targetPath = UPLOADS_PATH . '/' . $fileName;
                 if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
                     $data['image'] = $fileName;

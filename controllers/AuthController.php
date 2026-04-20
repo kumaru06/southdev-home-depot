@@ -8,16 +8,19 @@ require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Log.php';
 require_once __DIR__ . '/../includes/Mailer.php';
 require_once __DIR__ . '/../models/PasswordReset.php';
+require_once __DIR__ . '/../models/RateLimiter.php';
 
 class AuthController {
     private $userModel;
     private $logModel;
     private $pdo;
+    private $rateLimiter;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
         $this->userModel = new User($this->pdo);
         $this->logModel  = new Log($this->pdo);
+        $this->rateLimiter = new RateLimiter($this->pdo);
     }
 
     public function showLogin() {
@@ -59,6 +62,21 @@ class AuthController {
             !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
             strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
         ) || (strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false);
+
+        // Rate limiting check
+        if ($this->rateLimiter->isLimited()) {
+            $mins = $this->rateLimiter->getLockoutMinutesRemaining();
+            $msg = "Too many login attempts. Please try again in {$mins} minute(s).";
+            if ($isAjax) {
+                session_write_close();
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['success' => false, 'message' => $msg]);
+                exit;
+            }
+            flash('error', $msg);
+            header('Location: ' . APP_URL . '/index.php?url=login');
+            exit;
+        }
 
         $login    = trim($_POST['email'] ?? '');  // accepts email or username
         $password = $_POST['password'] ?? '';
@@ -107,6 +125,12 @@ class AuthController {
                 exit;
             }
 
+            // Regenerate session ID to prevent session fixation attacks
+            session_regenerate_id(true);
+
+            // Clear rate limit attempts on successful login
+            $this->rateLimiter->clearAttempts();
+
             $_SESSION['user_id']    = $user['id'];
             $_SESSION['role_id']    = $user['role_id'];
             $_SESSION['first_name'] = $user['first_name'];
@@ -125,6 +149,9 @@ class AuthController {
             header('Location: ' . APP_URL . '/index.php?url=' . $redirect);
             exit;
         }
+
+        // Record failed login attempt for rate limiting
+        $this->rateLimiter->recordFailedAttempt($login);
 
         if ($isAjax) {
             session_write_close();
@@ -148,6 +175,14 @@ class AuthController {
         }
 
         AuthMiddleware::csrf();
+
+        // Rate limiting check
+        if ($this->rateLimiter->isLimited()) {
+            $mins = $this->rateLimiter->getLockoutMinutesRemaining();
+            flash('error', "Too many login attempts. Please try again in {$mins} minute(s).");
+            header('Location: ' . APP_URL . '/index.php?url=admin-login');
+            exit;
+        }
 
         $email    = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
@@ -180,6 +215,12 @@ class AuthController {
                 exit;
             }
 
+            // Regenerate session ID to prevent session fixation attacks
+            session_regenerate_id(true);
+
+            // Clear rate limit attempts on successful login
+            $this->rateLimiter->clearAttempts();
+
             $_SESSION['user_id']    = $user['id'];
             $_SESSION['role_id']    = $user['role_id'];
             $_SESSION['first_name'] = $user['first_name'];
@@ -192,6 +233,9 @@ class AuthController {
             header('Location: ' . APP_URL . '/index.php?url=dashboard');
             exit;
         }
+
+        // Record failed login attempt for rate limiting
+        $this->rateLimiter->recordFailedAttempt($email);
 
         flash('error', 'Invalid email or password.');
         header('Location: ' . APP_URL . '/index.php?url=admin-login');
@@ -270,8 +314,9 @@ class AuthController {
             $data['username'] = null;
         }
 
-        if (strlen($data['password']) < 8) {
-            flash('error', 'Password must be at least 8 characters.');
+        $pwError = validate_password($data['password']);
+        if ($pwError) {
+            flash('error', $pwError);
             header('Location: ' . APP_URL . '/index.php?url=register');
             exit;
         }
@@ -460,8 +505,9 @@ class AuthController {
             exit;
         }
 
-        if (strlen($password) < 8) {
-            flash('error', 'Password must be at least 8 characters.');
+        $pwError = validate_password($password);
+        if ($pwError) {
+            flash('error', $pwError);
             header('Location: ' . APP_URL . '/index.php?url=reset-password&token=' . urlencode($token));
             exit;
         }
@@ -701,7 +747,20 @@ class AuthController {
         if (isset($_SESSION['user_id'])) {
             $this->logModel->create(LOG_LOGOUT, 'User logged out', $_SESSION['user_id']);
         }
+
+        // Completely destroy the session
+        $_SESSION = [];
+        // Delete the session cookie
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params['path'], $params['domain'],
+                $params['secure'], $params['httponly']
+            );
+        }
         session_destroy();
+
+        // Start a fresh session for the flash message
         session_start();
         flash('success', 'You have been logged out.');
         // Redirect back and trigger the login modal on the landing page

@@ -2,6 +2,10 @@
 require_once INCLUDES_PATH . '/header.php';
 require_once INCLUDES_PATH . '/sidebar.php';
 
+$firstName = htmlspecialchars($_SESSION['first_name'] ?? $_SESSION['user_name'] ?? 'Admin');
+$hour = (int)date('G');
+$greeting = $hour < 12 ? 'Good Morning' : ($hour < 18 ? 'Good Afternoon' : 'Good Evening');
+
 // Helper: map log action to icon + colour class
 function _dash_activity_icon(string $action): array {
     if (str_contains($action, 'login') || str_contains($action, 'logout'))
@@ -14,10 +18,13 @@ function _dash_activity_icon(string $action): array {
         return ['package',      'ab-product'];
     if (str_contains($action, 'stock') || str_contains($action, 'inventory'))
         return ['layers',       'ab-stock'];
+    if (str_contains($action, 'payment'))
+        return ['credit-card',  'ab-order'];
+    if (str_contains($action, 'cancel'))
+        return ['x-circle',     'ab-cancel'];
     return ['activity', 'ab-default'];
 }
 
-// Friendly action label
 function _dash_action_label(string $raw): string {
     return ucwords(str_replace('_', ' ', $raw));
 }
@@ -29,64 +36,67 @@ function _dash_action_label(string $raw): string {
             <button class="sidebar-toggle-btn" id="sidebarToggleTop"><i data-lucide="menu"></i></button>
             <h2>Dashboard</h2>
         </div>
+        <div class="top-bar-right">
+            <span class="top-bar-greeting"><?= $greeting ?>, <?= $firstName ?></span>
+        </div>
     </div>
 
     <div class="page-content">
 
-        <!-- ========== Stat Cards ========== -->
+        <!-- ─── Hero Stat Cards ──────────────────────────────── -->
         <div class="stat-cards">
-            <div class="stat-card">
+            <div class="stat-card stat-accent">
                 <div class="stat-info">
                     <span class="stat-label">Total Revenue</span>
                     <span class="stat-value">₱<?= number_format($totalSales ?? 0, 2) ?></span>
                 </div>
                 <div class="stat-icon"><i data-lucide="trending-up"></i></div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card stat-info-c">
                 <div class="stat-info">
                     <span class="stat-label">Total Orders</span>
                     <span class="stat-value"><?= $totalOrders ?? 0 ?></span>
                 </div>
                 <div class="stat-icon"><i data-lucide="shopping-cart"></i></div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card stat-warning-c">
                 <div class="stat-info">
                     <span class="stat-label">Pending Orders</span>
                     <span class="stat-value"><?= $pendingOrders ?? 0 ?></span>
                 </div>
                 <div class="stat-icon"><i data-lucide="clock"></i></div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card stat-success-c">
                 <div class="stat-info">
                     <span class="stat-label">Total Customers</span>
                     <span class="stat-value"><?= $totalCustomers ?? 0 ?></span>
                 </div>
                 <div class="stat-icon"><i data-lucide="users"></i></div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card stat-charcoal-c">
                 <div class="stat-info">
                     <span class="stat-label">Products</span>
                     <span class="stat-value"><?= $totalProducts ?? 0 ?></span>
                 </div>
                 <div class="stat-icon"><i data-lucide="package"></i></div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card stat-danger-c">
                 <div class="stat-info">
-                    <span class="stat-label">Pending Cancellations</span>
+                    <span class="stat-label">Cancel Requests</span>
                     <span class="stat-value"><?= $pendingCancels ?? 0 ?></span>
                 </div>
                 <div class="stat-icon"><i data-lucide="x-circle"></i></div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card stat-red-c">
                 <div class="stat-info">
                     <span class="stat-label">Damaged Products</span>
                     <span class="stat-value"><?= $totalDamaged ?? 0 ?></span>
                 </div>
-                <div class="stat-icon" style="background:var(--danger-bg, #FEE2E2);color:var(--danger, #DC2626);"><i data-lucide="alert-octagon"></i></div>
+                <div class="stat-icon"><i data-lucide="alert-octagon"></i></div>
             </div>
         </div>
 
-        <!-- ========== Charts ========== -->
+        <!-- ─── Charts ───────────────────────────────────────── -->
         <div class="chart-grid">
             <div class="chart-container">
                 <div class="chart-header">
@@ -122,26 +132,18 @@ function _dash_action_label(string $raw): string {
             </div>
         </div>
 
-        <!-- ========== Recent Orders + Activity ========== -->
+        <!-- ─── Recent Orders + Activity ─────────────────────── -->
         <div class="dashboard-grid-orders">
-            <!-- Recent Orders -->
             <div class="dash-card">
                 <div class="dash-card-header">
                     <h3><i data-lucide="shopping-bag"></i> Recent Orders</h3>
-                    <a href="<?= APP_URL ?>/index.php?url=admin/orders" class="view-all-link">
-                        View All <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
-                    </a>
+                    <a href="<?= APP_URL ?>/index.php?url=admin/orders" class="view-all-link">View All <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></a>
                 </div>
                 <div class="dash-card-body">
                     <?php if (!empty($recentOrders)): ?>
                         <table class="dash-table">
                             <thead>
-                                <tr>
-                                    <th>Order #</th>
-                                    <th>Customer</th>
-                                    <th>Total</th>
-                                    <th>Status</th>
-                                </tr>
+                                <tr><th>Order #</th><th>Customer</th><th>Total</th><th>Status</th></tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($recentOrders as $order): ?>
@@ -155,18 +157,15 @@ function _dash_action_label(string $raw): string {
                             </tbody>
                         </table>
                     <?php else: ?>
-                        <div class="dash-empty">
-                            <i data-lucide="inbox"></i>
-                            <p>No recent orders</p>
-                        </div>
+                        <div class="dash-empty"><i data-lucide="inbox"></i><p>No recent orders</p></div>
                     <?php endif; ?>
                 </div>
             </div>
 
-            <!-- Recent Activity -->
             <div class="dash-card">
                 <div class="dash-card-header">
                     <h3><i data-lucide="activity"></i> Recent Activity</h3>
+                    <a href="<?= APP_URL ?>/index.php?url=admin/logs" class="view-all-link">View Logs <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></a>
                 </div>
                 <div class="dash-card-body">
                     <?php if (!empty($recentLogs)): ?>
@@ -192,21 +191,18 @@ function _dash_action_label(string $raw): string {
                             </div>
                         </div>
                     <?php else: ?>
-                        <div class="dash-empty">
-                            <i data-lucide="clock"></i>
-                            <p>No recent activity</p>
-                        </div>
+                        <div class="dash-empty"><i data-lucide="clock"></i><p>No recent activity</p></div>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
 
-        <!-- ========== Low Stock + Top Products ========== -->
+        <!-- ─── Low Stock + Top Products ─────────────────────── -->
         <div class="dashboard-grid-2">
-            <!-- Low Stock Alert -->
             <div class="dash-card">
                 <div class="dash-card-header">
-                    <h3><i data-lucide="alert-triangle" style="color:var(--danger);"></i> Low Stock Alert</h3>
+                    <h3><i data-lucide="alert-triangle" style="color:var(--warning);"></i> Low Stock Alert</h3>
+                    <a href="<?= APP_URL ?>/index.php?url=admin/inventory" class="view-all-link">Inventory <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></a>
                 </div>
                 <div class="dash-card-body">
                     <?php if (!empty($lowStock)): ?>
@@ -225,52 +221,44 @@ function _dash_action_label(string $raw): string {
                             </tbody>
                         </table>
                     <?php else: ?>
-                        <div class="dash-empty">
-                            <i data-lucide="check-circle" style="color:var(--success);opacity:.6;"></i>
-                            <p>All stock levels healthy</p>
-                        </div>
+                        <div class="dash-empty"><i data-lucide="check-circle" style="color:var(--success);opacity:.6;"></i><p>All stock levels healthy</p></div>
                     <?php endif; ?>
                 </div>
             </div>
 
-            <!-- Top Selling Products -->
+            <?php if (!empty($topProducts)): ?>
             <div class="dash-card">
                 <div class="dash-card-header">
-                    <h3><i data-lucide="bar-chart-2"></i> Top Selling Products</h3>
+                    <h3><i data-lucide="award"></i> Top Selling Products</h3>
                 </div>
-                <div class="dash-card-body">
-                    <?php if (!empty($topProducts)): ?>
-                        <table class="dash-table">
-                            <thead><tr><th>Product</th><th>Sold</th><th>Revenue</th></tr></thead>
-                            <tbody>
-                                <?php foreach ($topProducts as $tp): ?>
-                                    <tr>
-                                        <td><?= htmlspecialchars($tp['name']) ?></td>
-                                        <td><?= $tp['total_sold'] ?></td>
-                                        <td>₱<?= number_format($tp['total_revenue'], 2) ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    <?php else: ?>
-                        <div class="dash-empty">
-                            <i data-lucide="bar-chart"></i>
-                            <p>No sales data yet</p>
+                <div class="dash-card-body" style="padding:16px 20px;">
+                    <div class="top-products-list">
+                        <?php foreach ($topProducts as $i => $tp): ?>
+                        <div class="tp-row">
+                            <span class="tp-rank"><?= $i + 1 ?></span>
+                            <div class="tp-info">
+                                <span class="tp-name"><?= htmlspecialchars($tp['name']) ?></span>
+                                <span class="tp-meta"><?= $tp['total_sold'] ?> sold &bull; ₱<?= number_format($tp['total_revenue'], 2) ?></span>
+                            </div>
+                            <div class="tp-bar-wrap">
+                                <?php $maxSold = $topProducts[0]['total_sold'] ?? 1; $pct = round(($tp['total_sold'] / max($maxSold,1)) * 100); ?>
+                                <div class="tp-bar" style="width:<?= $pct ?>%"></div>
+                            </div>
                         </div>
-                    <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
 
-        <!-- ========== Damaged Products ========== -->
+        <!-- ─── Damaged Products ─────────────────────────────── -->
         <?php if (!empty($recentDamaged)): ?>
         <div class="dashboard-grid-2" style="margin-top: 0;">
             <div class="dash-card">
                 <div class="dash-card-header">
                     <h3><i data-lucide="alert-octagon" style="color:var(--danger);"></i> Damaged Products</h3>
-                    <a href="<?= APP_URL ?>/index.php?url=admin/inventory/damaged" class="view-all-link">
-                        View All <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
-                    </a>
+                    <a href="<?= APP_URL ?>/index.php?url=admin/inventory/damaged" class="view-all-link">View All <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></a>
                 </div>
                 <div class="dash-card-body">
                     <table class="dash-table">
@@ -307,73 +295,31 @@ function _dash_action_label(string $raw): string {
     window.DASHBOARD_CHARTS = {
         sales: {
             id: 'salesChart',
-            // monthly (default)
-            monthly: {
-                labels: <?= json_encode($chartLabels ?? []) ?>,
-                data: <?= json_encode($chartData ?? []) ?>
-            },
-            // daily (last 30 days)
-            daily: {
-                labels: <?= json_encode($dailyLabels ?? []) ?>,
-                data: <?= json_encode($dailyData ?? []) ?>,
-                rawDates: <?= json_encode($dailyRawDates ?? []) ?>
-            }
+            monthly: { labels: <?= json_encode($chartLabels ?? []) ?>, data: <?= json_encode($chartData ?? []) ?> },
+            daily:   { labels: <?= json_encode($dailyLabels ?? []) ?>, data: <?= json_encode($dailyData ?? []) ?>, rawDates: <?= json_encode($dailyRawDates ?? []) ?> }
         },
-        category: {
-            id: 'categoryChart',
-            labels: <?= json_encode($catLabels ?? []) ?>,
-            data: <?= json_encode($catData ?? []) ?>
-        }
+        category: { id: 'categoryChart', labels: <?= json_encode($catLabels ?? []) ?>, data: <?= json_encode($catData ?? []) ?> }
     };
 
-    // Wire Monthly/Daily toggle buttons
     document.addEventListener('DOMContentLoaded', function () {
         function setView(view) {
             window._currentSalesView = view;
-            // Use the new switchSalesView which properly handles daily vs monthly
-            if (typeof window.switchSalesView === 'function') {
-                window.switchSalesView(view);
-            }
-            // Toggle button styles
-            var monthlyBtn = document.getElementById('sales-view-monthly');
-            var dailyBtn = document.getElementById('sales-view-daily');
-            if (monthlyBtn && dailyBtn) {
-                monthlyBtn.classList.toggle('btn-accent', view === 'monthly');
-                monthlyBtn.classList.toggle('btn-outline', view !== 'monthly');
-                dailyBtn.classList.toggle('btn-accent', view === 'daily');
-                dailyBtn.classList.toggle('btn-outline', view !== 'daily');
+            if (typeof window.switchSalesView === 'function') window.switchSalesView(view);
+            var m = document.getElementById('sales-view-monthly'), d = document.getElementById('sales-view-daily');
+            if (m && d) {
+                m.classList.toggle('btn-accent', view === 'monthly');
+                m.classList.toggle('btn-outline', view !== 'monthly');
+                d.classList.toggle('btn-accent', view === 'daily');
+                d.classList.toggle('btn-outline', view !== 'daily');
             }
         }
-
         document.getElementById('sales-view-monthly').addEventListener('click', function () { setView('monthly'); });
         document.getElementById('sales-view-daily').addEventListener('click', function () { setView('daily'); });
-        // Default to monthly
         setView('monthly');
     });
 </script>
-    <script>
-        // If Chart.js isn't available, reveal the textual fallback so users see category totals.
-        (function () {
-            try {
-                if (typeof Chart === 'undefined') {
-                    var fb = document.querySelector('.category-fallback');
-                    var cvs = document.getElementById('categoryChart');
-                    if (fb) fb.style.display = 'block';
-                    if (cvs) cvs.style.display = 'none';
-                }
-            } catch (e) {}
-        })();
-    </script>
 <script>
-    // If CDN fails, load local Chart.js fallback from assets/vendor
-    (function () {
-        if (typeof Chart === 'undefined') {
-            var s = document.createElement('script');
-            s.src = '/assets/vendor/chartjs/chart.min.js';
-            s.defer = true;
-            s.onload = function () { try { console.info('Loaded local Chart.js fallback'); } catch (e) {} };
-            document.head.appendChild(s);
-        }
-    })();
+    (function(){try{if(typeof Chart==='undefined'){var fb=document.querySelector('.category-fallback'),cvs=document.getElementById('categoryChart');if(fb)fb.style.display='block';if(cvs)cvs.style.display='none';}}catch(e){}})();
+    (function(){if(typeof Chart==='undefined'){var s=document.createElement('script');s.src='/assets/vendor/chartjs/chart.min.js';s.defer=true;document.head.appendChild(s);}})();
 </script>
 <?php require_once INCLUDES_PATH . '/footer.php'; ?>

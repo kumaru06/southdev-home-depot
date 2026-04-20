@@ -1,4 +1,9 @@
 
+# Environment files (contain secrets)
+.env
+.env.production
+
+# Config (may contain fallback secrets)
 config/config.php
 
 # Ignore local conversation/log dumps

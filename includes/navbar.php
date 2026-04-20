@@ -67,10 +67,8 @@ try {
             <form action="<?= APP_URL ?>/index.php" method="GET" class="search-inline" role="search">
                 <input type="hidden" name="url" value="products/search">
                 <div class="search-box">
-                    <input type="text" name="q" class="form-control" placeholder="Search products, tiles, tools..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
-                    <button type="submit" class="search-btn" aria-label="Search">
-                        Search
-                    </button>
+                    <input type="text" name="q" class="form-control" placeholder="Search..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
+                    <button type="submit" class="search-btn" aria-label="Search"></button>
                 </div>
             </form>
 
@@ -296,20 +294,26 @@ try {
                 'order_cancelled': 'x-circle',
                 'order_update': 'bell',
                 'order': 'bell',
+                'cancel_requested': 'clock',
                 'cancel_approved': 'check-circle',
                 'cancel_rejected': 'x-circle',
+                'return_requested': 'rotate-ccw',
                 'return_approved': 'rotate-ccw',
-                'return_rejected': 'x-circle'
+                'return_rejected': 'x-circle',
+                'return_completed': 'check-circle'
             };
             var colorMap = {
                 'order_processing': '#f97316',
                 'order_shipped': '#3b82f6',
                 'order_delivered': '#22c55e',
                 'order_cancelled': '#ef4444',
+                'cancel_requested': '#f59e0b',
                 'cancel_approved': '#22c55e',
                 'cancel_rejected': '#ef4444',
-                'return_approved': '#3b82f6',
-                'return_rejected': '#ef4444'
+                'return_requested': '#f59e0b',
+                'return_approved': '#22c55e',
+                'return_rejected': '#ef4444',
+                'return_completed': '#22c55e'
             };
 
             btn.addEventListener('click', function(e){
@@ -318,6 +322,23 @@ try {
                 isOpen = !isOpen;
                 dropdown.classList.toggle('open', isOpen);
                 if (isOpen) loadNotifications();
+            });
+
+            // Open on hover
+            var hoverTimer = null;
+            wrap.addEventListener('mouseenter', function(){
+                clearTimeout(hoverTimer);
+                if (!isOpen) {
+                    isOpen = true;
+                    dropdown.classList.add('open');
+                    loadNotifications();
+                }
+            });
+            wrap.addEventListener('mouseleave', function(){
+                hoverTimer = setTimeout(function(){
+                    isOpen = false;
+                    dropdown.classList.remove('open');
+                }, 250);
             });
 
             // Close on outside click

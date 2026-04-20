@@ -8,7 +8,9 @@ require_once __DIR__ . '/../config/constants.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/Payment.php';
 require_once __DIR__ . '/../models/Order.php';
+require_once __DIR__ . '/../models/OrderItem.php';
 require_once __DIR__ . '/../models/PayMongoGateway.php';
+require_once __DIR__ . '/../includes/Mailer.php';
 
 // Auth check (session already started in config.php)
 if (!isset($_SESSION['user_id'])) {
@@ -22,6 +24,17 @@ $transactionId = $_POST['transaction_id'] ?? null;
 // PayMongo card / 3DS return parameters
 $intentId  = $_GET['intent_id']  ?? null;
 $clientKey = $_GET['client_key'] ?? null;
+
+// Capture receipt email from all sources (GET for COD, POST for bank, session for card/gcash)
+$receiptEmail = '';
+if (!empty($_GET['receipt_email']) && filter_var($_GET['receipt_email'], FILTER_VALIDATE_EMAIL)) {
+    $receiptEmail = trim($_GET['receipt_email']);
+} elseif (!empty($_POST['receipt_email']) && filter_var($_POST['receipt_email'], FILTER_VALIDATE_EMAIL)) {
+    $receiptEmail = trim($_POST['receipt_email']);
+} elseif (!empty($_SESSION['receipt_email'])) {
+    $receiptEmail = trim($_SESSION['receipt_email']);
+    unset($_SESSION['receipt_email']);
+}
 
 // CSRF check for POST requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -89,6 +102,70 @@ if ($orderId) {
 }
 
 $order = (new Order($pdo))->findById($orderId);
+
+// ── Send receipt email if provided ──────────────────────────────────────
+$receiptSent = false;
+if ($receiptEmail && $order) {
+    try {
+        $orderItemModel = new OrderItem($pdo);
+        $orderItems = $orderItemModel->getByOrderId($orderId);
+
+        // Determine payment method display name
+        $payment = (new Payment($pdo))->getByOrderId($orderId);
+        $paymentMethodDisplay = 'N/A';
+        if ($payment) {
+            $methodMap = ['cod' => 'Cash on Delivery', 'gcash' => 'GCash', 'card' => 'Credit/Debit Card', 'bank' => 'Bank Transfer'];
+            $paymentMethodDisplay = $methodMap[$payment['payment_method']] ?? ucfirst($payment['payment_method']);
+        }
+
+        // Build items HTML rows
+        $itemsHtml = '';
+        foreach ($orderItems as $item) {
+            $itemsHtml .= '<tr>';
+            $itemsHtml .= '<td style="padding:10px 0;border-bottom:1px solid #E5E7EB;font-size:13px;color:#1C1C1C;">' . htmlspecialchars($item['product_name']) . '</td>';
+            $itemsHtml .= '<td align="center" style="padding:10px 0;border-bottom:1px solid #E5E7EB;font-size:13px;color:#6B7280;">' . intval($item['quantity']) . '</td>';
+            $itemsHtml .= '<td align="right" style="padding:10px 0;border-bottom:1px solid #E5E7EB;font-size:13px;color:#1C1C1C;font-weight:600;">₱' . number_format($item['subtotal'], 2) . '</td>';
+            $itemsHtml .= '</tr>';
+        }
+
+        // Load and populate template
+        $templatePath = __DIR__ . '/../templates/email/order-receipt.html';
+        $html = file_get_contents($templatePath);
+
+        $customerName = htmlspecialchars(($order['first_name'] ?? '') . ' ' . ($order['last_name'] ?? ''));
+        $shippingAddress = htmlspecialchars($order['shipping_address'] ?? $order['address'] ?? 'N/A');
+        $orderUrl = APP_URL . '/index.php?url=orders/' . $orderId;
+
+        $html = str_replace('{{app_name}}', APP_NAME, $html);
+        $html = str_replace('{{customer_name}}', $customerName, $html);
+        $html = str_replace('{{order_number}}', htmlspecialchars($order['order_number']), $html);
+        $html = str_replace('{{order_date}}', date('F j, Y g:i A', strtotime($order['created_at'])), $html);
+        $html = str_replace('{{payment_method}}', $paymentMethodDisplay, $html);
+        $html = str_replace('{{order_items}}', $itemsHtml, $html);
+        $html = str_replace('{{total_amount}}', number_format($order['total_amount'], 2), $html);
+        $html = str_replace('{{shipping_address}}', $shippingAddress, $html);
+        $html = str_replace('{{order_url}}', $orderUrl, $html);
+        $html = str_replace('{{receipt_email}}', htmlspecialchars($receiptEmail), $html);
+
+        $textBody = "Order Receipt - " . APP_NAME . "\n\n";
+        $textBody .= "Order #" . $order['order_number'] . "\n";
+        $textBody .= "Total: ₱" . number_format($order['total_amount'], 2) . "\n";
+        $textBody .= "Payment: " . $paymentMethodDisplay . "\n\n";
+        $textBody .= "Thank you for your purchase!";
+
+        $mailer = new Mailer();
+        $receiptSent = $mailer->send(
+            $receiptEmail,
+            $customerName,
+            'Order Receipt - #' . $order['order_number'] . ' | ' . APP_NAME,
+            $html,
+            $textBody
+        );
+    } catch (Exception $e) {
+        // Log silently, don't block success page
+        error_log("Receipt email failed for order {$orderId}: " . $e->getMessage());
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -123,6 +200,16 @@ $order = (new Order($pdo))->findById($orderId);
         <div class="result-check">&check;</div>
         <h2>Payment Successful!</h2>
         <p class="subtitle">Thank you for your purchase.</p>
+
+        <?php if ($receiptSent && $receiptEmail): ?>
+            <p style="color:#16A34A;font-size:.825rem;margin-bottom:1rem;background:#DCFCE7;padding:.5rem .85rem;border-radius:8px;">
+                &#9993; Receipt sent to <strong><?= htmlspecialchars($receiptEmail) ?></strong>
+            </p>
+        <?php elseif ($receiptEmail && !$receiptSent): ?>
+            <p style="color:#92400E;font-size:.825rem;margin-bottom:1rem;background:#FFF7ED;padding:.5rem .85rem;border-radius:8px;">
+                Could not send receipt to <?= htmlspecialchars($receiptEmail) ?>. You can view your order below.
+            </p>
+        <?php endif; ?>
 
         <?php if ($order): ?>
             <div class="order-summary">

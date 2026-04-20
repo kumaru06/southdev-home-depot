@@ -31,12 +31,20 @@ class Cart {
         }
     }
 
-    public function updateQuantity($cartId, $quantity) {
+    public function updateQuantity($cartId, $quantity, $userId = null) {
+        if ($userId) {
+            $stmt = $this->pdo->prepare("UPDATE cart SET quantity = ? WHERE id = ? AND user_id = ?");
+            return $stmt->execute([$quantity, $cartId, $userId]);
+        }
         $stmt = $this->pdo->prepare("UPDATE cart SET quantity = ? WHERE id = ?");
         return $stmt->execute([$quantity, $cartId]);
     }
 
-    public function removeItem($cartId) {
+    public function removeItem($cartId, $userId = null) {
+        if ($userId) {
+            $stmt = $this->pdo->prepare("DELETE FROM cart WHERE id = ? AND user_id = ?");
+            return $stmt->execute([$cartId, $userId]);
+        }
         $stmt = $this->pdo->prepare("DELETE FROM cart WHERE id = ?");
         return $stmt->execute([$cartId]);
     }

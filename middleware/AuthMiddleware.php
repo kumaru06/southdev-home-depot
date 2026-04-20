@@ -21,7 +21,7 @@ class AuthMiddleware {
      */
     public static function guest() {
         if (isset($_SESSION['user_id'])) {
-            $url = ($_SESSION['role_id'] == ROLE_CUSTOMER) ? 'products' : 'dashboard';
+            $url = ((int)$_SESSION['role_id'] === ROLE_CUSTOMER) ? 'products' : 'dashboard';
             header('Location: ' . APP_URL . '/index.php?url=' . $url);
             exit;
         }
@@ -32,7 +32,7 @@ class AuthMiddleware {
      */
     public static function adminOrStaff() {
         self::handle();
-        if ($_SESSION['role_id'] != ROLE_STAFF && $_SESSION['role_id'] != ROLE_SUPER_ADMIN) {
+        if ((int)$_SESSION['role_id'] !== ROLE_STAFF && (int)$_SESSION['role_id'] !== ROLE_SUPER_ADMIN) {
             http_response_code(403);
             include ROOT_PATH . '/views/errors/403.php';
             exit;
@@ -44,7 +44,7 @@ class AuthMiddleware {
      */
     public static function adminOrStaffOrInventory() {
         self::handle();
-        if (!in_array($_SESSION['role_id'], [ROLE_STAFF, ROLE_SUPER_ADMIN, ROLE_INVENTORY])) {
+        if (!in_array((int)$_SESSION['role_id'], [ROLE_STAFF, ROLE_SUPER_ADMIN, ROLE_INVENTORY], true)) {
             http_response_code(403);
             include ROOT_PATH . '/views/errors/403.php';
             exit;
@@ -56,7 +56,7 @@ class AuthMiddleware {
      */
     public static function inventory() {
         self::handle();
-        if ($_SESSION['role_id'] != ROLE_INVENTORY && $_SESSION['role_id'] != ROLE_SUPER_ADMIN) {
+        if ((int)$_SESSION['role_id'] !== ROLE_INVENTORY && (int)$_SESSION['role_id'] !== ROLE_SUPER_ADMIN) {
             http_response_code(403);
             include ROOT_PATH . '/views/errors/403.php';
             exit;
@@ -68,7 +68,7 @@ class AuthMiddleware {
      */
     public static function superAdmin() {
         self::handle();
-        if ($_SESSION['role_id'] != ROLE_SUPER_ADMIN) {
+        if ((int)$_SESSION['role_id'] !== ROLE_SUPER_ADMIN) {
             http_response_code(403);
             include ROOT_PATH . '/views/errors/403.php';
             exit;
@@ -82,8 +82,14 @@ class AuthMiddleware {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!verify_csrf()) {
                 flash('error', 'Invalid security token. Please try again.');
-                $ref = $_SERVER['HTTP_REFERER'] ?? APP_URL;
-                header('Location: ' . $ref);
+                // Validate referer is same-origin to prevent open redirect
+                $ref = $_SERVER['HTTP_REFERER'] ?? '';
+                $appBase = rtrim(APP_URL, '/');
+                if ($ref && strpos($ref, $appBase) === 0) {
+                    header('Location: ' . $ref);
+                } else {
+                    header('Location: ' . APP_URL);
+                }
                 exit;
             }
         }

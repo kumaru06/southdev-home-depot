@@ -321,9 +321,13 @@
             }
 
             function closeLoginModal() {
+                overlay.classList.add('closing');
                 overlay.classList.remove('active');
-                document.body.style.overflow = '';
-                if (errorBox) { errorBox.style.display = 'none'; errorBox.textContent = ''; }
+                setTimeout(function() {
+                    overlay.classList.remove('closing');
+                    document.body.style.overflow = '';
+                    if (errorBox) { errorBox.style.display = 'none'; errorBox.textContent = ''; }
+                }, 250);
             }
 
             // Close button

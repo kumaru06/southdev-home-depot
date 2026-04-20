@@ -11,6 +11,7 @@ require_once __DIR__ . '/../models/Inventory.php';
 require_once __DIR__ . '/../models/StockMovement.php';
 require_once __DIR__ . '/../models/Payment.php';
 require_once __DIR__ . '/../models/Log.php';
+require_once __DIR__ . '/../models/Notification.php';
 
 class ReturnController {
     private $returnModel;
@@ -82,6 +83,19 @@ class ReturnController {
 
         if ($this->returnModel->create($data)) {
             $this->logModel->create(LOG_RETURN_REQUEST, "Return request submitted for Order #{$data['order_id']}");
+
+            // Notify customer: return request submitted
+            try {
+                $notifModel = new Notification($this->pdo);
+                $notifModel->create(
+                    $_SESSION['user_id'],
+                    'Return Requested',
+                    "Your return request for order #{$order['order_number']} has been submitted and is awaiting review.",
+                    'return_requested',
+                    APP_URL . '/index.php?url=orders/' . $data['order_id']
+                );
+            } catch (Throwable $e) { /* silent */ }
+
             flash('success', 'Return request submitted successfully.');
         } else {
             flash('error', 'Failed to submit return request.');
@@ -111,6 +125,40 @@ class ReturnController {
         $this->logModel->create(LOG_RETURN_UPDATE, "Return request #{$id} updated to: {$status}");
 
         $return = $this->returnModel->findById($id);
+
+        // Notify customer about return status change
+        if ($return) {
+            try {
+                $order = $this->orderModel->findById($return['order_id']);
+                if ($order) {
+                    $notifModel = new Notification($this->pdo);
+                    $notifTitles = [
+                        'approved'  => 'Return Approved',
+                        'rejected'  => 'Return Rejected',
+                        'completed' => 'Return Completed',
+                    ];
+                    $notifMessages = [
+                        'approved'  => "Your return request for order #{$order['order_number']} has been approved.",
+                        'rejected'  => "Your return request for order #{$order['order_number']} has been rejected." . ($adminNotes ? " Reason: {$adminNotes}" : ''),
+                        'completed' => "Your return for order #{$order['order_number']} has been completed and a refund is being processed.",
+                    ];
+                    $notifTypes = [
+                        'approved'  => 'return_approved',
+                        'rejected'  => 'return_rejected',
+                        'completed' => 'return_completed',
+                    ];
+                    if (isset($notifTitles[$status])) {
+                        $notifModel->create(
+                            $return['user_id'],
+                            $notifTitles[$status],
+                            $notifMessages[$status],
+                            $notifTypes[$status],
+                            APP_URL . '/index.php?url=orders/' . $return['order_id']
+                        );
+                    }
+                }
+            } catch (Throwable $e) { /* silent */ }
+        }
 
         // When a return is APPROVED
         if ($status === 'approved' && $return) {

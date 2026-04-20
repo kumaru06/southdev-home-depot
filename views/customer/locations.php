@@ -216,7 +216,7 @@ require_once INCLUDES_PATH . '/navbar.php';
 <div class="loc-hero">
     <div class="loc-hero-inner">
         <h1>Visit Our Store</h1>
-        <p>Davao City's Premier Tiles &amp; Construction Supply</p>
+        <p>Davao City's Premier Tiles &amp; Hardware Supply</p>
     </div>
 </div>
 

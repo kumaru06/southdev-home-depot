@@ -26,6 +26,31 @@ class UserController {
         require_once VIEWS_PATH . '/superadmin/manage-users.php';
     }
 
+    public function viewUser($id) {
+        AuthMiddleware::superAdmin();
+        $user = $this->userModel->findById($id);
+        if (!$user) {
+            flash('error', 'User not found.');
+            header('Location: ' . APP_URL . '/index.php?url=admin/users');
+            exit;
+        }
+
+        // Get user orders
+        require_once MODELS_PATH . '/Order.php';
+        $orderModel = new Order($this->pdo);
+        $orders = $orderModel->getByUserId($user['id']);
+
+        // Get user reviews
+        require_once MODELS_PATH . '/Review.php';
+        $reviewModel = new Review($this->pdo);
+        $reviews = $reviewModel->getByUserId($user['id']);
+
+        $pageTitle = 'View User — ' . $user['first_name'] . ' ' . $user['last_name'];
+        $isAdmin   = true;
+        $extraCss  = ['admin.css'];
+        require_once VIEWS_PATH . '/superadmin/view-user.php';
+    }
+
     public function create() {
         AuthMiddleware::superAdmin();
         AuthMiddleware::csrf();
@@ -40,7 +65,13 @@ class UserController {
             'phone'      => trim($_POST['phone'] ?? '')
         ];
 
-        if ($this->userModel->findByEmail($data['email'])) {
+        if (empty($data['first_name']) || empty($data['last_name']) || empty($data['email']) || empty($data['password'])) {
+            flash('error', 'First name, last name, email, and password are required.');
+        } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            flash('error', 'Please enter a valid email address.');
+        } elseif (validate_password($data['password'])) {
+            flash('error', validate_password($data['password']));
+        } elseif ($this->userModel->findByEmail($data['email'])) {
             flash('error', 'Email already exists.');
         } elseif ($this->userModel->create($data)) {
             // If super admin created a staff or inventory account, mark email verified
@@ -173,8 +204,9 @@ class UserController {
                 exit;
             }
 
-            if (strlen($newPassword) < 8) {
-                flash('error', 'New password must be at least 8 characters.');
+            $pwError = validate_password($newPassword);
+            if ($pwError) {
+                flash('error', $pwError);
                 header('Location: ' . APP_URL . '/index.php?url=' . $returnUrl);
                 exit;
             }

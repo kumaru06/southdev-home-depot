@@ -16,14 +16,14 @@ require_once INCLUDES_PATH . '/navbar.php';
         <div class="orders-list">
         <?php foreach ($orders as $idx => $order): ?>
             <div class="order-card order-card--enhanced" style="animation-delay: <?= $idx * 0.05 ?>s">
-                <div class="order-card-status-stripe order-card-status-stripe--<?= $order['status'] ?>"></div>
+                <div class="order-card-status-stripe order-card-status-stripe--<?= htmlspecialchars($order['status']) ?>"></div>
                 <div class="order-card-content">
                     <div class="order-card-header">
                         <div class="order-card-main">
                             <div class="order-card-top-row">
                                 <h3 class="order-number"><?= htmlspecialchars($order['order_number']) ?></h3>
                                 <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                                    <span class="badge badge-<?= $order['status'] ?>"><?= ucfirst($order['status']) ?></span>
+                                    <span class="badge badge-<?= htmlspecialchars($order['status']) ?>"><?= htmlspecialchars(ucfirst($order['status'])) ?></span>
                                     <?php
                                         $rr = $returnsByOrder[$order['id']] ?? null;
                                         // Only show return badges on delivered orders (returns don't apply to other statuses)

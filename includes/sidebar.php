@@ -43,7 +43,7 @@ $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($
                 </a>
             </li>
             <li>
-                <a href="<?= APP_URL ?>/index.php?url=staff/inventory" class="<?= strpos($currentUrl, 'inventory') !== false ? 'active' : '' ?>">
+                <a href="<?= APP_URL ?>/index.php?url=staff/inventory" class="<?= strpos($currentUrl, 'inventory') !== false && strpos($currentUrl, 'damaged') === false ? 'active' : '' ?>">
                     <span class="nav-icon"><i class="lucide-warehouse"></i></span>
                     <span class="nav-text">Inventory</span>
                 </a>
@@ -145,7 +145,7 @@ $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($
                 </a>
             </li>
             <li>
-                <a href="<?= APP_URL ?>/index.php?url=admin/inventory" class="<?= strpos($currentUrl, 'inventory') !== false ? 'active' : '' ?>">
+                <a href="<?= APP_URL ?>/index.php?url=admin/inventory" class="<?= strpos($currentUrl, 'inventory') !== false && strpos($currentUrl, 'damaged') === false ? 'active' : '' ?>">
                     <span class="nav-icon"><i class="lucide-warehouse"></i></span>
                     <span class="nav-text">Inventory</span>
                 </a>

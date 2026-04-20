@@ -456,6 +456,8 @@ switch ($urlParts[0]) {
                     $controller = new UserController($pdo);
                     if (isset($urlParts[2]) && $urlParts[2] === 'create') {
                         $controller->create();
+                    } elseif (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'view') {
+                        $controller->viewUser($urlParts[2]);
                     } elseif (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'toggle') {
                         $controller->toggleActive($urlParts[2]);
                     } elseif (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'delete') {
@@ -618,7 +620,17 @@ switch ($urlParts[0]) {
      * HOME / DEFAULT
      * ============================================================= */
     case '':
-        // Serve the public homepage (customer dashboard view used as public landing)
+        // Redirect logged-in users to their appropriate page
+        if (isLoggedIn()) {
+            $roleId = $_SESSION['role_id'] ?? null;
+            if ($roleId == ROLE_CUSTOMER) {
+                header('Location: ' . APP_URL . '/index.php?url=products');
+            } else {
+                header('Location: ' . APP_URL . '/index.php?url=dashboard');
+            }
+            exit;
+        }
+        // Serve the public homepage for guests
         $pageTitle = 'Home';
         $extraCss  = ['customer.css'];
         require_once VIEWS_PATH . '/customer/dashboard.php';

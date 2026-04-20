@@ -45,7 +45,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
                 </div>
             </div>
             <div class="od-hero-status">
-                <span class="badge badge-<?= $order['status'] ?> badge-lg"><?= ucfirst($order['status']) ?></span>
+                <span class="badge badge-<?= htmlspecialchars($order['status']) ?> badge-lg"><?= htmlspecialchars(ucfirst($order['status'])) ?></span>
                 <?php if (!empty($returnRequest) && $returnRequest['status'] !== 'rejected' && $order['status'] === 'delivered'): ?>
                     <?php
                         $returnStatusLabels = [

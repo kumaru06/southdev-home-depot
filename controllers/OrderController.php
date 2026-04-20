@@ -198,6 +198,19 @@ class OrderController {
 
         if ($this->orderModel->cancelOrder($id, $_SESSION['user_id'], $reason)) {
             $this->logModel->create(LOG_ORDER_CANCEL, "Order #{$id} ({$order['order_number']}) cancelled by customer. Stock restored.");
+
+            // Notify customer: order cancelled
+            try {
+                $notifModel = new Notification($this->pdo);
+                $notifModel->create(
+                    $_SESSION['user_id'],
+                    'Order Cancelled',
+                    "Your order #{$order['order_number']} has been cancelled." . ($reason ? " Reason: {$reason}" : ''),
+                    'order_cancelled',
+                    APP_URL . '/index.php?url=orders/' . $id
+                );
+            } catch (Throwable $e) { /* silent */ }
+
             flash('success', 'Order cancelled. Stock has been restored.');
         } else {
             flash('error', 'Unable to cancel this order.');
@@ -246,6 +259,19 @@ class OrderController {
         ]);
 
         $this->logModel->create(LOG_CANCEL_REQUEST, "Cancel request submitted for Order #{$orderId}");
+
+        // Notify customer: cancellation request submitted
+        try {
+            $notifModel = new Notification($this->pdo);
+            $notifModel->create(
+                $_SESSION['user_id'],
+                'Cancellation Requested',
+                "Your cancellation request for order #{$order['order_number']} has been submitted and is awaiting approval.",
+                'cancel_requested',
+                APP_URL . '/index.php?url=orders/' . $orderId
+            );
+        } catch (Throwable $e) { /* silent */ }
+
         flash('success', 'Cancellation request submitted. Awaiting admin approval.');
         header('Location: ' . APP_URL . '/index.php?url=orders/' . $orderId);
         exit;

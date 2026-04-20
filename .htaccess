@@ -1,5 +1,29 @@
 RewriteEngine On
 
+# ─── Security: Block direct access to sensitive directories & files ───
+# Deny access to config, models, controllers, middleware, includes, database, tools, storage, docs, vendor
+RewriteRule ^(config|models|controllers|middleware|includes|database|tools|storage|docs|vendor)/ - [F,L]
+
+# Block access to SQL files, composer files, markdown docs, and deploy scripts
+RewriteRule \.(sql|md|ps1|log)$ - [F,L]
+RewriteRule ^composer\.(json|lock)$ - [F,L]
+
+# Block access to .env files (contains secrets)
+RewriteRule ^\.env - [F,L]
+
+# Prevent directory listing
+Options -Indexes
+
+# ─── Hide server signature ───
+ServerSignature Off
+
+# ─── Force HTTPS in production ───
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP_HOST} !^localhost [NC]
+RewriteCond %{HTTP_HOST} !^127\.0\.0\.1 [NC]
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# ─── URL Rewriting ───
 # Redirect to index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

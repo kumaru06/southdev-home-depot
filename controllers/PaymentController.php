@@ -93,6 +93,12 @@ class PaymentController {
             $input = json_decode(file_get_contents('php://input'), true);
             $orderId = intval($input['order_id'] ?? 0);
             $method = $input['method'] ?? 'gcash';
+            $receiptEmail = trim($input['receipt_email'] ?? '');
+
+            // Store receipt email in session for later use
+            if ($receiptEmail && filter_var($receiptEmail, FILTER_VALIDATE_EMAIL)) {
+                $_SESSION['receipt_email'] = $receiptEmail;
+            }
 
             // Verify order exists and belongs to user
             $order = $this->orderModel->findById($orderId);
@@ -444,6 +450,12 @@ class PaymentController {
             $paymentMethodId = $input['payment_method_id'] ?? '';
             $paymentIntentId = $input['payment_intent_id'] ?? '';
             $clientKey       = $input['client_key'] ?? '';
+            $receiptEmail    = trim($input['receipt_email'] ?? '');
+
+            // Store receipt email in session for later use
+            if ($receiptEmail && filter_var($receiptEmail, FILTER_VALIDATE_EMAIL)) {
+                $_SESSION['receipt_email'] = $receiptEmail;
+            }
 
             if (!$paymentMethodId || !$paymentIntentId || !$clientKey) {
                 throw new Exception('Missing required payment data');

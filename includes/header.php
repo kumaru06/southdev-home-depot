@@ -9,6 +9,15 @@ if (!headers_sent()) {
     header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
     header('Pragma: no-cache');
     header('Expires: 0');
+
+    // Security headers
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+    // Content Security Policy – allow same-origin, Google Fonts, Lucide icons, and inline styles/scripts
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com https://unpkg.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.paymongo.com; frame-ancestors 'self';");
 }
 ?>
 <!DOCTYPE html>
@@ -19,6 +28,9 @@ if (!headers_sent()) {
     <meta name="csrf-token" content="<?= csrf_token() ?>">
     <meta name="description" content="<?= APP_TAGLINE ?>">
     <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle) . ' – ' : '' ?><?= APP_NAME ?></title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="<?= APP_URL ?>/assets/favicon.svg">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,7 +55,7 @@ if (!headers_sent()) {
         <?php endforeach; ?>
     <?php endif; ?>
 
-        <script>var APP_URL = '<?= APP_URL ?>';</script>
+        <script>var APP_URL = <?= json_encode(APP_URL) ?>;</script>
 </head>
 <body class="<?= isset($isAdmin) && $isAdmin ? 'admin-layout' : '' ?>">
 

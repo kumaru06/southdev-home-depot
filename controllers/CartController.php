@@ -55,7 +55,8 @@ class CartController {
         $cartId   = intval($_POST['cart_id'] ?? 0);
         $quantity = max(1, intval($_POST['quantity'] ?? 1));
 
-        $this->cartModel->updateQuantity($cartId, $quantity);
+        // Pass user_id to prevent IDOR (users modifying other users' carts)
+        $this->cartModel->updateQuantity($cartId, $quantity, $_SESSION['user_id']);
         echo json_encode(['success' => true]);
     }
 
@@ -64,7 +65,7 @@ class CartController {
         header('Content-Type: application/json');
 
         $cartId = intval($_POST['cart_id'] ?? 0);
-        $this->cartModel->removeItem($cartId);
+        $this->cartModel->removeItem($cartId, $_SESSION['user_id']);
         echo json_encode(['success' => true]);
     }
 

@@ -22,7 +22,6 @@
     z-index: 100;
     display: flex;
     flex-direction: column;
-    transition: width .3s cubic-bezier(.4,0,.2,1), min-width .3s cubic-bezier(.4,0,.2,1);
     overflow: hidden;
 }
 .sidebar.collapsed { width: 68px; min-width: 68px; transform: none; }
@@ -55,7 +54,6 @@
     white-space: nowrap;
     overflow: hidden;
     opacity: 1;
-    transition: opacity .2s;
 }
 .sidebar.collapsed .brand-text { opacity: 0; width: 0; }
 
@@ -102,7 +100,6 @@
     color: rgba(255,255,255,.6);
     font-size: 13px;
     font-weight: 500;
-    transition: all .25s ease;
     white-space: nowrap;
     border-left: none;
     border-radius: 10px;
@@ -115,7 +112,6 @@
     align-items: center;
     justify-content: center;
     font-size: 16px;
-    transition: color .25s ease;
     background: none;
     border-radius: 0;
 }
@@ -123,7 +119,6 @@
 .sidebar .nav-menu a:hover {
     background: rgba(255,255,255,.1);
     color: rgba(255,255,255,.95);
-    transform: translateX(2px);
 }
 .sidebar .nav-menu a:hover .nav-icon {
     background: none;
@@ -148,7 +143,6 @@
 .sidebar .nav-menu a .nav-text {
     overflow: hidden;
     opacity: 1;
-    transition: opacity .2s;
 }
 .sidebar.collapsed .nav-menu a .nav-text { opacity: 0; width: 0; }
 

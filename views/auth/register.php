@@ -93,16 +93,16 @@ require_once INCLUDES_PATH . '/header.php';
 .register-split-wrapper {
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     min-height: calc(100vh - 140px);
     padding: 20px 24px;
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 .register-split {
     display: grid;
-    grid-template-columns: 0.9fr 1.1fr;
+    grid-template-columns: 0.8fr 1.2fr;
     width: 100%;
-    max-width: 1100px;
+    max-width: 920px;
     background: #fff;
     border-radius: 16px;
     overflow: hidden;
@@ -112,13 +112,13 @@ require_once INCLUDES_PATH . '/header.php';
 .register-media {
     position: relative;
     background:
-        linear-gradient(135deg, rgba(234,88,12,.75) 0%, rgba(249,115,22,.55) 60%, rgba(251,146,60,.4) 100%),
-        var(--register-img, #f97316);
+        linear-gradient(135deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.2) 60%, rgba(0,0,0,.15) 100%),
+        var(--register-img, #334155);
     background-size: cover;
     background-position: center;
     display: flex;
     align-items: flex-end;
-    padding: 32px;
+    padding: 24px;
 }
 .register-media-overlay {
     position: absolute;
@@ -133,84 +133,93 @@ require_once INCLUDES_PATH . '/header.php';
 .register-media-badge {
     display: inline-flex;
     align-items: center;
-    height: 28px;
-    padding: 0 14px;
+    height: 24px;
+    padding: 0 11px;
     border-radius: 999px;
     background: rgba(255,255,255,.18);
     border: 1px solid rgba(255,255,255,.25);
     font-weight: 800;
-    font-size: 12px;
+    font-size: 10px;
     letter-spacing: .4px;
     text-transform: uppercase;
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
 }
 .register-media-title {
-    margin-top: 12px;
-    font-size: 28px;
+    margin-top: 8px;
+    font-size: 20px;
     font-weight: 900;
     letter-spacing: -.4px;
     text-shadow: 0 2px 8px rgba(0,0,0,.15);
 }
 .register-media-subtitle {
-    margin-top: 6px;
+    margin-top: 3px;
     color: rgba(255,255,255,.85);
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
 }
 /* Right: Form Panel */
 .register-panel {
-    padding: 28px 32px;
+    padding: 22px 26px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
 .register-panel .auth-brand {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+}
+.register-panel .auth-brand .auth-icon-img {
+    width: 36px;
+    height: 36px;
 }
 .register-panel .auth-brand h2 {
     margin: 0;
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 800;
     letter-spacing: -.3px;
     color: #1f2937;
 }
 .register-panel .auth-tagline {
-    margin: 2px 0 0;
+    margin: 1px 0 0;
     color: #6b7280;
-    font-size: 12px;
+    font-size: 11.5px;
 }
 .register-panel .auth-footer {
-    margin-top: 14px;
+    margin-top: 10px;
     text-align: center;
+    font-size: 12px;
 }
 .register-panel .form-group {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 .register-panel .form-row {
-    gap: 12px;
+    gap: 10px;
     margin-bottom: 0;
+    flex-wrap: nowrap;
+}
+.register-panel .form-col {
+    min-width: 0;
 }
 .register-panel label {
-    font-size: 11px;
-    margin-bottom: 3px;
+    font-size: 10px;
+    margin-bottom: 2px;
 }
 .register-panel .form-control-sm {
-    padding: 8px 12px;
-    font-size: 13px;
+    padding: 7px 11px;
+    font-size: 12.5px;
 }
 .register-panel .input-icon-wrap .form-control-sm {
     padding-left: 38px;
 }
 .register-panel .btn-block {
-    margin-top: 14px;
-    padding: 10px;
-    font-size: 14px;
-    max-width: 260px;
+    margin-top: 10px;
+    padding: 9px;
+    font-size: 13px;
+    max-width: 240px;
     margin-left: auto;
     margin-right: auto;
 }

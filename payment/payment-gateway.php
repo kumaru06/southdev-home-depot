@@ -97,15 +97,37 @@ $pageTitle = 'Payment';
             <p style="color:var(--steel); line-height:1.6; margin-bottom:1.25rem; font-size:.9rem;">
                 Your order will be prepared and payment will be collected upon delivery. Please have the exact amount ready.
             </p>
+            <div class="form-group">
+                <label class="form-label">Email (optional, for receipt)</label>
+                <input type="email" id="cod-email" class="form-control" placeholder="your@email.com" value="<?= htmlspecialchars($_SESSION['email'] ?? '') ?>">
+            </div>
             <div class="btn-group">
-                <a href="<?= APP_URL ?>/payment/payment-success.php?order_id=<?= $orderId ?>&method=cod&csrf_token=<?= urlencode(csrf_token()) ?>" class="btn btn-accent">Confirm Order</a>
+                <a href="#" id="cod-confirm-btn" onclick="confirmCod()" class="btn btn-accent">Confirm Order</a>
                 <a href="<?= APP_URL ?>/payment/payment-failed.php?order_id=<?= $orderId ?>" class="btn btn-outline">Cancel</a>
             </div>
+            <script>
+            function confirmCod() {
+                var email = document.getElementById('cod-email').value.trim();
+                var url = '<?= APP_URL ?>/payment/payment-success.php?order_id=<?= $orderId ?>&method=cod&csrf_token=<?= urlencode(csrf_token()) ?>';
+                if (email) url += '&receipt_email=' + encodeURIComponent(email);
+                window.location.href = url;
+            }
+            </script>
 
         <?php elseif ($method === 'gcash'): ?>
             <?php if (defined('PAYMONGO_ENABLED') && PAYMONGO_ENABLED): ?>
                 <!-- PayMongo GCash Integration -->
-                <div id="gcash-loading" class="pay-loading">
+                <div id="gcash-form-section">
+                    <div class="form-group" style="margin-bottom:1.25rem;">
+                        <label class="form-label">Email (optional, for receipt)</label>
+                        <input type="email" id="gcash-email" class="form-control" placeholder="your@email.com" value="<?= htmlspecialchars($_SESSION['email'] ?? '') ?>">
+                    </div>
+                    <div class="btn-group">
+                        <button onclick="startGcash()" class="btn btn-accent">Continue to GCash</button>
+                        <a href="<?= APP_URL ?>/payment/payment-failed.php?order_id=<?= $orderId ?>" class="btn btn-outline">Cancel</a>
+                    </div>
+                </div>
+                <div id="gcash-loading" class="pay-loading" style="display:none;">
                     <div class="pay-spinner"></div>
                     <p>Preparing payment...</p>
                     <p style="font-size:.78rem;margin-top:.25rem;">Redirecting to GCash via PayMongo</p>
@@ -120,16 +142,23 @@ $pageTitle = 'Payment';
                 </div>
 
                 <script>
+                    function startGcash() {
+                        document.getElementById('gcash-form-section').style.display = 'none';
+                        initGcashPayment();
+                    }
+
                     function initGcashPayment() {
                         document.getElementById('gcash-loading').style.display = 'block';
                         document.getElementById('gcash-error').style.display = 'none';
 
+                        var gcashEmail = document.getElementById('gcash-email').value.trim();
                         fetch('<?= APP_URL ?>/index.php?url=payment/create-source', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 order_id: <?= $orderId ?>,
-                                method: 'gcash'
+                                method: 'gcash',
+                                receipt_email: gcashEmail || undefined
                             })
                         })
                         .then(r => r.json())
@@ -149,7 +178,7 @@ $pageTitle = 'Payment';
                         });
                     }
 
-                    document.addEventListener('DOMContentLoaded', initGcashPayment);
+                    // GCash payment now starts on button click, not auto-load
                 </script>
             <?php else: ?>
                 <p style="color:var(--danger); text-align:center; padding:1.5rem 0; font-size:.9rem;">GCash payments require PayMongo to be enabled. Please contact the administrator.</p>
@@ -341,7 +370,8 @@ $pageTitle = 'Payment';
                                 order_id:          ORDER_ID,
                                 payment_method_id: paymentMethodId,
                                 payment_intent_id: paymentIntentId,
-                                client_key:        clientKey
+                                client_key:        clientKey,
+                                receipt_email:     email || undefined
                             })
                         });
 
@@ -385,6 +415,10 @@ $pageTitle = 'Payment';
                 <div class="form-group">
                     <label class="form-label">Transaction Reference Number</label>
                     <input type="text" name="transaction_id" class="form-control" placeholder="Enter your bank ref #" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email (optional, for receipt)</label>
+                    <input type="email" name="receipt_email" class="form-control" placeholder="your@email.com" value="<?= htmlspecialchars($_SESSION['email'] ?? '') ?>">
                 </div>
                 <div class="btn-group">
                     <button type="submit" class="btn btn-accent">I've Made the Transfer</button>
