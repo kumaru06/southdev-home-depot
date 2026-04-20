@@ -15,13 +15,12 @@ require_once INCLUDES_PATH . '/navbar.php';
         <form action="<?= APP_URL ?>/index.php" method="GET" class="search-bar" style="display:flex; gap:.75rem; flex-wrap:wrap;">
             <input type="hidden" name="url" value="orders/track">
             <div class="input-icon-wrap" style="flex:1; min-width:250px;">
-                <i data-lucide="search" class="input-icon"></i>
                 <input type="text" name="order_number" class="form-control"
                        placeholder="Enter your order number (e.g. SHD-20260214-A1B2C3)"
                        value="<?= htmlspecialchars($orderNumber ?? '') ?>" required>
             </div>
             <button type="submit" class="btn btn-accent">
-                <i data-lucide="search" style="width:16px;height:16px;"></i> Track
+                Track
             </button>
         </form>
     </div>
@@ -55,7 +54,6 @@ require_once INCLUDES_PATH . '/navbar.php';
             <?php if ($order['status'] !== 'cancelled'): ?>
                 <div class="order-timeline" style="margin-top:2rem;">
                     <h4 style="margin-bottom:1rem; font-weight:600;">
-                        <i data-lucide="git-branch" style="width:16px;height:16px;vertical-align:middle;color:var(--accent);"></i>
                         Order Progress
                     </h4>
                     <?php
@@ -67,7 +65,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                             <div class="timeline-step <?= $i <= $currentIndex ? 'completed' : '' ?> <?= $i === $currentIndex ? 'current' : '' ?>">
                                 <div class="step-dot">
                                     <?php if ($i <= $currentIndex): ?>
-                                        <i data-lucide="check" style="width:14px;height:14px;"></i>
+                                        &check;
                                     <?php else: ?>
                                         <span><?= $i + 1 ?></span>
                                     <?php endif; ?>
@@ -79,14 +77,12 @@ require_once INCLUDES_PATH . '/navbar.php';
                 </div>
             <?php else: ?>
                 <div style="text-align:center; margin-top:2rem; padding:1.5rem; background:var(--neutral); border-radius:8px;">
-                    <i data-lucide="x-circle" style="width:32px;height:32px;color:var(--accent);margin-bottom:.5rem;"></i>
                     <p style="color:var(--accent); font-weight:600;">This order has been cancelled.</p>
                 </div>
             <?php endif; ?>
         </div>
     <?php elseif (isset($orderNumber) && $orderNumber): ?>
         <div class="card" style="text-align:center; padding:3rem;">
-            <i data-lucide="search-x" style="width:48px;height:48px;color:var(--steel);margin-bottom:1rem;"></i>
             <h3 style="color:var(--charcoal); margin-bottom:.5rem;">Order Not Found</h3>
             <p style="color:var(--steel);">No order matching "<strong><?= htmlspecialchars($orderNumber) ?></strong>" was found. Please check the order number and try again.</p>
         </div>

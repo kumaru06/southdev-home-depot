@@ -8,6 +8,7 @@ require_once __DIR__ . '/../config/constants.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/Payment.php';
 require_once __DIR__ . '/../models/Order.php';
+require_once __DIR__ . '/../models/PayMongoGateway.php';
 
 // Auth check (session already started in config.php)
 if (!isset($_SESSION['user_id'])) {
@@ -15,8 +16,12 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$orderId = intval($_GET['order_id'] ?? $_POST['order_id'] ?? 0);
+$orderId       = intval($_GET['order_id'] ?? $_POST['order_id'] ?? 0);
 $transactionId = $_POST['transaction_id'] ?? null;
+
+// PayMongo card / 3DS return parameters
+$intentId  = $_GET['intent_id']  ?? null;
+$clientKey = $_GET['client_key'] ?? null;
 
 // CSRF check for POST requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -28,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if ($orderId) {
     $paymentModel = new Payment($pdo);
-    $orderModel = new Order($pdo);
+    $orderModel   = new Order($pdo);
 
     // Verify ownership
     $order = $orderModel->findById($orderId);
@@ -37,14 +42,50 @@ if ($orderId) {
         exit;
     }
 
-    // Update payment status
-    $payment = $paymentModel->getByOrderId($orderId);
-    if ($payment) {
-        $paymentModel->updateStatus($payment['id'], PAYMENT_COMPLETED, $transactionId);
-    }
+    // ── Card 3DS return: verify intent status before marking complete ──────
+    $isTestMode = isset($_GET['test_mode']) && $_GET['test_mode'] === '1';
+    if ($isTestMode) {
+        // Test bypass – just mark complete
+        $payment = $paymentModel->getByOrderId($orderId);
+        if ($payment && $payment['status'] !== PAYMENT_COMPLETED) {
+            $paymentModel->updateStatus($payment['id'], PAYMENT_COMPLETED, 'test_' . uniqid());
+        }
+        // Order stays pending — staff will advance to processing
+    } elseif ($intentId && $clientKey && defined('PAYMONGO_ENABLED') && PAYMONGO_ENABLED) {
+        try {
+            $gateway = new PayMongoGateway();
+            $intentData = $gateway->getPaymentIntent($intentId, $clientKey);
+            $intentStatus = $intentData['data']['attributes']['status'] ?? '';
 
-    // Update order status to processing
-    $orderModel->updateStatus($orderId, ORDER_PROCESSING);
+            if ($intentStatus === 'succeeded') {
+                $payment = $paymentModel->getByOrderId($orderId);
+                if ($payment && $payment['status'] !== PAYMENT_COMPLETED) {
+                    $paymentModel->updateStatus($payment['id'], PAYMENT_COMPLETED, $intentId);
+                    // Order stays pending — staff will advance to processing
+                }
+            } elseif ($intentStatus === 'awaiting_payment_method' || $intentStatus === 'payment_error') {
+                // 3DS failed / payment was declined
+                $payment = $paymentModel->getByOrderId($orderId);
+                if ($payment) {
+                    $paymentModel->updateStatus($payment['id'], PAYMENT_FAILED);
+                }
+                header('Location: ' . APP_URL . '/payment/payment-failed.php?order_id=' . $orderId . '&reason=card_declined');
+                exit;
+            }
+            // else: still processing (unlikely at return URL) — fall through to success page
+        } catch (Exception $e) {
+            // If we can't verify, fail safe
+            header('Location: ' . APP_URL . '/payment/payment-failed.php?order_id=' . $orderId . '&reason=verification_error');
+            exit;
+        }
+    } else {
+        // COD / bank / GCash (non-3DS) — mark complete as before
+        $payment = $paymentModel->getByOrderId($orderId);
+        if ($payment && $payment['status'] !== PAYMENT_COMPLETED) {
+            $paymentModel->updateStatus($payment['id'], PAYMENT_COMPLETED, $transactionId);
+        }
+        // Order stays pending — staff will advance to processing
+    }
 }
 
 $order = (new Order($pdo))->findById($orderId);
@@ -56,35 +97,30 @@ $order = (new Order($pdo))->findById($orderId);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment Successful - <?= APP_NAME ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root { --charcoal:#1C1C1C; --accent:#C62828; --neutral:#F4F4F4; --white:#FFFFFF; --steel:#4A4A4A; }
-        body { font-family:'Inter',sans-serif; background:var(--neutral); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; }
-        .result-card { background:var(--white); border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,.08); max-width:480px; width:100%; padding:3rem 2.5rem; text-align:center; }
-        .success-icon { width:80px; height:80px; border-radius:50%; background:#e8f5e9; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem; }
-        .success-icon i { color:#2e7d32; }
-        .result-card h2 { font-size:1.5rem; font-weight:700; color:var(--charcoal); margin-bottom:.5rem; }
-        .result-card .subtitle { color:var(--steel); font-size:.9rem; margin-bottom:1.5rem; }
-        .order-summary { background:var(--neutral); border-radius:8px; padding:1rem 1.25rem; margin-bottom:1.5rem; text-align:left; }
-        .order-summary .row { display:flex; justify-content:space-between; padding:.35rem 0; font-size:.9rem; }
-        .order-summary .row .label { color:var(--steel); }
-        .order-summary .row .value { font-weight:600; color:var(--charcoal); }
-        .btn { display:inline-flex; align-items:center; justify-content:center; gap:.4rem; padding:.7rem 1.5rem; border-radius:6px; font-weight:600; font-size:.9rem; cursor:pointer; border:none; text-decoration:none; transition:all .2s; }
-        .btn-accent { background:var(--accent); color:var(--white); }
-        .btn-accent:hover { background:#a52222; }
-        .btn-outline { background:transparent; color:var(--steel); border:1px solid #ddd; }
-        .btn-outline:hover { border-color:var(--charcoal); color:var(--charcoal); }
-        .btn-group { display:flex; flex-direction:column; gap:.75rem; }
-        .btn-block { width:100%; }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        :root{--charcoal:#1C1C1C;--steel:#6B7280;--accent:#F97316;--accent-dark:#EA580C;--neutral:#F5F5F5;--white:#FFFFFF;--border:#E5E7EB;--success:#16A34A;}
+        body{font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;}
+        .result-card{background:var(--white);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.06);max-width:460px;width:100%;padding:2.5rem;text-align:center;}
+        .result-check{width:64px;height:64px;border-radius:50%;background:#DCFCE7;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:1.75rem;color:var(--success);}
+        .result-card h2{font-size:1.35rem;font-weight:800;color:var(--charcoal);margin-bottom:.35rem;}
+        .result-card .subtitle{color:var(--steel);font-size:.875rem;margin-bottom:1.25rem;}
+        .order-summary{background:var(--neutral);border-radius:8px;padding:.85rem 1.15rem;margin-bottom:1.25rem;text-align:left;}
+        .order-summary .row{display:flex;justify-content:space-between;padding:.3rem 0;font-size:.875rem;}
+        .order-summary .row .label{color:var(--steel);}
+        .order-summary .row .value{font-weight:700;color:var(--charcoal);}
+        .btn{display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.7rem 1.25rem;border-radius:8px;font-weight:700;font-size:.875rem;cursor:pointer;border:none;text-decoration:none;transition:all .15s;font-family:inherit;width:100%;}
+        .btn-accent{background:var(--accent);color:var(--white);}
+        .btn-accent:hover{background:var(--accent-dark);}
+        .btn-outline{background:transparent;color:var(--steel);border:1.5px solid var(--border);}
+        .btn-outline:hover{border-color:var(--charcoal);color:var(--charcoal);}
+        .btn-group{display:flex;flex-direction:column;gap:.6rem;}
     </style>
 </head>
 <body>
     <div class="result-card">
-        <div class="success-icon">
-            <i data-lucide="check-circle" style="width:40px;height:40px;"></i>
-        </div>
+        <div class="result-check">&check;</div>
         <h2>Payment Successful!</h2>
         <p class="subtitle">Thank you for your purchase.</p>
 
@@ -100,21 +136,15 @@ $order = (new Order($pdo))->findById($orderId);
                 </div>
                 <div class="row">
                     <span class="label">Status</span>
-                    <span class="value" style="color:#2e7d32;">Processing</span>
+                    <span class="value" style="color:var(--accent);">Pending</span>
                 </div>
             </div>
         <?php endif; ?>
 
         <div class="btn-group">
-            <a href="<?= APP_URL ?>/index.php?url=orders/<?= $orderId ?>" class="btn btn-accent btn-block">
-                <i data-lucide="eye" style="width:16px;height:16px;"></i> View Order
-            </a>
-            <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-outline btn-block">
-                <i data-lucide="shopping-bag" style="width:16px;height:16px;"></i> Continue Shopping
-            </a>
+            <a href="<?= APP_URL ?>/index.php?url=orders/<?= $orderId ?>" class="btn btn-accent">View Order</a>
+            <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-outline">Continue Shopping</a>
         </div>
     </div>
-
-    <script>lucide.createIcons();</script>
 </body>
 </html>

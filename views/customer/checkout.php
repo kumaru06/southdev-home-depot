@@ -8,10 +8,10 @@ require_once INCLUDES_PATH . '/navbar.php';
 <div class="container">
     <!-- Checkout Progress Header -->
     <div class="co-header">
-        <h1 class="co-title"><i data-lucide="shield-check"></i> Secure Checkout</h1>
+        <h1 class="co-title">Secure Checkout</h1>
         <div class="co-steps">
             <div class="co-step done">
-                <span class="co-step-num"><i data-lucide="check"></i></span>
+                <span class="co-step-num">&check;</span>
                 <span class="co-step-label">Cart</span>
             </div>
             <div class="co-step-line done"></div>
@@ -39,16 +39,14 @@ require_once INCLUDES_PATH . '/navbar.php';
                 <!-- Delivery Address -->
                 <div class="co-card">
                     <div class="co-card-header">
-                        <div class="co-card-icon"><i data-lucide="map-pin"></i></div>
+                        <div class="co-card-icon"></div>
                         <div>
                             <h3 class="co-card-title">Delivery Address</h3>
                             <p class="co-card-sub">Davao City delivery area only</p>
                         </div>
                     </div>
                     <div class="co-card-body">
-                        <div class="co-location-tag">
-                            <i data-lucide="navigation"></i> Davao City, Davao del Sur &bull; 8000
-                        </div>
+                        <div class="co-location-tag">Davao City, Davao del Sur &bull; 8000</div>
                         <div class="form-group">
                             <label for="shipping_barangay">Barangay <span class="required">*</span></label>
                             <select id="shipping_barangay" class="form-control" required>
@@ -79,7 +77,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                 <!-- Payment Method -->
                 <div class="co-card">
                     <div class="co-card-header">
-                        <div class="co-card-icon co-card-icon--blue"><i data-lucide="wallet"></i></div>
+                        <div class="co-card-icon co-card-icon--blue"></div>
                         <div>
                             <h3 class="co-card-title">Payment Method</h3>
                             <p class="co-card-sub">Choose how you'd like to pay</p>
@@ -121,33 +119,6 @@ require_once INCLUDES_PATH . '/navbar.php';
                                 </div>
                             </label>
                         </div>
-
-                        <!-- Card details (hidden until card selected) -->
-                        <div id="card-details" class="co-card-expand" style="display:none">
-                            <div class="co-card-expand-inner">
-                                <div class="co-card-expand-head">
-                                    <i data-lucide="lock" style="width:14px;height:14px"></i> Card Information
-                                </div>
-                                <div class="form-group">
-                                    <label for="card_number">Card Number</label>
-                                    <input type="text" id="card_number" name="card_number" class="form-control" placeholder="1234 5678 9012 3456">
-                                </div>
-                                <div class="form-group">
-                                    <label for="card_name">Name on Card</label>
-                                    <input type="text" id="card_name" name="card_name" class="form-control" placeholder="e.g. Juan Dela Cruz">
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group form-col">
-                                        <label for="card_expiry">Expiry</label>
-                                        <input type="text" id="card_expiry" name="card_expiry" class="form-control" placeholder="MM / YY">
-                                    </div>
-                                    <div class="form-group form-col">
-                                        <label for="card_cvc">CVC</label>
-                                        <input type="text" id="card_cvc" name="card_cvc" class="form-control" placeholder="123">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -156,7 +127,6 @@ require_once INCLUDES_PATH . '/navbar.php';
             <div class="checkout-sidebar">
                 <div class="co-summary">
                     <div class="co-summary-head">
-                        <i data-lucide="shopping-bag"></i>
                         <h3>Order Summary</h3>
                         <span class="co-badge"><?= count($cartItems) ?></span>
                     </div>
@@ -184,17 +154,13 @@ require_once INCLUDES_PATH . '/navbar.php';
                         </div>
                     </div>
                     <div class="co-summary-actions">
-                        <button type="submit" class="btn btn-accent btn-block btn-lg">
-                            <i data-lucide="check-circle"></i> Place Order
-                        </button>
-                        <a href="<?= APP_URL ?>/index.php?url=cart" class="btn btn-outline btn-block btn-lg">
-                            <i data-lucide="arrow-left"></i> Back to Cart
-                        </a>
+                        <button type="submit" class="btn btn-accent btn-block btn-lg">Place Order</button>
+                        <a href="<?= APP_URL ?>/index.php?url=cart" class="btn btn-outline btn-block btn-lg">&larr; Back to Cart</a>
                     </div>
                     <div class="co-trust">
-                        <span><i data-lucide="shield-check"></i> Secure</span>
-                        <span><i data-lucide="truck"></i> Davao Delivery</span>
-                        <span><i data-lucide="rotate-ccw"></i> Easy Returns</span>
+                        <span>Secure</span>
+                        <span>Davao Delivery</span>
+                        <span>Easy Returns</span>
                     </div>
                 </div>
             </div>

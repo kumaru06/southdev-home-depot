@@ -46,9 +46,9 @@ foreach ($reviews as $r) { $ratingDist[intval($r['rating'])]++; }
     <!-- Breadcrumb -->
     <nav class="breadcrumb">
         <a href="<?= APP_URL ?>/index.php?url=products">Products</a>
-        <i data-lucide="chevron-right"></i>
+        <span>/</span>
         <span><?= htmlspecialchars($product['category_name'] ?? '') ?></span>
-        <i data-lucide="chevron-right"></i>
+        <span>/</span>
         <span><?= htmlspecialchars($product['name']) ?></span>
     </nav>
 
@@ -62,7 +62,6 @@ foreach ($reviews as $r) { $ratingDist[intval($r['rating'])]++; }
             <?php else: ?>
                 <img class="pd-gallery__img pd-gallery__img--oos" src="<?= APP_URL ?>/assets/uploads/<?= $product['image'] ?: 'placeholder.svg' ?>" alt="<?= htmlspecialchars($product['name']) ?>">
                 <div class="pd-gallery__oos-overlay">
-                    <i data-lucide="x-circle"></i>
                     <span>Not Available</span>
                 </div>
             <?php endif; ?>
@@ -92,11 +91,11 @@ foreach ($reviews as $r) { $ratingDist[intval($r['rating'])]++; }
                 <span class="pd-price">₱<?= number_format($product['price'], 2) ?></span>
                 <?php if ($inStock): ?>
                     <span class="pd-stock-badge pd-stock-badge--in">
-                        <i data-lucide="check-circle"></i> <?= $product['stock'] ?> in stock
+                        <?= $product['stock'] ?> in stock
                     </span>
                 <?php else: ?>
                     <span class="pd-stock-badge pd-stock-badge--out">
-                        <i data-lucide="x-circle"></i> Out of stock
+                        Out of stock
                     </span>
                 <?php endif; ?>
             </div>
@@ -105,7 +104,7 @@ foreach ($reviews as $r) { $ratingDist[intval($r['rating'])]++; }
 
             <!-- Description -->
             <div class="pd-description">
-                <h3 class="pd-section-label"><i data-lucide="file-text"></i> Description</h3>
+                <h3 class="pd-section-label">Description</h3>
                 <p><?= nl2br(htmlspecialchars($product['description'])) ?></p>
             </div>
 
@@ -114,15 +113,15 @@ foreach ($reviews as $r) { $ratingDist[intval($r['rating'])]++; }
             <!-- Meta Info -->
             <div class="pd-meta">
                 <div class="pd-meta__item">
-                    <span class="pd-meta__label"><i data-lucide="hash"></i> SKU</span>
+                    <span class="pd-meta__label">SKU</span>
                     <span class="pd-meta__value"><?= htmlspecialchars($product['sku'] ?? 'N/A') ?></span>
                 </div>
                 <div class="pd-meta__item">
-                    <span class="pd-meta__label"><i data-lucide="layers"></i> Category</span>
+                    <span class="pd-meta__label">Category</span>
                     <span class="pd-meta__value"><?= htmlspecialchars($product['category_name'] ?? 'Uncategorized') ?></span>
                 </div>
                 <div class="pd-meta__item">
-                    <span class="pd-meta__label"><i data-lucide="package"></i> Availability</span>
+                    <span class="pd-meta__label">Availability</span>
                     <?php if ($inStock): ?>
                         <span class="pd-meta__value pd-meta__value--success">Available</span>
                     <?php else: ?>
@@ -139,30 +138,22 @@ foreach ($reviews as $r) { $ratingDist[intval($r['rating'])]++; }
                         <input type="number" id="quantity" value="1" min="1" max="<?= $product['stock'] ?>" class="qty-input">
                         <button type="button" class="qty-btn" onclick="this.previousElementSibling.stepUp(); this.previousElementSibling.dispatchEvent(new Event('change'))">+</button>
                     </div>
-                    <button onclick="addToCart(<?= $product['id'] ?>, document.getElementById('quantity').value)" class="btn btn-accent btn-lg pd-btn-cart">
-                        <i data-lucide="shopping-cart"></i> Add to Cart
-                    </button>
+                    <button onclick="addToCart(<?= $product['id'] ?>, document.getElementById('quantity').value)" class="btn btn-accent btn-lg pd-btn-cart"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Add to Cart</button>
                 </div>
             <?php elseif (!isset($_SESSION['user_id'])): ?>
                 <div class="pd-actions">
-                    <a href="<?= APP_URL ?>/index.php?url=login" class="btn btn-accent btn-lg pd-btn-cart">
-                        <i data-lucide="log-in"></i> Sign in to purchase
-                    </a>
+                    <a href="<?= APP_URL ?>/index.php?url=login" class="btn btn-accent btn-lg pd-btn-cart">Sign in to purchase</a>
                 </div>
             <?php endif; ?>
 
-            <a href="<?= APP_URL ?>/index.php?url=products" class="pd-back-link">
-                <i data-lucide="arrow-left"></i> Back to Products
-            </a>
+            <a href="<?= APP_URL ?>/index.php?url=products" class="pd-back-link">&larr; Back to Products</a>
         </div>
     </div>
 
     <!-- ========== Reviews Section (Full Width) ========== -->
     <section class="pd-reviews" id="pd-reviews">
         <div class="pd-reviews__header">
-            <h2 class="pd-reviews__title">
-                <i data-lucide="message-square"></i> Customer Reviews
-            </h2>
+            <h2 class="pd-reviews__title">Customer Reviews</h2>
             <?php if ($reviewCount): ?>
                 <span class="pd-reviews__count"><?= $reviewCount ?> review<?= $reviewCount > 1 ? 's' : '' ?></span>
             <?php endif; ?>
@@ -201,7 +192,6 @@ foreach ($reviews as $r) { $ratingDist[intval($r['rating'])]++; }
         <div class="pd-reviews__list">
             <?php if (empty($reviews)): ?>
                 <div class="pd-reviews__empty">
-                    <i data-lucide="star"></i>
                     <p>No reviews yet. Be the first to review this product!</p>
                 </div>
             <?php else: ?>

@@ -28,10 +28,7 @@ if (!file_exists($display2Full)) {
         <!-- Left Sidebar -->
         <aside class="storefront-sidebar" aria-label="Browse categories">
             <div class="sidebar-card">
-                <div class="sidebar-title">
-                    <i data-lucide="layout-grid" style="width:16px;height:16px;opacity:.5"></i>
-                    Explore
-                </div>
+                <div class="sidebar-title">Explore</div>
                 <nav class="sidebar-nav">
                     <a href="<?= APP_URL ?>/index.php?url=products" class="<?= !isset($_GET['category']) ? 'active' : '' ?>">
                         <span><img src="<?= APP_URL ?>/assets/uploads/images/png-icon/tile.png" alt="All Products" style="width:15px;height:15px"> All Products</span>
@@ -41,14 +38,13 @@ if (!file_exists($display2Full)) {
                     </a>
                     <?php if (isset($categories)): foreach ($categories as $cat): ?>
                         <a href="<?= APP_URL ?>/index.php?url=products&category=<?= $cat['id'] ?>" class="<?= (isset($_GET['category']) && $_GET['category'] == $cat['id']) ? 'active' : '' ?>">
-                            <span><i data-lucide="tag" style="width:14px;height:14px"></i> <?= htmlspecialchars($cat['name']) ?></span>
+                            <span><?= htmlspecialchars($cat['name']) ?></span>
                         </a>
                     <?php endforeach; endif; ?>
                 </nav>
             </div>
 
             <div class="sidebar-footer-link">
-                <i data-lucide="help-circle" style="width:13px;height:13px"></i>
                 <a href="<?= APP_URL ?>/index.php?url=profile">Help Center</a>
             </div>
         </aside>
@@ -90,7 +86,7 @@ if (!file_exists($display2Full)) {
             <?php if ((isset($_GET['url']) && strpos($_GET['url'], 'products') === 0) || (isset($currentUrl) && strpos($currentUrl, 'products') === 0)): ?>
             <!-- Section heading -->
             <div class="section-heading">
-                <span class="section-badge"><img src="<?= APP_URL ?>/assets/uploads/images/png-icon/product.png" alt="Products" style="width:17px;height:17px;"> OUR PRODUCTS</span>
+                <span class="section-badge">OUR PRODUCTS</span>
                 <h2 class="section-title">Everything You Need in <span class="accent-text">One Place</span></h2>
                 <p class="section-subtitle">Browse our complete range of premium building materials, fixtures, and finishes.</p>
             </div>
@@ -142,7 +138,6 @@ if (!file_exists($display2Full)) {
                                 <img src="<?= APP_URL ?>/assets/uploads/<?= $product['image'] ?>" alt="<?= htmlspecialchars($product['name']) ?>" loading="lazy">
                             <?php else: ?>
                                 <div class="product-no-image">
-                                    <i data-lucide="image" class="no-img-icon"></i>
                                     <span>No Image</span>
                                 </div>
                             <?php endif; ?>
@@ -151,12 +146,11 @@ if (!file_exists($display2Full)) {
                             <?php endif; ?>
                             <?php if ($isOutOfStock): ?>
                                 <div class="product-unavailable-overlay">
-                                    <i data-lucide="x-circle" style="width:28px;height:28px;margin-bottom:4px;"></i>
                                     <span>Not Available</span>
                                 </div>
-                                <span class="product-badge badge-danger"><i data-lucide="alert-circle" style="width:11px;height:11px"></i> Out of Stock</span>
+                                <span class="product-badge badge-danger">Out of Stock</span>
                             <?php elseif (isset($product['stock']) && $product['stock'] <= 5): ?>
-                                <span class="product-badge badge-warning"><i data-lucide="alert-triangle" style="width:11px;height:11px"></i> Low Stock</span>
+                                <span class="product-badge badge-warning">Low Stock</span>
                             <?php endif; ?>
                         </div>
                         <div class="product-info">
@@ -189,13 +183,9 @@ if (!file_exists($display2Full)) {
                         </div>
                     </a>
                     <?php if (isset($_SESSION['user_id']) && $_SESSION['role_id'] == ROLE_CUSTOMER && !$isOutOfStock): ?>
-                        <button class="btn btn-accent btn-sm btn-add-cart" onclick="addToCart(<?= $product['id'] ?>, 1)">
-                            <i data-lucide="shopping-cart"></i> Add to Cart
-                        </button>
+                        <button class="btn btn-accent btn-sm btn-add-cart" onclick="addToCart(<?= $product['id'] ?>, 1)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> ADD TO CART</button>
                     <?php elseif ($isOutOfStock): ?>
-                        <button class="btn btn-sm btn-add-cart btn-out-of-stock" disabled>
-                            <i data-lucide="x-circle"></i> Not Available
-                        </button>
+                        <button class="btn btn-sm btn-add-cart btn-out-of-stock" disabled>Not Available</button>
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
@@ -217,7 +207,6 @@ if (!file_exists($display2Full)) {
             <?php endif; ?>
             <?php else: ?>
         <div class="empty-state">
-            <i data-lucide="package-x" class="empty-icon"></i>
             <h3>No products found</h3>
             <p>Try adjusting your search or browse a different category.</p>
             <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-accent">View All Products</a>

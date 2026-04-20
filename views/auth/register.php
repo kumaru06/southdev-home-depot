@@ -77,7 +77,7 @@ require_once INCLUDES_PATH . '/header.php';
                 </div>
 
                 <button type="submit" class="btn btn-accent btn-block">
-                    <i data-lucide="user-plus"></i> Create Account
+                    Create Account
                 </button>
             </form>
 

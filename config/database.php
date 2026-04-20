@@ -1,12 +1,25 @@
 <?php
 /**
  * Database Configuration
+ * Auto-detects local (XAMPP) vs production (InfinityFree)
  */
 
-$db_host = 'localhost';
-$db_name = 'southdev';
-$db_user = 'root';
-$db_pass = '';
+// Detect environment: if running on localhost/XAMPP, use local DB
+if (in_array($_SERVER['SERVER_NAME'] ?? '', ['localhost', '127.0.0.1']) 
+    || php_sapi_name() === 'cli' 
+    || strpos($_SERVER['DOCUMENT_ROOT'] ?? '', 'xampp') !== false) {
+    // LOCAL (XAMPP)
+    $db_host = 'localhost';
+    $db_name = 'southdev';
+    $db_user = 'root';
+    $db_pass = '';
+} else {
+    // PRODUCTION (InfinityFree)
+    $db_host = 'sql107.infinityfree.com';
+    $db_name = 'if0_41705046_southdev';
+    $db_user = 'if0_41705046';
+    $db_pass = 'markperez201';
+}
 
 try {
     $pdo = new PDO(

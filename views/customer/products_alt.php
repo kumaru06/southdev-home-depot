@@ -33,7 +33,6 @@ require_once INCLUDES_PATH . '/navbar.php';
                             <img src="<?= APP_URL ?>/assets/uploads/<?= $product['image'] ?>" alt="<?= htmlspecialchars($product['name']) ?>" loading="lazy">
                         <?php else: ?>
                             <div class="product-no-image">
-                                <i data-lucide="image" class="no-img-icon"></i>
                                 <span>No Image</span>
                             </div>
                         <?php endif; ?>
@@ -42,12 +41,11 @@ require_once INCLUDES_PATH . '/navbar.php';
                         <?php endif; ?>
                         <?php if ($isOutOfStock): ?>
                             <div class="product-unavailable-overlay">
-                                <i data-lucide="x-circle" style="width:28px;height:28px;margin-bottom:4px;"></i>
                                 <span>Not Available</span>
                             </div>
-                            <span class="product-badge badge-danger"><i data-lucide="alert-circle" style="width:11px;height:11px"></i> Out of Stock</span>
+                            <span class="product-badge badge-danger">Out of Stock</span>
                         <?php elseif (isset($product['stock']) && $product['stock'] <= 5): ?>
-                            <span class="product-badge badge-warning"><i data-lucide="alert-triangle" style="width:11px;height:11px"></i> Low Stock</span>
+                            <span class="product-badge badge-warning">Low Stock</span>
                         <?php endif; ?>
                     </div>
                     <div class="product-info">
@@ -81,11 +79,11 @@ require_once INCLUDES_PATH . '/navbar.php';
                 </a>
                 <?php if (isset($_SESSION['user_id']) && $_SESSION['role_id'] == ROLE_CUSTOMER && !$isOutOfStock): ?>
                     <button class="btn btn-accent btn-sm btn-add-cart" onclick="addToCart(<?= $product['id'] ?>, 1)">
-                        <i data-lucide="shopping-cart"></i> Add to Cart
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> ADD TO CART
                     </button>
                 <?php elseif ($isOutOfStock): ?>
                     <button class="btn btn-sm btn-add-cart btn-out-of-stock" disabled>
-                        <i data-lucide="x-circle"></i> Not Available
+                        Not Available
                     </button>
                 <?php endif; ?>
             </div>
@@ -108,7 +106,6 @@ require_once INCLUDES_PATH . '/navbar.php';
 
     <?php else: ?>
     <div class="empty-state">
-        <i data-lucide="package-x" class="empty-icon"></i>
         <h3>No products found</h3>
         <p>Try adjusting your search or browse a different category.</p>
         <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-accent">View All Products</a>

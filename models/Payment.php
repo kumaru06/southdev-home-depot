@@ -38,10 +38,12 @@ class Payment {
     }
 
     public function createWithSource($data) {
-        $stmt = $this->pdo->prepare("INSERT INTO payments (order_id, payment_method, source_id, amount, status) VALUES (?, ?, ?, ?, ?)");
+        $stmt = $this->pdo->prepare("INSERT INTO payments (order_id, payment_method, source_id, client_key, amount, status) VALUES (?, ?, ?, ?, ?, ?)");
         return $stmt->execute([
             $data['order_id'], $data['payment_method'],
-            $data['source_id'] ?? null, $data['amount'],
+            $data['source_id'] ?? null,
+            $data['client_key'] ?? null,
+            $data['amount'],
             $data['status'] ?? PAYMENT_PENDING
         ]);
     }
@@ -49,6 +51,11 @@ class Payment {
     public function updateSourceId($id, $sourceId) {
         $stmt = $this->pdo->prepare("UPDATE payments SET source_id = ? WHERE id = ?");
         return $stmt->execute([$sourceId, $id]);
+    }
+
+    public function updateSourceAndClientKey($id, $sourceId, $clientKey) {
+        $stmt = $this->pdo->prepare("UPDATE payments SET source_id = ?, client_key = ? WHERE id = ?");
+        return $stmt->execute([$sourceId, $clientKey, $id]);
     }
 
     public function updateStatus($id, $status, $transactionId = null) {

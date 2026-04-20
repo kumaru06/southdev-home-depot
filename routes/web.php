@@ -205,6 +205,25 @@ switch ($urlParts[0]) {
         break;
 
     /* ================================================================
+     * NOTIFICATIONS (customer-facing)
+     * ============================================================= */
+    case 'notifications':
+        require_once CONTROLLERS_PATH . '/NotificationController.php';
+        $controller = new NotificationController($pdo);
+        if (isset($urlParts[1])) {
+            if ($urlParts[1] === 'read' && isset($urlParts[2])) {
+                $controller->read($urlParts[2]);
+            } elseif ($urlParts[1] === 'mark-all-read') {
+                $controller->markAllRead();
+            } elseif ($urlParts[1] === 'api-unread') {
+                $controller->apiUnread();
+            }
+        } else {
+            $controller->index();
+        }
+        break;
+
+    /* ================================================================
      * RETURNS  (customer-facing)
      * ============================================================= */
     case 'returns':
@@ -238,25 +257,18 @@ switch ($urlParts[0]) {
     case 'payment':
         require_once CONTROLLERS_PATH . '/PaymentController.php';
         $controller = new PaymentController($pdo);
-        $controller->process();
-        break;
-
-    /* ================================================================
-     * PAYMONGO - Create Payment Source (AJAX)
-     * ============================================================= */
-    case 'payment/create-source':
-        require_once CONTROLLERS_PATH . '/PaymentController.php';
-        $controller = new PaymentController($pdo);
-        $controller->createPayMongoSource();
-        break;
-
-    /* ================================================================
-     * PAYMONGO - Webhook Handler
-     * ============================================================= */
-    case 'payment/webhook':
-        require_once CONTROLLERS_PATH . '/PaymentController.php';
-        $controller = new PaymentController($pdo);
-        $controller->handlePayMongoWebhook();
+        $sub = $urlParts[1] ?? '';
+        if ($sub === 'create-source') {
+            $controller->createPayMongoSource();
+        } elseif ($sub === 'create-intent') {
+            $controller->createCardPaymentIntent();
+        } elseif ($sub === 'attach-card') {
+            $controller->attachCardPaymentMethod();
+        } elseif ($sub === 'webhook') {
+            $controller->handlePayMongoWebhook();
+        } else {
+            $controller->process();
+        }
         break;
 
     /* ================================================================

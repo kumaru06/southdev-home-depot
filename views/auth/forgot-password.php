@@ -10,7 +10,6 @@ require_once INCLUDES_PATH . '/header.php';
         <div class="auth-card card auth-card--center">
             <div class="auth-panel">
                 <div class="auth-brand">
-                    <i data-lucide="hard-hat" class="auth-icon"></i>
                     <div>
                         <h2><?= APP_NAME ?></h2>
                         <p class="auth-tagline">Enter your email to reset your password</p>

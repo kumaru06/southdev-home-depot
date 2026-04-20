@@ -9,7 +9,6 @@ require_once INCLUDES_PATH . '/header.php';
     <div class="auth-wrapper">
         <div class="auth-card card">
             <div class="auth-brand">
-                <i data-lucide="mail-check" class="auth-icon"></i>
                 <h2>Verify Your Email</h2>
                 <p class="auth-tagline">Check your inbox for the verification link</p>
             </div>
@@ -29,7 +28,6 @@ require_once INCLUDES_PATH . '/header.php';
                 <div class="form-group">
                     <label for="email">Email Address</label>
                     <div class="input-icon-wrap">
-                        <i data-lucide="mail" class="input-icon"></i>
                         <input type="email" id="email" name="email" class="form-control" placeholder="you@example.com" value="<?= htmlspecialchars($_SESSION['pending_verify_email'] ?? '') ?>" required>
                     </div>
                 </div>
@@ -37,13 +35,12 @@ require_once INCLUDES_PATH . '/header.php';
                 <div class="form-group">
                     <label for="otp">OTP Code</label>
                     <div class="input-icon-wrap">
-                        <i data-lucide="key" class="input-icon"></i>
                         <input type="text" id="otp" name="otp" class="form-control" placeholder="Enter 6-digit code" maxlength="6" required>
                     </div>
                 </div>
 
                 <button type="submit" class="btn btn-accent btn-block">
-                    <i data-lucide="check-circle"></i> Verify OTP
+                    Verify OTP
                 </button>
             </form>
 
@@ -53,7 +50,7 @@ require_once INCLUDES_PATH . '/header.php';
                 <?= csrf_field() ?>
                 <input type="hidden" name="email" value="<?= htmlspecialchars($_SESSION['pending_verify_email'] ?? '') ?>">
                 <button type="submit" class="btn btn-outline btn-block">
-                    <i data-lucide="refresh-cw"></i> Resend Verification Email
+                    Resend Verification Email
                 </button>
             </form>
 

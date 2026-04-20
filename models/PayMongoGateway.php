@@ -81,6 +81,74 @@ class PayMongoGateway {
         return $this->makeRequest('GET', "/payments/{$paymentId}", null);
     }
 
+    // ─── CARD PAYMENT (Payment Intent flow) ───────────────────────────────────
+
+    /**
+     * Create a Payment Intent for card payments
+     * 
+     * @param float  $amount      Order amount in PHP
+     * @param string $description Order/transaction reference
+     * @return array Response containing id, client_key, status
+     */
+    public function createPaymentIntent($amount, $description) {
+        $payload = [
+            'data' => [
+                'attributes' => [
+                    'amount'                   => intval($amount * 100),
+                    'currency'                 => 'PHP',
+                    'capture_type'             => 'automatic',
+                    'description'              => $description,
+                    'statement_descriptor'     => 'SOUTHDEV HOME DEPOT',
+                    'payment_method_allowed'   => ['card'],
+                    'payment_method_options'   => [
+                        'card' => ['request_three_d_secure' => 'any']
+                    ]
+                ]
+            ]
+        ];
+
+        return $this->makeRequest('POST', '/payment_intents', $payload);
+    }
+
+    /**
+     * Attach a Payment Method to a Payment Intent
+     * Called from backend after frontend creates the PaymentMethod via JS.
+     *
+     * @param string $paymentIntentId  pi_xxx
+     * @param string $paymentMethodId pm_xxx (created by PayMongo.js on frontend)
+     * @param string $clientKey       client_key from the Payment Intent
+     * @param string $returnUrl       URL to redirect after 3DS
+     * @return array Updated Payment Intent (check status & next_action)
+     */
+    public function attachPaymentMethod($paymentIntentId, $paymentMethodId, $clientKey, $returnUrl) {
+        $payload = [
+            'data' => [
+                'attributes' => [
+                    'payment_method' => $paymentMethodId,
+                    'client_key'     => $clientKey,
+                    'return_url'     => $returnUrl
+                ]
+            ]
+        ];
+
+        return $this->makeRequest('POST', "/payment_intents/{$paymentIntentId}/attach", $payload);
+    }
+
+    /**
+     * Retrieve a Payment Intent (e.g., after 3DS redirect to check final status)
+     *
+     * @param string $paymentIntentId  pi_xxx
+     * @param string $clientKey        client_key (required for public-key auth retrieval)
+     * @return array Payment Intent data
+     */
+    public function getPaymentIntent($paymentIntentId, $clientKey = null) {
+        $endpoint = "/payment_intents/{$paymentIntentId}";
+        if ($clientKey) {
+            $endpoint .= '?client_key=' . urlencode($clientKey);
+        }
+        return $this->makeRequest('GET', $endpoint, null);
+    }
+
     /**
      * Verify webhook signature
      * 

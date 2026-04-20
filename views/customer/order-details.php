@@ -30,7 +30,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
     <!-- Breadcrumb -->
     <nav class="breadcrumb">
         <a href="<?= APP_URL ?>/index.php?url=orders">Profile</a>
-        <i data-lucide="chevron-right"></i>
+        <span>/</span>
         <span><?= htmlspecialchars($order['order_number']) ?></span>
     </nav>
 
@@ -40,8 +40,8 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
             <div class="od-hero-info">
                 <span class="od-order-number"><?= htmlspecialchars($order['order_number']) ?></span>
                 <div class="od-hero-meta">
-                    <span><i data-lucide="calendar" style="width:14px;height:14px"></i> <?= date('M d, Y \a\t h:i A', strtotime($order['created_at'])) ?></span>
-                    <span><i data-lucide="package" style="width:14px;height:14px"></i> <?= count($orderItems) ?> item<?= count($orderItems) !== 1 ? 's' : '' ?></span>
+                    <span><?= date('M d, Y \a\t h:i A', strtotime($order['created_at'])) ?></span>
+                    <span><?= count($orderItems) ?> item<?= count($orderItems) !== 1 ? 's' : '' ?></span>
                 </div>
             </div>
             <div class="od-hero-status">
@@ -56,7 +56,6 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
                         $rs = $returnStatusLabels[$returnRequest['status']] ?? $returnStatusLabels['pending'];
                     ?>
                     <span class="return-badge <?= $rs['class'] ?>">
-                        <i data-lucide="<?= $rs['icon'] ?>" style="width:13px;height:13px"></i>
                         <?= $rs['label'] ?>
                     </span>
                 <?php endif; ?>
@@ -75,16 +74,13 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
                 $active  = $i === $currentIdx;
             ?>
             <div class="od-timeline-step <?= $done ? 'done' : '' ?> <?= $active ? 'active' : '' ?>" style="left: <?= ($i / (count($steps)-1)) * 100 ?>%">
-                <div class="od-step-dot">
-                    <i data-lucide="<?= $stepIcons[$i] ?>" style="width:14px;height:14px"></i>
-                </div>
+                <div class="od-step-dot"></div>
                 <span class="od-step-label"><?= ucfirst($step) ?></span>
             </div>
             <?php endforeach; ?>
         </div>
         <?php else: ?>
         <div class="od-cancelled-banner">
-            <i data-lucide="x-octagon" style="width:18px;height:18px"></i>
             <span>This order has been cancelled</span>
         </div>
         <?php endif; ?>
@@ -119,19 +115,16 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
         };
     ?>
     <div class="refund-banner <?= $rrClass ?>">
-        <div class="refund-banner-icon">
-            <i data-lucide="<?= $rrIcon ?>"></i>
-        </div>
+        <div class="refund-banner-icon"></div>
         <div class="refund-banner-content">
             <h4><?= $rrTitle ?></h4>
             <p><?= $rrDesc ?></p>
             <div class="refund-banner-meta">
-                <span><i data-lucide="calendar" style="width:13px;height:13px"></i> Requested <?= date('M d, Y', strtotime($returnRequest['created_at'])) ?></span>
-                <span><i data-lucide="tag" style="width:13px;height:13px"></i> <?= htmlspecialchars($returnRequest['reason']) ?></span>
+                <span>Requested <?= date('M d, Y', strtotime($returnRequest['created_at'])) ?></span>
+                <span><?= htmlspecialchars($returnRequest['reason']) ?></span>
             </div>
             <?php if (!empty($returnRequest['admin_notes'])): ?>
             <div class="refund-banner-notes">
-                <i data-lucide="message-circle" style="width:13px;height:13px"></i>
                 <span><strong>Staff note:</strong> <?= htmlspecialchars($returnRequest['admin_notes']) ?></span>
             </div>
             <?php endif; ?>
@@ -149,7 +142,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
         <!-- Order Info -->
         <div class="od-card od-card--info">
             <div class="od-card-header">
-                <div class="od-card-icon"><i data-lucide="file-text"></i></div>
+                <div class="od-card-icon"></div>
                 <div>
                     <h3>Order Information</h3>
                     <p>Details about this order</p>
@@ -206,24 +199,11 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
             <?php if ($order['status'] === 'pending'): ?>
             <div class="od-card-action">
                 <div class="od-cancel-section">
-                    <h4><i data-lucide="alert-circle" style="width:15px;height:15px"></i> Cancel this order?</h4>
-                    <form action="<?= APP_URL ?>/index.php?url=orders/<?= $order['id'] ?>/cancel" method="POST" class="js-cancel-order-form">
+                    <h4>Cancel this order?</h4>
+                    <p class="od-cancel-note">This order hasn't been processed yet and can be cancelled immediately.</p>
+                    <form action="<?= APP_URL ?>/index.php?url=orders/<?= $order['id'] ?>/cancel" method="POST" class="cancel-order-form" id="detailCancelForm">
                         <?= csrf_field() ?>
-                        <div class="form-group">
-                            <select name="cancel_reason" id="cancel_reason" class="form-control js-cancel-reason-select" required>
-                                <option value="" selected disabled>Select a reason…</option>
-                                <option value="Need to change delivery address">Need to change delivery address</option>
-                                <option value="Wrong delivery address">Wrong delivery address</option>
-                                <option value="Wrong products ordered">Wrong products ordered</option>
-                                <option value="Order placed by mistake">Order placed by mistake</option>
-                                <option value="Found a better price elsewhere">Found a better price elsewhere</option>
-                                <option value="other">Other (please specify)</option>
-                            </select>
-                        </div>
-                        <div class="form-group js-cancel-reason-other" style="display:none;">
-                            <textarea name="cancel_reason_other" id="cancel_reason_other" class="form-control" rows="3" placeholder="Type your reason..."></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-danger btn-cancel-order"><i data-lucide="x-circle"></i> Cancel Order</button>
+                        <button type="button" class="btn btn-danger btn-cancel-order" id="detailCancelBtn">Cancel Order</button>
                     </form>
                 </div>
             </div>
@@ -231,13 +211,11 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
             <div class="od-card-action">
                 <?php if (!empty($cancelRequest)): ?>
                     <div class="od-return-status-note">
-                        <i data-lucide="<?= $cancelRequest['status'] === 'approved' ? 'check-circle' : ($cancelRequest['status'] === 'rejected' ? 'x-circle' : 'clock') ?>"
-                           style="width:15px;height:15px;color:<?= $cancelRequest['status'] === 'approved' ? '#16A34A' : ($cancelRequest['status'] === 'rejected' ? '#EF4444' : '#F97316') ?>;"></i>
                         <span>Cancellation request is <strong><?= $cancelRequest['status'] ?></strong></span>
                     </div>
                 <?php else: ?>
                 <div class="od-cancel-section">
-                    <h4><i data-lucide="alert-triangle" style="width:15px;height:15px"></i> Need to cancel?</h4>
+                    <h4>Need to cancel?</h4>
                     <p class="od-cancel-note">Since this order is being processed, cancellation requires approval.</p>
                     <form action="<?= APP_URL ?>/index.php?url=orders/request-cancel/<?= $order['id'] ?>" method="POST" class="js-cancel-request-form">
                         <?= csrf_field() ?>
@@ -255,7 +233,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
                         <div class="form-group js-cancel-reason-other" style="display:none;">
                             <textarea name="cancel_reason_other" id="cancel_reason_other" class="form-control" rows="3" placeholder="Type your reason..."></textarea>
                         </div>
-                        <button type="submit" class="btn btn-warning"><i data-lucide="alert-triangle"></i> Request Cancellation</button>
+                        <button type="submit" class="btn btn-warning">Request Cancellation</button>
                     </form>
                 </div>
                 <?php endif; ?>
@@ -264,12 +242,11 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
             <div class="od-card-action">
                 <?php if (!empty($returnRequest) && $returnRequest['status'] !== 'rejected'): ?>
                     <div class="od-return-status-note">
-                        <i data-lucide="rotate-ccw" style="width:15px;height:15px;color:var(--accent);"></i>
                         <span>Return request is <strong><?= $returnRequest['status'] === 'completed' ? 'refunded' : $returnRequest['status'] ?></strong></span>
                     </div>
                 <?php else: ?>
                     <a href="<?= APP_URL ?>/index.php?url=returns/request/<?= $order['id'] ?>" class="btn btn-outline btn-block">
-                        <i data-lucide="rotate-ccw"></i> Request Return
+                        Request Return
                     </a>
                 <?php endif; ?>
             </div>
@@ -280,9 +257,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
         <?php if (!empty($cancelRequest)): ?>
         <div class="od-card od-card--cancel-status">
             <div class="od-card-header">
-                <div class="od-card-icon" style="background:<?= $cancelRequest['status'] === 'approved' ? 'rgba(22,163,74,.1)' : ($cancelRequest['status'] === 'rejected' ? 'rgba(239,68,68,.1)' : 'rgba(249,115,22,.1)') ?>;color:<?= $cancelRequest['status'] === 'approved' ? '#16A34A' : ($cancelRequest['status'] === 'rejected' ? '#EF4444' : '#F97316') ?>;">
-                    <i data-lucide="<?= $cancelRequest['status'] === 'approved' ? 'check-circle' : ($cancelRequest['status'] === 'rejected' ? 'x-circle' : 'clock') ?>"></i>
-                </div>
+
                 <div>
                     <h3>Cancellation Request</h3>
                     <p>Status: <strong><?= ucfirst($cancelRequest['status']) ?></strong></p>
@@ -296,7 +271,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
                 <?php if (!empty($cancelRequest['admin_notes'])): ?>
                 <div class="od-staff-reply">
                     <span style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);">
-                        <i data-lucide="message-circle" style="width:13px;height:13px;vertical-align:-2px;margin-right:3px;"></i>Staff Reply
+                        Staff Reply
                     </span>
                     <div class="od-staff-reply-bubble">
                         <?= htmlspecialchars($cancelRequest['admin_notes']) ?>
@@ -316,7 +291,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
         <!-- Shipping Address -->
         <div class="od-card od-card--shipping">
             <div class="od-card-header">
-                <div class="od-card-icon od-card-icon--purple"><i data-lucide="map-pin"></i></div>
+                <div class="od-card-icon od-card-icon--purple"></div>
                 <div>
                     <h3>Shipping Address</h3>
                     <p>Delivery destination</p>
@@ -324,7 +299,6 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
             </div>
             <div class="od-card-body">
                 <div class="od-address-block">
-                    <i data-lucide="home" style="width:16px;height:16px;flex-shrink:0;color:var(--text-muted);margin-top:2px"></i>
                     <div>
                         <p class="od-address-line"><?= htmlspecialchars($order['shipping_address']) ?></p>
                         <p class="od-address-sub"><?= htmlspecialchars(implode(', ', array_filter([
@@ -341,7 +315,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
     <!-- Order Items -->
     <div class="od-card od-card--items">
         <div class="od-card-header">
-            <div class="od-card-icon od-card-icon--green"><i data-lucide="shopping-bag"></i></div>
+            <div class="od-card-icon od-card-icon--green"></div>
             <div>
                 <h3>Order Items</h3>
                 <p><?= count($orderItems) ?> product<?= count($orderItems) !== 1 ? 's' : '' ?> in this order</p>
@@ -354,7 +328,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
                     <?php if (!empty($item['image'])): ?>
                     <img src="<?= APP_URL ?>/assets/uploads/<?= $item['image'] ?>" class="od-item-thumb" alt="">
                     <?php else: ?>
-                    <div class="od-item-thumb-placeholder"><i data-lucide="image" style="width:20px;height:20px"></i></div>
+                    <div class="od-item-thumb-placeholder"><span style="font-size:10px;color:var(--text-muted);">N/A</span></div>
                     <?php endif; ?>
                     <div class="od-item-info">
                         <span class="od-item-name"><?= htmlspecialchars($item['product_name']) ?></span>
@@ -365,7 +339,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
                     <span class="od-item-subtotal">₱<?= number_format($item['subtotal'], 2) ?></span>
                     <?php if ($order['status'] === 'delivered'): ?>
                         <?php if (in_array($item['id'], $reviewedItemIds)): ?>
-                            <span class="badge badge-success" style="font-size:11px;"><i data-lucide="check" style="width:12px;height:12px"></i> Reviewed</span>
+                            <span class="badge badge-success" style="font-size:11px;">Reviewed</span>
                         <?php else: ?>
                             <button class="btn btn-outline btn-sm js-open-review" data-product-id="<?= $item['product_id'] ?>" data-order-id="<?= $order['id'] ?>" data-order-item-id="<?= $item['id'] ?>">Write a Review</button>
                         <?php endif; ?>
@@ -388,9 +362,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
 
     <!-- Back button -->
     <div class="od-back-row">
-        <a href="<?= APP_URL ?>/index.php?url=orders" class="btn btn-outline">
-            <i data-lucide="arrow-left"></i> Back to Orders
-        </a>
+        <a href="<?= APP_URL ?>/index.php?url=orders" class="btn btn-outline">&larr; Back to Orders</a>
     </div>
 </div>
 
@@ -500,6 +472,75 @@ document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('.js-close-review').forEach(function(btn){ btn.addEventListener('click', closeModal); });
     document.getElementById('reviewModal').addEventListener('click', function(e){ if(e.target === this) closeModal(); });
 });
+</script>
+<?php endif; ?>
+
+<?php if ($order['status'] === 'pending'): ?>
+<!-- Cancel Order Confirmation Modal -->
+<div class="cancel-modal-overlay" id="cancelModal">
+    <div class="cancel-modal">
+        <div class="cancel-modal-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+        </div>
+        <h3 class="cancel-modal-title">Cancel Order</h3>
+        <p class="cancel-modal-text">Are you sure you want to cancel order <strong><?= htmlspecialchars($order['order_number']) ?></strong>? This action cannot be undone.</p>
+        <div class="cancel-modal-actions">
+            <button type="button" class="cancel-modal-btn cancel-modal-btn--no" id="cancelModalNo">Keep Order</button>
+            <button type="button" class="cancel-modal-btn cancel-modal-btn--yes" id="cancelModalYes">Yes, Cancel</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.cancel-modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 10000;
+    background: rgba(0,0,0,.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    align-items: center; justify-content: center; animation: cmFadeIn .2s ease;
+}
+.cancel-modal-overlay.active { display: flex; }
+@keyframes cmFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cmSlideUp { from { opacity: 0; transform: translateY(24px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.cancel-modal {
+    background: #fff; border-radius: 16px; padding: 36px 32px 28px; max-width: 400px; width: 90%;
+    text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.2); animation: cmSlideUp .25s ease forwards;
+}
+.cancel-modal-icon {
+    width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 50%;
+    background: #FEE2E2; display: flex; align-items: center; justify-content: center;
+}
+.cancel-modal-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: #1a1a2e; margin: 0 0 8px; }
+.cancel-modal-text { font-size: .9rem; color: #64748b; line-height: 1.5; margin: 0 0 24px; }
+.cancel-modal-text strong { color: #1a1a2e; font-weight: 600; }
+.cancel-modal-actions { display: flex; gap: 12px; }
+.cancel-modal-btn {
+    flex: 1; padding: 12px 20px; border: none; border-radius: 10px; font-size: .9rem;
+    font-weight: 600; cursor: pointer; transition: all .2s ease; font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.cancel-modal-btn--no { background: #f1f5f9; color: #475569; }
+.cancel-modal-btn--no:hover { background: #e2e8f0; }
+.cancel-modal-btn--yes { background: linear-gradient(135deg, #DC2626, #B91C1C); color: #fff; box-shadow: 0 4px 12px rgba(220,38,38,.3); }
+.cancel-modal-btn--yes:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(220,38,38,.4); }
+</style>
+
+<script>
+(function() {
+    var overlay = document.getElementById('cancelModal');
+    var btnNo = document.getElementById('cancelModalNo');
+    var btnYes = document.getElementById('cancelModalYes');
+    var form = document.getElementById('detailCancelForm');
+
+    document.getElementById('detailCancelBtn').addEventListener('click', function() {
+        overlay.classList.add('active');
+    });
+    btnNo.addEventListener('click', function() { overlay.classList.remove('active'); });
+    btnYes.addEventListener('click', function() { if (form) form.submit(); });
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.classList.remove('active'); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') overlay.classList.remove('active'); });
+})();
 </script>
 <?php endif; ?>
 

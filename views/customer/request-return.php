@@ -7,13 +7,13 @@ require_once INCLUDES_PATH . '/navbar.php';
 <div class="container">
     <nav class="breadcrumb">
         <a href="<?= APP_URL ?>/index.php?url=orders">Profile</a>
-        <i class="lucide-chevron-right"></i>
+        /
         <a href="<?= APP_URL ?>/index.php?url=orders/<?= $order['id'] ?>"><?= htmlspecialchars($order['order_number']) ?></a>
-        <i class="lucide-chevron-right"></i>
+        /
         <span>Request Return</span>
     </nav>
 
-    <h1 class="page-heading"><i data-lucide="rotate-ccw"></i> Request Return</h1>
+    <h1 class="page-heading">Request Return</h1>
 
     <div class="card">
         <div class="detail-row"><span>Order</span><strong><?= htmlspecialchars($order['order_number']) ?></strong></div>
@@ -44,7 +44,7 @@ require_once INCLUDES_PATH . '/navbar.php';
             <input type="hidden" name="reason" id="final_reason" value="">
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-accent"><i data-lucide="send"></i> Submit Request</button>
+                <button type="submit" class="btn btn-accent">Submit Request</button>
                 <a href="<?= APP_URL ?>/index.php?url=orders/<?= $order['id'] ?>" class="btn btn-outline">Cancel</a>
             </div>
         </form>

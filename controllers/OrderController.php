@@ -11,6 +11,7 @@ require_once __DIR__ . '/../models/Log.php';
 require_once __DIR__ . '/../models/CancelRequest.php';
 require_once __DIR__ . '/../models/Payment.php';
 require_once __DIR__ . '/../models/ReturnRequest.php';
+require_once __DIR__ . '/../models/Notification.php';
 
 class OrderController {
     private $orderModel;
@@ -142,8 +143,27 @@ class OrderController {
             $this->pdo->commit();
 
             $this->logModel->create(LOG_ORDER_CREATE, "Order #{$orderId} placed via {$paymentMethod}, total: ₱" . number_format($totalAmount, 2));
-            flash('success', 'Order placed successfully!');
-            header('Location: ' . APP_URL . '/index.php?url=orders/' . $orderId);
+
+            // Notify customer: order placed
+            try {
+                $orderData = $this->orderModel->findById($orderId);
+                $notifModel = new Notification($this->pdo);
+                $notifModel->create(
+                    $_SESSION['user_id'],
+                    'Order Placed',
+                    "Your order #{$orderData['order_number']} has been placed successfully! Total: ₱" . number_format($totalAmount, 2),
+                    'order_processing',
+                    APP_URL . '/index.php?url=orders/' . $orderId
+                );
+            } catch (Throwable $e) { /* silent */ }
+
+            // Redirect to payment gateway for online payment methods
+            if (in_array($paymentMethod, ['gcash', 'card'])) {
+                header('Location: ' . APP_URL . '/payment/payment-gateway.php?order_id=' . $orderId . '&method=' . $paymentMethod);
+            } else {
+                flash('success', 'Order placed successfully!');
+                header('Location: ' . APP_URL . '/index.php?url=orders/' . $orderId);
+            }
         } catch (Exception $e) {
             $this->pdo->rollBack();
             flash('error', 'Failed to place order. Please try again.');
@@ -157,11 +177,10 @@ class OrderController {
         AuthMiddleware::handle();
         AuthMiddleware::csrf();
 
+        // Reason is optional for pending orders (direct cancel)
         $reason = $this->buildCancelReasonFromPost();
         if ($reason === '') {
-            flash('error', 'Please select a reason for cancelling your order.');
-            header('Location: ' . APP_URL . '/index.php?url=orders/' . $id);
-            exit;
+            $reason = 'Cancelled by customer';
         }
 
         $order = $this->orderModel->findById($id);
@@ -248,6 +267,21 @@ class OrderController {
         $this->cancelModel->approve($requestId, $adminNotes);
         $this->orderModel->cancelOrder($request['order_id'], null, $request['reason'] ?? null);
 
+        // Notify customer: cancellation approved
+        try {
+            $order = $this->orderModel->findById($request['order_id']);
+            if ($order) {
+                $notifModel = new Notification($this->pdo);
+                $notifModel->create(
+                    $request['user_id'],
+                    'Cancellation Approved',
+                    "Your cancellation request for order #{$order['order_number']} has been approved.",
+                    'cancel_approved',
+                    APP_URL . '/index.php?url=orders/' . $request['order_id']
+                );
+            }
+        } catch (Throwable $e) { /* silent */ }
+
         $this->logModel->create(LOG_CANCEL_APPROVE, "Cancel request #{$requestId} approved. Order #{$request['order_id']} cancelled, stock restored.");
         flash('success', 'Cancellation approved. Order cancelled and stock restored.');
         header('Location: ' . APP_URL . '/index.php?url=staff/cancel-requests');
@@ -260,7 +294,27 @@ class OrderController {
         AuthMiddleware::csrf();
 
         $adminNotes = trim($_POST['admin_notes'] ?? '');
+
+        // Fetch request data BEFORE rejecting so we have user_id/order_id
+        $request = $this->cancelModel->findById($requestId);
         $this->cancelModel->reject($requestId, $adminNotes);
+
+        // Notify customer: cancellation rejected
+        try {
+            if ($request) {
+                $order = $this->orderModel->findById($request['order_id']);
+                if ($order) {
+                    $notifModel = new Notification($this->pdo);
+                    $notifModel->create(
+                        $request['user_id'],
+                        'Cancellation Rejected',
+                        "Your cancellation request for order #{$order['order_number']} has been rejected." . ($adminNotes ? " Reason: {$adminNotes}" : ''),
+                        'cancel_rejected',
+                        APP_URL . '/index.php?url=orders/' . $request['order_id']
+                    );
+                }
+            }
+        } catch (Throwable $e) { /* silent */ }
 
         $this->logModel->create(LOG_CANCEL_REJECT, "Cancel request #{$requestId} rejected.");
         flash('success', 'Cancellation request rejected.');
@@ -285,8 +339,24 @@ class OrderController {
         AuthMiddleware::csrf();
 
         $status = $_POST['status'] ?? '';
+        $order = $this->orderModel->findById($id);
         $this->orderModel->updateStatus($id, $status);
         $this->logModel->create(LOG_ORDER_STATUS, "Order #{$id} status changed to: {$status}");
+
+        // Notify customer about order status change
+        if ($order) {
+            try {
+                $notifModel = new Notification($this->pdo);
+                $msg = Notification::orderStatusMessage($status, $order['order_number']);
+                $notifModel->create(
+                    $order['user_id'],
+                    $msg['title'],
+                    $msg['message'],
+                    $msg['type'],
+                    APP_URL . '/index.php?url=orders/' . $id
+                );
+            } catch (Throwable $e) { /* silent */ }
+        }
 
         flash('success', 'Order status updated.');
         header('Location: ' . APP_URL . '/index.php?url=staff/orders/' . $id);

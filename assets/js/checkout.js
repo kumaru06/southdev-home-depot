@@ -73,16 +73,6 @@
                     opt.classList.remove('active');
                 });
                 this.closest('.co-pay-opt').classList.add('active');
-
-                /* Show/hide card details */
-                document.querySelectorAll('.co-card-expand').forEach(function (el) {
-                    el.style.display = 'none';
-                });
-                var target = document.getElementById(this.value + '-details');
-                if (target) {
-                    target.style.display = 'block';
-                    target.style.animation = 'pageFadeIn .3s ease';
-                }
             });
         });
 
@@ -94,42 +84,7 @@
             });
         }
 
-        /* Card inputs formatting */
-        var cardNumberInput = document.getElementById('card_number');
-        var cardNameInput   = document.getElementById('card_name');
-        var cardExpiryInput = document.getElementById('card_expiry');
-        var cardCvcInput    = document.getElementById('card_cvc');
-
-        if (cardNumberInput) {
-            cardNumberInput.addEventListener('input', function () {
-                var digits = this.value.replace(/\D/g, '').slice(0, 16);
-                var parts = digits.match(/.{1,4}/g);
-                this.value = parts ? parts.join(' ') : digits;
-            });
-        }
-
-        if (cardNameInput) {
-            cardNameInput.addEventListener('input', function () {
-                this.value = this.value.replace(/[^A-Za-z\s\-\']/g, '');
-            });
-        }
-
-        if (cardExpiryInput) {
-            cardExpiryInput.addEventListener('input', function () {
-                var digits = this.value.replace(/\D/g, '').slice(0, 4);
-                if (digits.length >= 3) {
-                    this.value = digits.slice(0, 2) + ' / ' + digits.slice(2);
-                } else {
-                    this.value = digits;
-                }
-            });
-        }
-
-        if (cardCvcInput) {
-            cardCvcInput.addEventListener('input', function () {
-                this.value = this.value.replace(/\D/g, '').slice(0, 3);
-            });
-        }
+        /* Card details are collected on the payment gateway page, not here */
     });
 
     /* ── Barangay Dropdown ── */

@@ -38,7 +38,6 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
                 <div class="auth-panel">
                     <div class="auth-brand">
                         <div class="auth-icon-wrap">
-                            <i data-lucide="shield" class="auth-icon"></i>
                         </div>
                         <div class="auth-brand-text">
                             <h2><?= APP_NAME ?></h2>
@@ -53,7 +52,6 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
                         <div class="form-group">
                             <label for="email">Email Address</label>
                             <div class="input-icon-wrap">
-                                <i data-lucide="mail" class="input-icon"></i>
                                 <input type="email" id="email" name="email" class="form-control" placeholder="you@example.com" autocomplete="username" required autofocus>
                             </div>
                         </div>
@@ -61,16 +59,15 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
                         <div class="form-group">
                             <label for="password">Password</label>
                             <div class="input-icon-wrap">
-                                <i data-lucide="lock" class="input-icon"></i>
                                 <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" autocomplete="current-password" required>
-                                <button type="button" class="auth-pw-toggle" onclick="(function(b){var i=b.previousElementSibling;var isP=i.type==='password';i.type=isP?'text':'password';b.innerHTML=isP?'<i data-lucide=\'eye-off\'></i>':'<i data-lucide=\'eye\'></i>';if(window.lucide)lucide.createIcons();})(this)" aria-label="Toggle password visibility">
-                                    <i data-lucide="eye"></i>
+                                <button type="button" class="auth-pw-toggle" onclick="(function(b){var i=b.previousElementSibling;var isP=i.type==='password';i.type=isP?'text':'password';b.textContent=isP?'Hide':'Show';})(this)" aria-label="Toggle password visibility">
+                                    Show
                                 </button>
                             </div>
                         </div>
 
                         <button type="submit" class="btn btn-accent btn-block">
-                            <i data-lucide="log-in"></i> Sign In
+                            Sign In
                         </button>
                     </form>
 

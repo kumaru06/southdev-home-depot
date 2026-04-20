@@ -17,17 +17,17 @@
                 <div class="footer-col">
                     <h5>Quick Links</h5>
                     <ul>
-                        <li><a href="<?= APP_URL ?>/index.php?url=products"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i> Shop Products</a></li>
-                        <li><a href="<?= APP_URL ?>/index.php?url=cart"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i> Shopping Cart</a></li>
+                        <li><a href="<?= APP_URL ?>/index.php?url=products">Shop Products</a></li>
+                        <li><a href="<?= APP_URL ?>/index.php?url=cart">Shopping Cart</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
                     <h5>Contact</h5>
                     <ul class="footer-contact-list">
-                        <li><i data-lucide="map-pin" class="footer-icon"></i> <?= APP_LOCATION ?></li>
-                        <li><i data-lucide="phone" class="footer-icon"></i> +63 (939) 939 8250</li>
-                        <li><i data-lucide="mail" class="footer-icon"></i> southdevhomedepo2020@gmail.com</li>
-                        <li><i data-lucide="clock" class="footer-icon"></i> Mon–Sat: 8:00 AM – 5:00 PM</li>
+                        <li><?= APP_LOCATION ?></li>
+                        <li>+63 (939) 939 8250</li>
+                        <li>southdevhomedepo2020@gmail.com</li>
+                        <li>Mon–Sat: 8:00 AM – 5:00 PM</li>
                     </ul>
                 </div>
             </div>

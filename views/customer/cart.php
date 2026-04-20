@@ -7,7 +7,7 @@ require_once INCLUDES_PATH . '/navbar.php';
 
 <div class="container">
     <div class="page-heading-row">
-        <h1 class="page-heading"><i data-lucide="shopping-cart"></i> Shopping Cart</h1>
+        <h1 class="page-heading">Shopping Cart</h1>
         <?php if (!empty($cartItems)): ?>
             <span class="page-heading-badge"><?= count($cartItems) ?> item<?= count($cartItems) > 1 ? 's' : '' ?></span>
         <?php endif; ?>
@@ -34,7 +34,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                                         <?php if ($item['image']): ?>
                                             <img src="<?= APP_URL ?>/assets/uploads/<?= $item['image'] ?>" alt="<?= htmlspecialchars($item['product_name']) ?>" class="cart-thumb">
                                         <?php else: ?>
-                                            <div class="cart-thumb cart-thumb-placeholder"><i data-lucide="package"></i></div>
+                                            <div class="cart-thumb cart-thumb-placeholder"><span style="font-size:11px;font-weight:700;color:var(--text-muted);">N/A</span></div>
                                         <?php endif; ?>
                                         <div class="cart-product-info">
                                             <span class="cart-product-name"><?= htmlspecialchars($item['product_name']) ?></span>
@@ -52,9 +52,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                                 </td>
                                 <td data-label="Subtotal"><strong class="cart-subtotal">₱<?= number_format($item['price'] * $item['quantity'], 2) ?></strong></td>
                                 <td>
-                                    <button class="btn btn-danger btn-sm cart-remove-btn" onclick="removeFromCart(<?= $item['id'] ?>)" title="Remove item">
-                                        <i data-lucide="trash-2"></i>
-                                    </button>
+                                    <button class="btn btn-danger btn-sm cart-remove-btn" onclick="removeFromCart(<?= $item['id'] ?>)" title="Remove item">&times;</button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -64,7 +62,6 @@ require_once INCLUDES_PATH . '/navbar.php';
 
             <div class="cart-summary">
                 <div class="cart-summary-header">
-                    <i data-lucide="receipt"></i>
                     <h3>Order Summary</h3>
                 </div>
                 <div class="cart-summary-body">
@@ -82,29 +79,19 @@ require_once INCLUDES_PATH . '/navbar.php';
                     </div>
                 </div>
                 <div class="cart-summary-actions">
-                    <a href="<?= APP_URL ?>/index.php?url=checkout" class="btn btn-accent btn-lg btn-block">
-                        <i data-lucide="credit-card"></i> Proceed to Checkout
-                    </a>
-                    <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-outline btn-lg btn-block">
-                        <i data-lucide="arrow-left"></i> Continue Shopping
-                    </a>
+                    <a href="<?= APP_URL ?>/index.php?url=checkout" class="btn btn-accent btn-lg btn-block">Proceed to Checkout</a>
+                    <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-outline btn-lg btn-block">&larr; Continue Shopping</a>
                 </div>
                 <div class="cart-summary-secure">
-                    <i data-lucide="shield-check"></i>
                     <span>Secure checkout guaranteed</span>
                 </div>
             </div>
         </div>
     <?php else: ?>
         <div class="empty-state empty-state--cart">
-            <div class="empty-state-icon-wrap">
-                <i data-lucide="shopping-cart"></i>
-            </div>
             <h3>Your cart is empty</h3>
             <p>Looks like you haven't added anything to your cart yet. Browse our products and find something you'll love!</p>
-            <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-accent btn-lg">
-                <i data-lucide="store"></i> Browse Products
-            </a>
+            <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-accent btn-lg">Browse Products</a>
         </div>
     <?php endif; ?>
 </div>

@@ -35,7 +35,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                     <input type="hidden" name="state" value="<?= htmlspecialchars($user['state'] ?? '') ?>">
                     <input type="hidden" name="zip_code" value="<?= htmlspecialchars($user['zip_code'] ?? '') ?>">
                     <label class="profile-camera-btn" title="Change photo">
-                        <i data-lucide="camera"></i>
+                        &#128247;
                         <input type="file" name="profile_image" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="this.form.submit()">
                     </label>
                 </form>
@@ -44,11 +44,11 @@ require_once INCLUDES_PATH . '/navbar.php';
                 <h1 class="profile-hero-name"><?= htmlspecialchars(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?></h1>
                 <div class="profile-hero-meta">
                     <?php if (!empty($user['username'])): ?>
-                        <span class="profile-meta-tag"><i data-lucide="at-sign"></i><?= htmlspecialchars($user['username']) ?></span>
+                        <span class="profile-meta-tag">@<?= htmlspecialchars($user['username']) ?></span>
                     <?php endif; ?>
-                    <span class="profile-meta-tag"><i data-lucide="mail"></i><?= htmlspecialchars($user['email']) ?></span>
+                    <span class="profile-meta-tag"><?= htmlspecialchars($user['email']) ?></span>
                     <?php if (!empty($user['phone'])): ?>
-                        <span class="profile-meta-tag"><i data-lucide="phone"></i><?= htmlspecialchars($user['phone']) ?></span>
+                        <span class="profile-meta-tag"><?= htmlspecialchars($user['phone']) ?></span>
                     <?php endif; ?>
                 </div>
             </div>
@@ -56,9 +56,9 @@ require_once INCLUDES_PATH . '/navbar.php';
     </div>
 
     <div class="profile-nav-tabs">
-        <button class="profile-tab active" data-target="personal-section"><i data-lucide="user"></i> Personal Info</button>
-        <button class="profile-tab" data-target="address-section"><i data-lucide="map-pin"></i> Address</button>
-        <button class="profile-tab" data-target="security-section"><i data-lucide="shield"></i> Security</button>
+        <button class="profile-tab active" data-target="personal-section">Personal Info</button>
+        <button class="profile-tab" data-target="address-section">Address</button>
+        <button class="profile-tab" data-target="security-section">Security</button>
     </div>
 
     <div class="profile-sections">
@@ -66,7 +66,6 @@ require_once INCLUDES_PATH . '/navbar.php';
         <div class="profile-section-block" id="personal-section">
             <div class="card profile-section-card">
                 <div class="profile-section-header">
-                    <div class="profile-section-icon"><i data-lucide="user-circle"></i></div>
                     <div>
                         <h3>Personal Information</h3>
                         <p>Update your name, username, and contact details.</p>
@@ -118,7 +117,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                     </div>
 
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-accent"><i data-lucide="save"></i> Save Changes</button>
+                        <button type="submit" class="btn btn-accent">Save Changes</button>
                     </div>
                 </form>
             </div>
@@ -128,7 +127,6 @@ require_once INCLUDES_PATH . '/navbar.php';
         <div class="profile-section-block" id="address-section">
             <div class="card profile-section-card">
                 <div class="profile-section-header">
-                    <div class="profile-section-icon"><i data-lucide="map-pin"></i></div>
                     <div>
                         <h3>Shipping Address</h3>
                         <p>Manage your default delivery address.</p>
@@ -166,7 +164,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                     </div>
 
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-accent"><i data-lucide="save"></i> Save Address</button>
+                        <button type="submit" class="btn btn-accent">Save Address</button>
                     </div>
                 </form>
             </div>
@@ -176,7 +174,6 @@ require_once INCLUDES_PATH . '/navbar.php';
         <div class="profile-section-block" id="security-section">
             <div class="card profile-section-card">
                 <div class="profile-section-header">
-                    <div class="profile-section-icon profile-section-icon--security"><i data-lucide="shield"></i></div>
                     <div>
                         <h3>Security</h3>
                         <p>Change your password to keep your account secure.</p>
@@ -190,7 +187,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                         <label for="current_password">Current Password <span class="required">*</span></label>
                         <div class="input-password-wrap">
                             <input type="password" id="current_password" name="current_password" class="form-control" autocomplete="current-password" required>
-                            <button type="button" class="password-toggle" data-target="current_password" tabindex="-1"><i data-lucide="eye"></i></button>
+                            <button type="button" class="password-toggle" data-target="current_password" tabindex="-1">Show</button>
                         </div>
                     </div>
 
@@ -199,20 +196,20 @@ require_once INCLUDES_PATH . '/navbar.php';
                             <label for="new_password">New Password <span class="required">*</span></label>
                             <div class="input-password-wrap">
                                 <input type="password" id="new_password" name="new_password" class="form-control" autocomplete="new-password" minlength="8" required>
-                                <button type="button" class="password-toggle" data-target="new_password" tabindex="-1"><i data-lucide="eye"></i></button>
+                                <button type="button" class="password-toggle" data-target="new_password" tabindex="-1">Show</button>
                             </div>
                         </div>
                         <div class="form-group form-col">
                             <label for="confirm_password">Confirm New Password <span class="required">*</span></label>
                             <div class="input-password-wrap">
                                 <input type="password" id="confirm_password" name="confirm_password" class="form-control" autocomplete="new-password" minlength="8" required>
-                                <button type="button" class="password-toggle" data-target="confirm_password" tabindex="-1"><i data-lucide="eye"></i></button>
+                                <button type="button" class="password-toggle" data-target="confirm_password" tabindex="-1">Show</button>
                             </div>
                         </div>
                     </div>
 
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-outline"><i data-lucide="key"></i> Update Password</button>
+                        <button type="submit" class="btn btn-outline">Update Password</button>
                     </div>
                 </form>
             </div>
@@ -250,9 +247,7 @@ document.addEventListener('DOMContentLoaded', function(){
             if (!input) return;
             var isPass = input.type === 'password';
             input.type = isPass ? 'text' : 'password';
-            var icon = this.querySelector('i, svg');
-            if (icon) icon.setAttribute('data-lucide', isPass ? 'eye-off' : 'eye');
-            if (window.lucide) lucide.createIcons();
+            this.textContent = isPass ? 'Hide' : 'Show';
         });
     });
 });

@@ -168,9 +168,8 @@
 
 /* ---------- Small Mobile  ---------- */
 @media (max-width: 480px) {
-    .product-grid { grid-template-columns: 1fr; }
+    .product-grid { grid-template-columns: repeat(2, 1fr); }
     .stat-cards { grid-template-columns: 1fr; }
-    .btn { width: 100%; justify-content: center; }
     .btn-group { flex-direction: column; }
 
     .hero { padding: 36px 0; }
@@ -189,23 +188,19 @@
     .quick-actions { flex-wrap: wrap; }
     .quick-actions .btn { flex: 1; min-width: 120px; }
 
-    .pagination a, .pagination span { width: 32px; height: 32px; font-size: 12px; }
-
-    /* Small mobile: taller product images and full-width add-to-cart */
-    .product-card .product-img { height: 260px; }
-    .product-card .product-info { padding: 10px; }
-    .btn-add-cart { width: calc(100% - 20px); margin: 8px 10px; }
+    .pagination a, .pagination span { width: auto !important; min-width: 32px; height: 32px; font-size: 12px; padding: 0 10px; }
+    .pagination .btn { width: auto !important; }
 }
 
 /* Strong overrides to ensure consistent product layout on narrow devices (fix narrow columns) */
 @media (max-width: 430px) {
-    .product-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
-    .product-card { max-width: 240px; width: 100%; margin: 0 auto; }
-    .product-card .product-img { height: 220px !important; }
-    .product-card .product-info { padding: 10px 12px !important; }
-    .product-card .product-name { font-size: 14px !important; }
-    .product-card .product-price { font-size: 16px !important; }
-    .btn-add-cart { width: calc(100% - 24px) !important; margin: 8px 12px !important; }
+    .product-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+    .product-card { width: 100%; margin: 0; }
+    .product-card .product-img { height: 160px !important; }
+    .product-card .product-info { padding: 8px 10px !important; }
+    .product-card .product-name { font-size: 12.5px !important; }
+    .product-card .product-price { font-size: 15px !important; }
+    .btn-add-cart { width: calc(100% - 16px) !important; margin: 6px 8px !important; }
 }
 
 @media (max-width: 360px) {

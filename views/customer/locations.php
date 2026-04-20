@@ -224,7 +224,6 @@ require_once INCLUDES_PATH . '/navbar.php';
 <div class="loc-cards">
     <div class="loc-card">
         <div class="loc-card-icon orange">
-            <i data-lucide="map-pin"></i>
         </div>
         <div class="loc-card-text">
             <h3>Address</h3>
@@ -233,7 +232,6 @@ require_once INCLUDES_PATH . '/navbar.php';
     </div>
     <div class="loc-card">
         <div class="loc-card-icon blue">
-            <i data-lucide="clock"></i>
         </div>
         <div class="loc-card-text">
             <h3>Store Hours</h3>
@@ -242,7 +240,6 @@ require_once INCLUDES_PATH . '/navbar.php';
     </div>
     <div class="loc-card">
         <div class="loc-card-icon green">
-            <i data-lucide="phone"></i>
         </div>
         <div class="loc-card-text">
             <h3>Contact</h3>
@@ -258,7 +255,7 @@ require_once INCLUDES_PATH . '/navbar.php';
         <div class="loc-map-header">
             <img src="<?= APP_URL ?>/assets/uploads/images/logo/location.png" alt="" class="loc-map-header-logo">
             <h2><?= htmlspecialchars(APP_NAME) ?></h2>
-            <span><i data-lucide="navigation" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px;"></i><?= htmlspecialchars(APP_LOCATION) ?></span>
+            <span><?= htmlspecialchars(APP_LOCATION) ?></span>
         </div>
         <div class="loc-map-embed">
             <iframe
@@ -272,8 +269,7 @@ require_once INCLUDES_PATH . '/navbar.php';
         <div class="loc-directions">
             <p>Need help finding us? Get turn-by-turn directions to our store.</p>
             <a href="https://www.google.com/maps/dir/?api=1&destination=Southdev+Home+Depot,+Davao+City" target="_blank" rel="noopener">
-                <i data-lucide="corner-up-right"></i>
-                Get Directions
+                Get Directions &rarr;
             </a>
         </div>
     </div>

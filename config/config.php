@@ -8,10 +8,16 @@ date_default_timezone_set('Asia/Manila');
 
 session_start();
 
+// Detect environment
+$is_local = in_array($_SERVER['SERVER_NAME'] ?? '', ['localhost', '127.0.0.1'])
+    || strpos($_SERVER['DOCUMENT_ROOT'] ?? '', 'xampp') !== false;
+
 // Application settings
 define('APP_NAME', 'Southdev Home Depot');
 define('APP_TAGLINE', 'Davao City\'s Premier Tiles & Hardware Supply');
-define('APP_URL', 'http://localhost/southdev-home-depot');
+define('APP_URL', $is_local 
+    ? 'http://localhost/southdev-home-depot' 
+    : 'https://southdev-home-depot.infinityfreeapp.com');
 define('APP_VERSION', '1.0.0');
 define('APP_LOCATION', 'Davao City, Philippines');
 // Optional: default coordinates for the main store location. If empty,
@@ -23,12 +29,12 @@ define('APP_MAP_LNG', getenv('APP_MAP_LNG') ?: '');
 // https://console.cloud.google.com/apis/credentials and enable Maps JavaScript API.
 define('APP_GOOGLE_MAPS_API_KEY', getenv('APP_GOOGLE_MAPS_API_KEY') ?: '');
 
-// PayMongo Configuration
+// PayMongo Configuration (TEST — live keys restricted, using test keys for full payment method support)
 // Get keys from: https://dashboard.paymongo.com/settings/api-keys
 define('PAYMONGO_ENABLED', true);  // Set to false to disable PayMongo
-define('PAYMONGO_SECRET_KEY', getenv('PAYMONGO_SECRET_KEY') ?: 'sk_test_xxxxxxxxxxxx');  // Replace with your secret key
-define('PAYMONGO_PUBLIC_KEY', getenv('PAYMONGO_PUBLIC_KEY') ?: 'pk_test_xxxxxxxxxxxx');  // Replace with your public key
-define('PAYMONGO_WEBHOOK_SECRET', getenv('PAYMONGO_WEBHOOK_SECRET') ?: 'whk_test_xxxxxxxxxxxx');  // Replace with your webhook secret
+define('PAYMONGO_SECRET_KEY', getenv('PAYMONGO_SECRET_KEY') ?: 'sk_test_xxxxxxxxxxxx');
+define('PAYMONGO_PUBLIC_KEY', getenv('PAYMONGO_PUBLIC_KEY') ?: 'pk_test_xxxxxxxxxxxx');
+define('PAYMONGO_WEBHOOK_SECRET', getenv('PAYMONGO_WEBHOOK_SECRET') ?: 'whk_test_xxxxxxxxxxxx');  // Update with test webhook secret from PayMongo dashboard
 
 // Mailer (PHPMailer) Configuration
 define('MAIL_HOST', getenv('MAIL_HOST') ?: 'smtp.gmail.com');

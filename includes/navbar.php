@@ -20,6 +20,20 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['role_id']) && $_SESSION['rol
         $cartCount = 0;
     }
 }
+// Ensure notification count is available for customer navbar badge
+$notifCount = 0;
+if (isset($_SESSION['user_id']) && isset($_SESSION['role_id']) && $_SESSION['role_id'] == ROLE_CUSTOMER) {
+    try {
+        $pdo = $GLOBALS['pdo'] ?? null;
+        if ($pdo) {
+            require_once __DIR__ . '/../models/Notification.php';
+            $notifModel = new Notification($pdo);
+            $notifCount = (int)$notifModel->getUnreadCount((int)$_SESSION['user_id']);
+        }
+    } catch (Throwable $e) {
+        $notifCount = 0;
+    }
+}
 // Load categories for Products dropdown (non-blocking; fall back if DB not available)
 $categoriesForNav = [];
 try {
@@ -53,10 +67,9 @@ try {
             <form action="<?= APP_URL ?>/index.php" method="GET" class="search-inline" role="search">
                 <input type="hidden" name="url" value="products/search">
                 <div class="search-box">
-                    <i data-lucide="search" class="search-box-icon"></i>
                     <input type="text" name="q" class="form-control" placeholder="Search products, tiles, tools..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
                     <button type="submit" class="search-btn" aria-label="Search">
-                        <i data-lucide="search"></i>
+                        Search
                     </button>
                 </div>
             </form>
@@ -64,6 +77,25 @@ try {
             <div class="auth-links">
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <?php if ($_SESSION['role_id'] == ROLE_CUSTOMER): ?>
+                        <div class="notif-dropdown-wrap" id="notifDropdownWrap">
+                            <button type="button" class="nav-notif-btn" title="Notifications" id="notifBellBtn">
+                                <i data-lucide="bell"></i>
+                                <?php $nc = isset($notifCount) ? (int)$notifCount : 0; ?>
+                                <span class="notif-count" id="notifBadge" style="<?= $nc > 0 ? '' : 'display:none' ?>"><?= $nc ?></span>
+                            </button>
+                            <div class="notif-dropdown" id="notifDropdown">
+                                <div class="notif-dropdown-header">
+                                    <h3>Notifications</h3>
+                                    <a href="<?= APP_URL ?>/index.php?url=notifications/mark-all-read" class="notif-mark-all" id="notifMarkAll">Mark all read</a>
+                                </div>
+                                <div class="notif-dropdown-body" id="notifDropdownBody">
+                                    <div class="notif-dropdown-loading">
+                                        <div class="notif-spinner"></div>
+                                    </div>
+                                </div>
+                                <a href="<?= APP_URL ?>/index.php?url=notifications" class="notif-dropdown-footer">See all notifications</a>
+                            </div>
+                        </div>
                         <a href="<?= APP_URL ?>/index.php?url=cart" class="nav-cart-btn" title="Shopping Cart">
                             <i data-lucide="shopping-cart"></i>
                             <?php $cc = isset($cartCount) ? (int)$cartCount : 0; ?>
@@ -71,12 +103,12 @@ try {
                         </a>
                     <?php endif; ?>
                 <?php else: ?>
-                    <a href="<?= APP_URL ?>/index.php?url=login" class="auth-link"><i data-lucide="log-in" style="width:15px;height:15px;"></i> Login</a>
-                    <a href="<?= APP_URL ?>/index.php?url=register" class="btn btn-accent"><i data-lucide="user-plus" style="width:15px;height:15px;"></i> Register</a>
+                    <a href="<?= APP_URL ?>/index.php?url=login" class="auth-link">Login</a>
+                    <a href="<?= APP_URL ?>/index.php?url=register" class="btn btn-accent">Register</a>
                 <?php endif; ?>
             </div>
             <button class="mobile-toggle" aria-label="Open menu" aria-expanded="false">
-                <i data-lucide="menu"></i>
+                &#9776;
             </button>
         </div>
     </div>
@@ -87,7 +119,6 @@ try {
                 <form action="<?= APP_URL ?>/index.php" method="GET">
                     <input type="hidden" name="url" value="products/search">
                     <div class="input-icon-wrap">
-                        <i data-lucide="search" class="input-icon"></i>
                         <input type="text" name="q" class="form-control" placeholder="Looking for tiles?" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
                     </div>
                 </form>
@@ -131,6 +162,29 @@ try {
                     <?php endif; ?>
                 <!-- mobile-only auth links removed to avoid duplicate topbar links -->
             </ul>
+
+            <!-- Mobile extras: cart + auth buttons visible in hamburger menu -->
+            <div class="mobile-nav-extras">
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <?php if ($_SESSION['role_id'] == ROLE_CUSTOMER): ?>
+                        <a href="<?= APP_URL ?>/index.php?url=notifications" class="mobile-cart-link">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                            Notifications<?php $nc2 = isset($notifCount) ? (int)$notifCount : 0; if ($nc2 > 0): ?> (<?= $nc2 ?>)<?php endif; ?>
+                        </a>
+                        <a href="<?= APP_URL ?>/index.php?url=cart" class="mobile-cart-link">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                            Cart<?php $cc = isset($cartCount) ? (int)$cartCount : 0; if ($cc > 0): ?> (<?= $cc ?>)<?php endif; ?>
+                        </a>
+                        <a href="<?= APP_URL ?>/index.php?url=orders" class="mobile-auth-link">My Orders</a>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <a href="<?= APP_URL ?>/index.php?url=login" class="mobile-auth-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                        Login
+                    </a>
+                    <a href="<?= APP_URL ?>/index.php?url=register" class="mobile-cart-link">Register</a>
+                <?php endif; ?>
+            </div>
         </div>
         <script>
         // Mobile menu toggle
@@ -144,8 +198,8 @@ try {
                     var expanded = this.getAttribute('aria-expanded') === 'true';
                     this.setAttribute('aria-expanded', (!expanded).toString());
                     header.classList.toggle('mobile-open');
-                    this.classList.toggle('open');
-                    // focus mobile search input after menu opens
+                    this.classList.toggle('open');                    // swap hamburger ↔ X
+                    this.innerHTML = expanded ? '&#9776;' : '&times;';                    // focus mobile search input after menu opens
                     if(!expanded && mobileSearch){
                         setTimeout(function(){
                             var input = mobileSearch.querySelector('input[name="q"]');
@@ -160,8 +214,32 @@ try {
                     if(window.innerWidth <= 900){
                         e.preventDefault();
                         var parent = this.parentElement;
-                        parent.classList.toggle('open');
+                        var wasOpen = parent.classList.contains('open');
+                        // close ALL open dropdowns first
+                        document.querySelectorAll('.menu-has-dropdown.open').forEach(function(dd){
+                            dd.classList.remove('open');
+                        });
+                        // toggle the clicked one (re-open if it wasn't already open)
+                        if(!wasOpen) parent.classList.add('open');
                     }
+                });
+            });
+
+            // Close dropdowns when clicking non-dropdown menu links
+            document.querySelectorAll('.main-menu > li:not(.menu-has-dropdown) > a').forEach(function(link){
+                link.addEventListener('click', function(){
+                    document.querySelectorAll('.menu-has-dropdown.open').forEach(function(dd){
+                        dd.classList.remove('open');
+                    });
+                });
+            });
+
+            // Close dropdowns when clicking non-dropdown menu links
+            document.querySelectorAll('.main-menu > li:not(.menu-has-dropdown) > a').forEach(function(link){
+                link.addEventListener('click', function(){
+                    document.querySelectorAll('.menu-has-dropdown.open').forEach(function(dd){
+                        dd.classList.remove('open');
+                    });
                 });
             });
 
@@ -195,6 +273,137 @@ try {
             }
         });
         </script>
+        <?php if (isset($_SESSION['user_id']) && isset($_SESSION['role_id']) && $_SESSION['role_id'] == ROLE_CUSTOMER): ?>
+        <script>
+        // Notification Dropdown
+        (function(){
+            var APP_URL = '<?= APP_URL ?>';
+            var wrap = document.getElementById('notifDropdownWrap');
+            var btn = document.getElementById('notifBellBtn');
+            var dropdown = document.getElementById('notifDropdown');
+            var body = document.getElementById('notifDropdownBody');
+            var badge = document.getElementById('notifBadge');
+            var markAllBtn = document.getElementById('notifMarkAll');
+            if (!wrap || !btn || !dropdown) return;
+
+            var isOpen = false;
+            var loaded = false;
+
+            var iconMap = {
+                'order_processing': 'package',
+                'order_shipped': 'truck',
+                'order_delivered': 'check-circle',
+                'order_cancelled': 'x-circle',
+                'order_update': 'bell',
+                'order': 'bell',
+                'cancel_approved': 'check-circle',
+                'cancel_rejected': 'x-circle',
+                'return_approved': 'rotate-ccw',
+                'return_rejected': 'x-circle'
+            };
+            var colorMap = {
+                'order_processing': '#f97316',
+                'order_shipped': '#3b82f6',
+                'order_delivered': '#22c55e',
+                'order_cancelled': '#ef4444',
+                'cancel_approved': '#22c55e',
+                'cancel_rejected': '#ef4444',
+                'return_approved': '#3b82f6',
+                'return_rejected': '#ef4444'
+            };
+
+            btn.addEventListener('click', function(e){
+                e.preventDefault();
+                e.stopPropagation();
+                isOpen = !isOpen;
+                dropdown.classList.toggle('open', isOpen);
+                if (isOpen) loadNotifications();
+            });
+
+            // Close on outside click
+            document.addEventListener('click', function(e){
+                if (isOpen && !wrap.contains(e.target)) {
+                    isOpen = false;
+                    dropdown.classList.remove('open');
+                }
+            });
+
+            // Mark all read
+            if (markAllBtn) {
+                markAllBtn.addEventListener('click', function(e){
+                    e.preventDefault();
+                    fetch(APP_URL + '/index.php?url=notifications/mark-all-read', {
+                        method: 'GET',
+                        headers: {'X-Requested-With': 'XMLHttpRequest'}
+                    }).then(function(){ 
+                        if (badge) { badge.style.display = 'none'; badge.textContent = '0'; }
+                        document.querySelectorAll('.nd-item--unread').forEach(function(el){
+                            el.classList.remove('nd-item--unread');
+                        });
+                        document.querySelectorAll('.nd-dot').forEach(function(el){
+                            el.remove();
+                        });
+                    });
+                });
+            }
+
+            function loadNotifications(){
+                body.innerHTML = '<div class="notif-dropdown-loading"><div class="notif-spinner"></div></div>';
+                fetch(APP_URL + '/index.php?url=notifications/api-unread')
+                    .then(function(r){ return r.json(); })
+                    .then(function(data){
+                        if (badge) {
+                            if (data.count > 0) { badge.textContent = data.count; badge.style.display = ''; }
+                            else { badge.style.display = 'none'; }
+                        }
+                        if (!data.notifications || data.notifications.length === 0) {
+                            body.innerHTML = '<div class="nd-empty"><i data-lucide="bell-off"></i><p>No notifications yet</p></div>';
+                            if (window.lucide) lucide.createIcons({attrs:{class:'lucide-icon'}});
+                            return;
+                        }
+                        var html = '';
+                        data.notifications.forEach(function(n){
+                            var icon = iconMap[n.type] || 'bell';
+                            var color = colorMap[n.type] || '#f97316';
+                            var unread = !n.is_read;
+                            var link = n.link || (APP_URL + '/index.php?url=notifications/read/' + n.id);
+                            html += '<a href="' + APP_URL + '/index.php?url=notifications/read/' + n.id + '" class="nd-item' + (unread ? ' nd-item--unread' : '') + '">';
+                            html += '<div class="nd-icon" style="background:' + color + '15;color:' + color + '"><i data-lucide="' + icon + '"></i></div>';
+                            html += '<div class="nd-content">';
+                            html += '<div class="nd-text"><strong>' + escHtml(n.title) + '</strong> ' + escHtml(n.message) + '</div>';
+                            html += '<div class="nd-time">' + escHtml(n.time_ago) + '</div>';
+                            html += '</div>';
+                            if (unread) html += '<span class="nd-dot"></span>';
+                            html += '</a>';
+                        });
+                        body.innerHTML = html;
+                        if (window.lucide) lucide.createIcons({attrs:{class:'lucide-icon'}});
+                    })
+                    .catch(function(){
+                        body.innerHTML = '<div class="nd-empty"><p>Failed to load</p></div>';
+                    });
+            }
+
+            function escHtml(s) {
+                var d = document.createElement('div');
+                d.textContent = s;
+                return d.innerHTML;
+            }
+
+            // Poll for new notifications every 30s
+            setInterval(function(){
+                fetch(APP_URL + '/index.php?url=notifications/api-unread')
+                    .then(function(r){ return r.json(); })
+                    .then(function(data){
+                        if (badge) {
+                            if (data.count > 0) { badge.textContent = data.count; badge.style.display = ''; }
+                            else { badge.style.display = 'none'; }
+                        }
+                    }).catch(function(){});
+            }, 30000);
+        })();
+        </script>
+        <?php endif; ?>
     </nav>
 </header>
 
@@ -203,7 +412,7 @@ try {
 <div class="login-modal-overlay" id="loginModalOverlay" role="dialog" aria-modal="true" aria-label="Sign in">
     <div class="login-modal">
         <button type="button" class="login-modal-close" aria-label="Close" id="loginModalClose">
-            <i data-lucide="x"></i>
+            &times;
         </button>
 
         <div class="login-modal-split">
@@ -243,7 +452,6 @@ try {
                     <div class="form-group">
                         <label for="loginModalEmail">Email or Username</label>
                         <div class="input-icon-wrap">
-                            <i data-lucide="user" class="input-icon"></i>
                             <input type="text" id="loginModalEmail" name="email" class="form-control" placeholder="you@example.com or username" autocomplete="username" required>
                         </div>
                     </div>
@@ -251,16 +459,15 @@ try {
                     <div class="form-group">
                         <label for="loginModalPassword">Password</label>
                         <div class="input-icon-wrap">
-                            <i data-lucide="lock" class="input-icon"></i>
                             <input type="password" id="loginModalPassword" name="password" class="form-control" placeholder="Enter your password" autocomplete="current-password" required>
-                            <button type="button" class="login-pw-toggle" onclick="(function(b){var i=b.previousElementSibling;var isP=i.type==='password';i.type=isP?'text':'password';b.innerHTML=isP?'<i data-lucide=\'eye-off\'></i>':'<i data-lucide=\'eye\'></i>';if(window.lucide)lucide.createIcons();})(this)" aria-label="Toggle password visibility">
-                                <i data-lucide="eye"></i>
+                            <button type="button" class="login-pw-toggle" onclick="(function(b){var i=b.previousElementSibling;var isP=i.type==='password';i.type=isP?'text':'password';b.textContent=isP?'Hide':'Show';})(this)" aria-label="Toggle password visibility">
+                                Show
                             </button>
                         </div>
                     </div>
 
                     <button type="submit" class="btn btn-accent btn-block" id="loginModalSubmit">
-                        <i data-lucide="log-in"></i> Sign In
+                        Sign In
                     </button>
                 </form>
 
@@ -270,7 +477,7 @@ try {
                     <div class="login-modal-divider">
                         <span>or</span>
                     </div>
-                    <p style="text-align:center;"><a href="<?= APP_URL ?>/index.php?url=admin-login" class="login-admin-link"><i data-lucide="shield" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i>Continue as administrator</a></p>
+                    <p style="text-align:center;"><a href="<?= APP_URL ?>/index.php?url=admin-login" class="login-admin-link">Continue as administrator</a></p>
                 </div>
             </div>
         </div>

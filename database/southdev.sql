@@ -124,6 +124,7 @@ CREATE TABLE `payments` (
     `payment_method` VARCHAR(50) NOT NULL,
     `transaction_id` VARCHAR(255),
     `source_id` VARCHAR(255),
+    `client_key` VARCHAR(512),
     `amount` DECIMAL(10,2) NOT NULL,
     `status` ENUM('pending','completed','failed','refunded') DEFAULT 'pending',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
