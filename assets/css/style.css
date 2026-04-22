@@ -901,7 +901,11 @@ p { color: var(--text-secondary); }
         overflow: hidden;
     }
     .menu-has-dropdown .submenu ul { list-style: none; margin: 0; padding: 8px 0; }
-    .menu-has-dropdown .submenu li { padding: 0; }
+    .menu-has-dropdown .submenu li {
+        display: block;
+        width: 100%;
+        padding: 0;
+    }
     .menu-has-dropdown .submenu a {
         display: flex;
         align-items: center;
@@ -911,6 +915,7 @@ p { color: var(--text-secondary); }
         font-size: 13.5px;
         text-transform: none;
         letter-spacing: 0;
+        white-space: nowrap;
         transition: background .15s ease, color .15s ease, padding-left .15s ease;
     }
     .menu-has-dropdown .submenu a::after { display: none; }

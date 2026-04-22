@@ -153,6 +153,40 @@ switch ($urlParts[0]) {
         break;
 
     /* ================================================================
+     * ABOUT
+     * Public page describing the business, values, and shopping promise
+     * ============================================================= */
+    case 'about':
+        $pageTitle = 'About Us';
+        require_once VIEWS_PATH . '/customer/about.php';
+        break;
+
+    case 'blog':
+        $pageTitle = 'Blog';
+        require_once VIEWS_PATH . '/customer/blog.php';
+        break;
+
+    case 'featured-collections':
+        $pageTitle = 'Featured Collections';
+        require_once VIEWS_PATH . '/customer/featured-collections.php';
+        break;
+
+    case 'room-gallery':
+        $pageTitle = 'Room Gallery';
+        require_once VIEWS_PATH . '/customer/room-gallery.php';
+        break;
+
+    case 'product-inquiry':
+        $pageTitle = 'Product Inquiry';
+        require_once VIEWS_PATH . '/customer/product-inquiry.php';
+        break;
+
+    case 'faqs':
+        $pageTitle = 'FAQs';
+        require_once VIEWS_PATH . '/customer/faqs.php';
+        break;
+
+    /* ================================================================
      * CART
      * ============================================================= */
     case 'cart':
@@ -620,17 +654,15 @@ switch ($urlParts[0]) {
      * HOME / DEFAULT
      * ============================================================= */
     case '':
-        // Redirect logged-in users to their appropriate page
+        // Redirect staff/admin users to their dashboard
         if (isLoggedIn()) {
             $roleId = $_SESSION['role_id'] ?? null;
-            if ($roleId == ROLE_CUSTOMER) {
-                header('Location: ' . APP_URL . '/index.php?url=products');
-            } else {
+            if ($roleId != ROLE_CUSTOMER) {
                 header('Location: ' . APP_URL . '/index.php?url=dashboard');
+                exit;
             }
-            exit;
         }
-        // Serve the public homepage for guests
+        // Serve the public homepage for guests and customers
         $pageTitle = 'Home';
         $extraCss  = ['customer.css'];
         require_once VIEWS_PATH . '/customer/dashboard.php';

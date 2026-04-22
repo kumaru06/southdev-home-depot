@@ -95,7 +95,11 @@ try {
                             </div>
                         </div>
                         <a href="<?= APP_URL ?>/index.php?url=cart" class="nav-cart-btn" title="Shopping Cart">
-                            <i data-lucide="shopping-cart"></i>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="9" cy="20" r="1"></circle>
+                                <circle cx="18" cy="20" r="1"></circle>
+                                <path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.5L21 7H8"></path>
+                            </svg>
                             <?php $cc = isset($cartCount) ? (int)$cartCount : 0; ?>
                             <span class="cart-count" style="<?= $cc > 0 ? '' : 'display:none' ?>"><?= $cc ?></span>
                         </a>
@@ -143,9 +147,28 @@ try {
                         </ul>
                     </div>
                 </li>
-                <li><a href="#">Styles &amp; Ideas <span class="caret">▾</span></a></li>
+                <li class="menu-has-dropdown">
+                    <a href="#">Styles &amp; Ideas <span class="caret">▾</span></a>
+                    <div class="submenu">
+                        <ul>
+                            <li class="submenu-header"><strong>Inspiration</strong></li>
+                            <li><a href="<?= APP_URL ?>/index.php?url=blog">Blog</a></li>
+                            <li><a href="<?= APP_URL ?>/index.php?url=featured-collections">Featured Collections</a></li>
+                            <li><a href="<?= APP_URL ?>/index.php?url=room-gallery">Room Gallery</a></li>
+                        </ul>
+                    </div>
+                </li>
                 <li><a href="<?= APP_URL ?>/index.php?url=locations">Location</a></li>
-                <li><a href="#">Contact Us <span class="caret">▾</span></a></li>
+                <li class="menu-has-dropdown">
+                    <a href="#">Contact Us <span class="caret">▾</span></a>
+                    <div class="submenu">
+                        <ul>
+                            <li class="submenu-header"><strong>Customer Support</strong></li>
+                            <li><a href="<?= APP_URL ?>/index.php?url=product-inquiry">Product Inquiry</a></li>
+                            <li><a href="<?= APP_URL ?>/index.php?url=faqs">FAQs</a></li>
+                        </ul>
+                    </div>
+                </li>
                     <?php if (isset($_SESSION['user_id']) && isset($_SESSION['role_id']) && $_SESSION['role_id'] === ROLE_CUSTOMER): ?>
                         <li class="menu-has-dropdown">
                             <a href="<?= APP_URL ?>/index.php?url=profile">PROFILE <span class="caret">▾</span></a>

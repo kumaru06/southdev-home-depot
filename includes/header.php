@@ -16,8 +16,8 @@ if (!headers_sent()) {
     header('X-XSS-Protection: 1; mode=block');
     header('Referrer-Policy: strict-origin-when-cross-origin');
     header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
-    // Content Security Policy – allow same-origin, Google Fonts, Lucide icons, and inline styles/scripts
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com https://unpkg.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.paymongo.com; frame-ancestors 'self';");
+    // Content Security Policy – allow same-origin assets plus approved third-party providers such as Google Maps embeds
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com https://unpkg.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.paymongo.com; frame-src 'self' https://www.google.com https://maps.google.com; child-src 'self' https://www.google.com https://maps.google.com; frame-ancestors 'self';");
 }
 ?>
 <!DOCTYPE html>
