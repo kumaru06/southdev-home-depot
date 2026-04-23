@@ -55,11 +55,13 @@ if ($orderId) {
         exit;
     }
 
+    $payment = $paymentModel->getByOrderId($orderId);
+    $paymentMethod = $payment['payment_method'] ?? '';
+
     // ── Card 3DS return: verify intent status before marking complete ──────
     $isTestMode = isset($_GET['test_mode']) && $_GET['test_mode'] === '1';
     if ($isTestMode) {
         // Test bypass – just mark complete
-        $payment = $paymentModel->getByOrderId($orderId);
         if ($payment && $payment['status'] !== PAYMENT_COMPLETED) {
             $paymentModel->updateStatus($payment['id'], PAYMENT_COMPLETED, 'test_' . uniqid());
         }
@@ -91,17 +93,25 @@ if ($orderId) {
             header('Location: ' . APP_URL . '/payment/payment-failed.php?order_id=' . $orderId . '&reason=verification_error');
             exit;
         }
-    } else {
-        // COD / bank / GCash (non-3DS) — mark complete as before
-        $payment = $paymentModel->getByOrderId($orderId);
+    } elseif ($paymentMethod === PAYMENT_METHOD_COD) {
+        // COD is confirmed immediately by the store workflow.
         if ($payment && $payment['status'] !== PAYMENT_COMPLETED) {
             $paymentModel->updateStatus($payment['id'], PAYMENT_COMPLETED, $transactionId);
         }
-        // Order stays pending — staff will advance to processing
     }
 }
 
 $order = (new Order($pdo))->findById($orderId);
+$payment = $orderId ? (new Payment($pdo))->getByOrderId($orderId) : null;
+$paymentStatus = $payment['status'] ?? PAYMENT_PENDING;
+$paymentMethod = $payment['payment_method'] ?? '';
+$isPaymentConfirmed = ($paymentStatus === PAYMENT_COMPLETED);
+$resultTitle = $isPaymentConfirmed ? 'Payment Successful!' : 'Payment Pending';
+$resultSubtitle = $isPaymentConfirmed
+    ? 'Thank you for your purchase.'
+    : (($paymentMethod === PAYMENT_METHOD_BANK)
+        ? 'Your order was placed. Bank transfer payment is awaiting confirmation.'
+        : 'Your order was placed. Payment confirmation is still pending.');
 
 // ── Send receipt email if provided ──────────────────────────────────────
 $receiptSent = false;
@@ -198,8 +208,8 @@ if ($receiptEmail && $order) {
 <body>
     <div class="result-card">
         <div class="result-check">&check;</div>
-        <h2>Payment Successful!</h2>
-        <p class="subtitle">Thank you for your purchase.</p>
+        <h2><?= htmlspecialchars($resultTitle) ?></h2>
+        <p class="subtitle"><?= htmlspecialchars($resultSubtitle) ?></p>
 
         <?php if ($receiptSent && $receiptEmail): ?>
             <p style="color:#16A34A;font-size:.825rem;margin-bottom:1rem;background:#DCFCE7;padding:.5rem .85rem;border-radius:8px;">
@@ -223,7 +233,7 @@ if ($receiptEmail && $order) {
                 </div>
                 <div class="row">
                     <span class="label">Status</span>
-                    <span class="value" style="color:var(--accent);">Pending</span>
+                    <span class="value" style="color:var(--accent);"><?= $isPaymentConfirmed ? 'Completed' : 'Pending' ?></span>
                 </div>
             </div>
         <?php endif; ?>

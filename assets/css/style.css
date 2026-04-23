@@ -517,56 +517,51 @@ p { color: var(--text-secondary); }
     }
     .auth-links a {
         color: #fff;
-        text-transform: uppercase;
-        font-weight: 700;
+        font-weight: 500;
         font-size: 13px;
-        letter-spacing: .3px;
+        letter-spacing: .01em;
     }
     .auth-link {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 9px 20px;
-        border-radius: 8px;
-        color: #fff;
-        font-weight: 700;
+        padding: 7px 18px;
+        border-radius: 6px;
+        color: rgba(255,255,255,.88);
+        font-weight: 500;
         font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: .3px;
-        background: rgba(255,255,255,.12);
-        border: 1.5px solid rgba(255,255,255,.2);
-        transition: all .22s ease;
+        text-transform: none;
+        letter-spacing: .01em;
+        background: transparent;
+        border: 1.5px solid rgba(255,255,255,.25);
+        transition: all .2s ease;
         text-decoration: none;
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
     }
     .auth-link:hover,
     .auth-link:focus {
-        background: rgba(255,255,255,.22);
-        border-color: rgba(255,255,255,.4);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 16px rgba(0,0,0,.10);
+        background: rgba(255,255,255,.10);
+        border-color: rgba(255,255,255,.45);
         color: #fff;
         text-decoration: none;
     }
     .auth-links .btn-accent {
-        background: #fff;
-        color: var(--accent);
-        border: 1.5px solid #fff;
-        border-radius: 8px;
-        padding: 9px 22px;
-        font-weight: 800;
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 7px 18px;
+        font-weight: 600;
         font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: .3px;
-        transition: all .22s ease;
-        box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        text-transform: none;
+        letter-spacing: .01em;
+        transition: all .2s ease;
+        box-shadow: 0 2px 8px rgba(234,88,12,.30);
     }
     .auth-links .btn-accent:hover {
-        background: #fff;
-        color: var(--accent-hover);
+        background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+        color: #fff;
+        box-shadow: 0 4px 14px rgba(234,88,12,.40);
         transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(0,0,0,.12);
     }
     .auth-links .btn-outline { background: transparent; border: 1.5px solid rgba(255,255,255,.2); color: #fff; }
 
@@ -2003,6 +1998,93 @@ p { color: var(--text-secondary); }
     color: var(--accent);
     background: rgba(249,115,22,.06);
 }
+
+/* ── Floating label inputs ─────────────────────────────────────────────── */
+.fl-group { margin-bottom: 4px; }
+
+.fl-wrap {
+    position: relative;
+    margin-top: 8px;
+}
+
+.fl-input {
+    width: 100%;
+    padding: 13px 14px 13px 14px !important;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fff;
+    color: #0f172a;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    box-shadow: none;
+}
+
+.fl-input:hover { border-color: #9ca3af; }
+
+.fl-input:focus {
+    border-color: var(--accent);
+    box-shadow: none;
+}
+
+.fl-label {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: #9ca3af;
+    pointer-events: none;
+    transition: top .18s ease, font-size .18s ease, color .18s ease, transform .18s ease, padding .18s ease;
+    background: transparent;
+    padding: 0 3px;
+    line-height: 1;
+}
+
+/* Floated state: sits on the border line */
+.fl-input:focus ~ .fl-label,
+.fl-input:not(:placeholder-shown) ~ .fl-label {
+    top: 0;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: .02em;
+    background: #fff;
+    padding: 0 4px;
+}
+
+.fl-input:not(:focus):not(:placeholder-shown) ~ .fl-label {
+    color: #6b7280;
+}
+
+/* Show/Hide toggle inside fl-wrap (password fields) */
+.fl-wrap .login-pw-toggle,
+.fl-wrap .auth-pw-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 2px 4px;
+    transition: color .2s;
+    z-index: 1;
+}
+
+.fl-wrap .login-pw-toggle:hover,
+.fl-wrap .auth-pw-toggle:hover { color: var(--accent); }
+
+/* Override global indent for fl-inputs */
+.fl-wrap .fl-input,
+.login-modal-form-panel .fl-wrap .form-control,
+.auth-panel .fl-wrap .form-control {
+    padding-left: 14px !important;
+}
 .login-pw-toggle i,
 .login-pw-toggle svg { width: 18px; height: 18px; }
 
@@ -2048,7 +2130,7 @@ p { color: var(--text-secondary); }
 }
 .login-admin-link::after { display: none !important; }
 
-.login-modal-form-panel .form-group label {
+.login-modal-form-panel .form-group label:not(.fl-label) {
     font-size: 10.5px;
     font-weight: 700;
     text-transform: uppercase;
@@ -2078,6 +2160,7 @@ p { color: var(--text-secondary); }
     background: var(--neutral);
     transition: all .25s ease;
 }
+.login-modal-form-panel .input-icon-wrap .form-control { padding-left: 14px; }
 .login-modal-form-panel .form-control:hover {
     border-color: #cbd5e1;
     background: var(--white);
@@ -2596,7 +2679,7 @@ select.form-control { cursor: pointer; }
 .auth-panel .form-group {
     margin-bottom: 20px;
 }
-.auth-panel .form-group label {
+.auth-panel .form-group label:not(.fl-label) {
     font-size: 11.5px;
     font-weight: 700;
     text-transform: uppercase;
@@ -2604,7 +2687,7 @@ select.form-control { cursor: pointer; }
     color: var(--steel);
     margin-bottom: 8px;
 }
-.auth-panel .form-control {
+.auth-panel .form-control:not(.fl-input) {
     padding: 13px 14px 13px 44px;
     border: 1.5px solid var(--border);
     border-radius: 12px;
@@ -2612,11 +2695,11 @@ select.form-control { cursor: pointer; }
     background: var(--neutral);
     transition: all .25s ease;
 }
-.auth-panel .form-control:hover {
+.auth-panel .form-control:not(.fl-input):hover {
     border-color: #cbd5e1;
     background: var(--white);
 }
-.auth-panel .form-control:focus {
+.auth-panel .form-control:not(.fl-input):focus {
     outline: none;
     border-color: var(--accent);
     background: var(--white);

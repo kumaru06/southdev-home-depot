@@ -193,7 +193,11 @@ class AuthController {
             exit;
         }
 
-        $user = $this->userModel->findByEmail($email);
+        // Look up by username first; fall back to email for backward compatibility
+        $user = $this->userModel->findByUsername($email);
+        if (!$user) {
+            $user = $this->userModel->findByEmail($email);
+        }
         if ($user && password_verify($password, $user['password'])) {
             // Disallow customers from logging in here
             if ($user['role_id'] == ROLE_CUSTOMER) {
@@ -237,7 +241,7 @@ class AuthController {
         // Record failed login attempt for rate limiting
         $this->rateLimiter->recordFailedAttempt($email);
 
-        flash('error', 'Invalid email or password.');
+        flash('error', 'Invalid username or password.');
         header('Location: ' . APP_URL . '/index.php?url=admin-login');
         exit;
     }

@@ -126,8 +126,13 @@ class OrderController {
             ]);
 
             foreach ($cartItems as $item) {
+                $reserved = $this->inventoryModel->reserveQuantity($item['product_id'], (int) $item['quantity']);
+                if (!$reserved) {
+                    $inventoryRow = $this->inventoryModel->getByProductId($item['product_id']);
+                    throw new Exception('Insufficient stock for ' . ($inventoryRow['product_name'] ?? $item['product_name'] ?? 'one or more items') . '.');
+                }
+
                 $this->orderModel->addItem($orderId, $item['product_id'], $item['quantity'], $item['price']);
-                $this->inventoryModel->adjustQuantity($item['product_id'], -$item['quantity']);
             }
 
             // Create payment record so payment method is tracked
@@ -166,8 +171,9 @@ class OrderController {
             }
         } catch (Exception $e) {
             $this->pdo->rollBack();
-            flash('error', 'Failed to place order. Please try again.');
+            flash('error', $e->getMessage() ?: 'Failed to place order. Please try again.');
             header('Location: ' . APP_URL . '/index.php?url=checkout');
+            exit;
         }
         exit;
     }
@@ -365,6 +371,13 @@ class OrderController {
         AuthMiddleware::csrf();
 
         $status = $_POST['status'] ?? '';
+        $allowedStatuses = [ORDER_PENDING, ORDER_PROCESSING, ORDER_SHIPPED, ORDER_DELIVERED, ORDER_CANCELLED];
+        if (!in_array($status, $allowedStatuses, true)) {
+            flash('error', 'Invalid order status.');
+            header('Location: ' . APP_URL . '/index.php?url=staff/orders/' . $id);
+            exit;
+        }
+
         $order = $this->orderModel->findById($id);
         $this->orderModel->updateStatus($id, $status);
         $this->logModel->create(LOG_ORDER_STATUS, "Order #{$id} status changed to: {$status}");

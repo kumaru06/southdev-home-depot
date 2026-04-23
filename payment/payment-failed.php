@@ -15,30 +15,15 @@ if (!isset($_SESSION['user_id'])) {
 
 $orderId = intval($_GET['order_id'] ?? 0);
 $reason = $_GET['reason'] ?? 'cancelled';
-
+$order = null;
 if ($orderId) {
-    require_once __DIR__ . '/../models/Payment.php';
     require_once __DIR__ . '/../models/Order.php';
-    require_once __DIR__ . '/../models/Log.php';
-
-    $paymentModel = new Payment($pdo);
     $orderModel = new Order($pdo);
-
-    // Mark payment as failed
-    $payment = $paymentModel->getByOrderId($orderId);
-    if ($payment) {
-        $paymentModel->updateStatus($payment['id'], PAYMENT_FAILED);
-    }
-
-    // Auto-cancel the order and restore stock (only for online payment failures)
     $order = $orderModel->findById($orderId);
-    if ($order && $order['status'] === 'pending' && $order['user_id'] == $_SESSION['user_id']) {
-        $cancelReason = 'Payment failed or cancelled by customer';
-        $orderModel->cancelOrder($orderId, $_SESSION['user_id'], $cancelReason);
 
-        // Log the auto-cancellation
-        $logModel = new Log($pdo);
-        $logModel->create(LOG_ORDER_CANCEL, "Order #{$orderId} ({$order['order_number']}) auto-cancelled: payment failed/cancelled.");
+    if ($order && (int) $order['user_id'] !== (int) ($_SESSION['user_id'] ?? 0)) {
+        header('Location: ' . APP_URL . '/index.php?url=orders');
+        exit;
     }
 }
 ?>
@@ -75,10 +60,10 @@ if ($orderId) {
             switch ($reason) {
                 case 'invalid_order':     echo 'The order could not be found. Please try again.'; break;
                 case 'invalid_token':     echo 'Security verification failed. Please try again.'; break;
-                case 'cancelled':         echo 'Your payment was cancelled and the order has been automatically cancelled. No charges were made.'; break;
-                case 'card_declined':     echo 'Your card was declined. The order has been cancelled. Please try placing a new order with a different payment method.'; break;
-                case 'verification_error':echo 'We couldn\'t verify your payment. The order has been cancelled for your safety.'; break;
-                default:                  echo 'Something went wrong. The order has been cancelled. Please try again.';
+                case 'cancelled':         echo 'Your payment was cancelled. No charges were made.'; break;
+                case 'card_declined':     echo 'Your card was declined. Please try again with a different payment method.'; break;
+                case 'verification_error':echo 'We couldn\'t verify your payment yet. Please check your order status before trying again.'; break;
+                default:                  echo 'Something went wrong. Please check your order status and try again.';
             }
             ?>
         </p>

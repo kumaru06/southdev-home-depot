@@ -31,6 +31,16 @@ class Inventory {
         return $stmt->execute([$adjustment, $productId]);
     }
 
+    public function reserveQuantity($productId, $quantity) {
+        $stmt = $this->pdo->prepare(
+            "UPDATE inventory
+             SET quantity = quantity - ?
+             WHERE product_id = ? AND quantity >= ?"
+        );
+        $stmt->execute([$quantity, $productId, $quantity]);
+        return $stmt->rowCount() > 0;
+    }
+
     public function getLowStock($threshold = null) {
         $sql = "SELECT i.*, p.name as product_name, p.sku FROM inventory i JOIN products p ON i.product_id = p.id WHERE p.is_active = 1 AND i.quantity <= " . ($threshold ? "?" : "i.reorder_level");
         $stmt = $this->pdo->prepare($sql);

@@ -79,6 +79,12 @@ $pageTitle = 'Payment';
         .pay-error-box{background:#FEF2F2;color:var(--danger);border-radius:8px;padding:.65rem .85rem;font-size:.825rem;margin-bottom:.85rem;display:none;}
         .pay-test-banner{background:#FFF7ED;color:#92400E;border:1px solid #FED7AA;border-radius:8px;padding:.5rem .85rem;font-size:.78rem;text-align:center;margin-bottom:1rem;}
         .pay-cards-note{font-size:.72rem;color:var(--steel);text-align:center;margin-top:.75rem;}
+        .card-number-wrap{position:relative;}
+        .card-number-wrap .form-control{padding-right:3.85rem;}
+        .card-brand-indicator{display:flex;justify-content:flex-end;margin-top:.45rem;min-height:1.1rem;}
+        .card-brand-logo{display:none;position:absolute;top:50%;right:.75rem;transform:translateY(-50%);width:34px;height:22px;object-fit:contain;border-radius:4px;background:var(--white);padding:2px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);pointer-events:none;}
+        .card-brand-logo.is-visible{display:block;}
+        .card-brand-hint{font-size:.72rem;color:var(--steel);text-align:right;flex:1;}
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
         @media(max-width:520px){.pay-body,.pay-header{padding-left:1.25rem;padding-right:1.25rem;}.pay-amount{font-size:1.6rem;}}
     </style>
@@ -142,6 +148,8 @@ $pageTitle = 'Payment';
                 </div>
 
                 <script>
+                    var CSRF_TOKEN = '<?= addslashes(csrf_token()) ?>';
+
                     function startGcash() {
                         document.getElementById('gcash-form-section').style.display = 'none';
                         initGcashPayment();
@@ -154,7 +162,7 @@ $pageTitle = 'Payment';
                         var gcashEmail = document.getElementById('gcash-email').value.trim();
                         fetch('<?= APP_URL ?>/index.php?url=payment/create-source', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
                             body: JSON.stringify({
                                 order_id: <?= $orderId ?>,
                                 method: 'gcash',
@@ -212,7 +220,13 @@ $pageTitle = 'Payment';
                         </div>
                         <div class="form-group">
                             <label class="form-label">Card Number</label>
-                            <input type="text" id="card-number" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19" autocomplete="cc-number" inputmode="numeric">
+                            <div class="card-number-wrap">
+                                <input type="text" id="card-number" class="form-control" placeholder="1234 5678 9012 3456" maxlength="23" autocomplete="cc-number" inputmode="numeric">
+                                <img id="card-brand-logo" class="card-brand-logo" alt="">
+                            </div>
+                            <div class="card-brand-indicator">
+                                <span id="card-brand-hint" class="card-brand-hint">Card type will appear automatically.</span>
+                            </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
@@ -250,16 +264,91 @@ $pageTitle = 'Payment';
 
                 <script>
                 var PAYMONGO_PUBLIC_KEY = '<?= addslashes(PAYMONGO_PUBLIC_KEY) ?>';
+                var CARD_BRAND_ASSET_BASE = '<?= APP_URL ?>/assets/uploads/images/cardlogo';
+                var CSRF_TOKEN = '<?= addslashes(csrf_token()) ?>';
                 var ORDER_ID = <?= $orderId ?>;
                 var paymentIntentId = null;
                 var clientKey = null;
+
+                function detectCardBrand(number) {
+                    if (!number) return null;
+
+                    const brands = [
+                        { key: 'visa', label: 'Visa', assetFile: 'visa.png', pattern: /^4/ },
+                        { key: 'mastercard', label: 'Mastercard', assetFile: 'mastercard.png', pattern: /^(5[1-5]|2(?:2[2-9]|[3-6]\d|7[01]|720))/ },
+                        { key: 'amex', label: 'American Express', assetFile: 'americanexpress.png', pattern: /^3[47]/ },
+                        { key: 'discover', label: 'Discover', assetFile: 'discover.png', pattern: /^(6011|65|64[4-9])/ },
+                        { key: 'jcb', label: 'JCB', assetFile: 'jcb.png', pattern: /^(2131|1800|35)/ },
+                        { key: 'diners', label: 'Diners Club', assetFile: 'dinersclub.png', pattern: /^3(?:0[0-5]|[68])/ },
+                        { key: 'unionpay', label: 'UnionPay', assetFile: 'unionpay.png', pattern: /^(62|81)/ },
+                        { key: 'maestro', label: 'Maestro', assetFile: 'maestro.png', pattern: /^(5[06789]|6\d)/ }
+                    ];
+
+                    for (const brand of brands) {
+                        if (brand.pattern.test(number)) {
+                            return brand;
+                        }
+                    }
+
+                    return number.length >= 4 ? { key: 'unknown', label: 'Unknown card' } : null;
+                }
+
+                function formatCardNumber(rawNumber, brand) {
+                    if (brand && brand.key === 'amex') {
+                        const trimmed = rawNumber.substring(0, 15);
+                        const p1 = trimmed.substring(0, 4);
+                        const p2 = trimmed.substring(4, 10);
+                        const p3 = trimmed.substring(10, 15);
+                        return [p1, p2, p3].filter(Boolean).join(' ');
+                    }
+
+                    const trimmed = rawNumber.substring(0, 19);
+                    return trimmed.replace(/(.{4})/g, '$1 ').trim();
+                }
+
+                function updateCardBrandUI(brand) {
+                    const logo = document.getElementById('card-brand-logo');
+                    const hint = document.getElementById('card-brand-hint');
+                    const cvcInput = document.getElementById('card-cvc');
+
+                    if (!logo || !hint || !cvcInput) return;
+
+                    logo.classList.remove('is-visible');
+                    logo.removeAttribute('src');
+                    logo.alt = '';
+
+                    if (!brand) {
+                        hint.textContent = 'Card type will appear automatically.';
+                        cvcInput.maxLength = 4;
+                        cvcInput.placeholder = 'CVC';
+                        return;
+                    }
+
+                    if (brand.key === 'unknown') {
+                        hint.textContent = 'We could not identify this card yet.';
+                    } else {
+                        hint.textContent = 'Detected card type: ' + brand.label + '.';
+                        logo.src = CARD_BRAND_ASSET_BASE + '/' + (brand.assetFile || (brand.key + '.png'));
+                        logo.alt = brand.label + ' logo';
+                        logo.onerror = function() {
+                            logo.classList.remove('is-visible');
+                        };
+                        logo.onload = function() {
+                            logo.classList.add('is-visible');
+                        };
+                    }
+
+                    cvcInput.maxLength = brand.key === 'amex' ? 4 : 3;
+                    cvcInput.placeholder = brand.key === 'amex' ? '4-digit CID' : 'CVC';
+                    cvcInput.value = (cvcInput.value || '').replace(/\D/g, '').substring(0, cvcInput.maxLength);
+                }
 
                 // ── Initialise: create payment intent on page load ──────────────
                 async function initCardPayment() {
                     try {
                         const res = await fetch('<?= APP_URL ?>/index.php?url=payment/create-intent', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
                             body: JSON.stringify({ order_id: ORDER_ID })
                         });
                         const data = await res.json();
@@ -286,8 +375,10 @@ $pageTitle = 'Payment';
                     initCardPayment();
 
                     document.getElementById('card-number').addEventListener('input', function(e) {
-                        let v = e.target.value.replace(/\D/g,'').substring(0,16);
-                        e.target.value = v.replace(/(.{4})/g,'$1 ').trim();
+                        let rawValue = e.target.value.replace(/\D/g, '');
+                        const brand = detectCardBrand(rawValue);
+                        e.target.value = formatCardNumber(rawValue, brand);
+                        updateCardBrandUI(brand);
                     });
                     document.getElementById('card-expiry').addEventListener('input', function(e) {
                         let v = e.target.value.replace(/\D/g,'').substring(0,4);
@@ -295,7 +386,7 @@ $pageTitle = 'Payment';
                         e.target.value = v;
                     });
                     document.getElementById('card-cvc').addEventListener('input', function(e) {
-                        e.target.value = e.target.value.replace(/\D/g,'').substring(0,4);
+                        e.target.value = e.target.value.replace(/\D/g,'').substring(0, e.target.maxLength || 4);
                     });
                 });
 
@@ -365,7 +456,7 @@ $pageTitle = 'Payment';
                         // Step B: Attach PaymentMethod to Payment Intent (our backend)
                         const attachRes = await fetch('<?= APP_URL ?>/index.php?url=payment/attach-card', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
                             body: JSON.stringify({
                                 order_id:          ORDER_ID,
                                 payment_method_id: paymentMethodId,

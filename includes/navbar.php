@@ -479,9 +479,6 @@ try {
 
             <div class="login-modal-form-panel">
                 <div class="login-modal-brand">
-                    <div class="login-modal-icon-wrap">
-                        <img src="<?= APP_URL ?>/assets/uploads/images/png-icon/tile.png" alt="Tile" class="login-modal-icon">
-                    </div>
                     <div class="login-modal-brand-text">
                         <h2><?= APP_NAME ?></h2>
                         <p>Sign in to your account</p>
@@ -493,20 +490,18 @@ try {
                 <form id="loginModalForm" method="POST" action="<?= APP_URL ?>/index.php?url=login">
                     <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
 
-                    <div class="form-group">
-                        <label for="loginModalEmail">Email or Username</label>
-                        <div class="input-icon-wrap">
-                            <input type="text" id="loginModalEmail" name="email" class="form-control" placeholder="you@example.com or username" autocomplete="username" required>
+                    <div class="form-group fl-group">
+                        <div class="fl-wrap">
+                            <input type="text" id="loginModalEmail" name="email" class="form-control fl-input" placeholder=" " autocomplete="username" required>
+                            <label for="loginModalEmail" class="fl-label">Email or Username</label>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="loginModalPassword">Password</label>
-                        <div class="input-icon-wrap">
-                            <input type="password" id="loginModalPassword" name="password" class="form-control" placeholder="Enter your password" autocomplete="current-password" required>
-                            <button type="button" class="login-pw-toggle" onclick="(function(b){var i=b.previousElementSibling;var isP=i.type==='password';i.type=isP?'text':'password';b.textContent=isP?'Hide':'Show';})(this)" aria-label="Toggle password visibility">
-                                Show
-                            </button>
+                    <div class="form-group fl-group">
+                        <div class="fl-wrap">
+                            <input type="password" id="loginModalPassword" name="password" class="form-control fl-input" placeholder=" " autocomplete="current-password" required>
+                            <label for="loginModalPassword" class="fl-label">Password</label>
+                            <button type="button" class="login-pw-toggle" onclick="(function(b){var i=b.previousElementSibling.previousElementSibling;var isP=i.type==='password';i.type=isP?'text':'password';b.textContent=isP?'Hide':'Show';})(this)" aria-label="Toggle password visibility">Show</button>
                         </div>
                     </div>
 

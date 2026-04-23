@@ -37,7 +37,10 @@ class CartController {
             return;
         }
 
-        if ($product['stock'] !== null && $product['stock'] < $quantity) {
+        $existingCartItem = $this->cartModel->getItemByUserAndProduct($_SESSION['user_id'], $productId);
+        $requestedTotalQty = $quantity + (int) ($existingCartItem['quantity'] ?? 0);
+
+        if ($product['stock'] !== null && (int) $product['stock'] < $requestedTotalQty) {
             echo json_encode(['success' => false, 'message' => 'Insufficient stock']);
             return;
         }
@@ -54,6 +57,17 @@ class CartController {
 
         $cartId   = intval($_POST['cart_id'] ?? 0);
         $quantity = max(1, intval($_POST['quantity'] ?? 1));
+
+        $cartItem = $this->cartModel->getItemById($cartId, $_SESSION['user_id']);
+        if (!$cartItem) {
+            echo json_encode(['success' => false, 'message' => 'Cart item not found']);
+            return;
+        }
+
+        if ($cartItem['stock'] !== null && (int) $cartItem['stock'] < $quantity) {
+            echo json_encode(['success' => false, 'message' => 'Insufficient stock for the requested quantity']);
+            return;
+        }
 
         // Pass user_id to prevent IDOR (users modifying other users' carts)
         $this->cartModel->updateQuantity($cartId, $quantity, $_SESSION['user_id']);

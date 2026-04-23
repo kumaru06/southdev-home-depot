@@ -31,6 +31,12 @@ class Cart {
         }
     }
 
+    public function getItemByUserAndProduct($userId, $productId) {
+        $stmt = $this->pdo->prepare("SELECT * FROM cart WHERE user_id = ? AND product_id = ? LIMIT 1");
+        $stmt->execute([$userId, $productId]);
+        return $stmt->fetch();
+    }
+
     public function updateQuantity($cartId, $quantity, $userId = null) {
         if ($userId) {
             $stmt = $this->pdo->prepare("UPDATE cart SET quantity = ? WHERE id = ? AND user_id = ?");
@@ -47,6 +53,24 @@ class Cart {
         }
         $stmt = $this->pdo->prepare("DELETE FROM cart WHERE id = ?");
         return $stmt->execute([$cartId]);
+    }
+
+    public function getItemById($cartId, $userId = null) {
+        $sql = "SELECT c.*, p.name as product_name, p.price, p.image, i.quantity as stock
+                FROM cart c
+                JOIN products p ON c.product_id = p.id
+                LEFT JOIN inventory i ON i.product_id = p.id
+                WHERE c.id = ?";
+        $params = [$cartId];
+
+        if ($userId !== null) {
+            $sql .= " AND c.user_id = ?";
+            $params[] = $userId;
+        }
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetch();
     }
 
     public function clearCart($userId) {

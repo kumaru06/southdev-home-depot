@@ -44,7 +44,7 @@ switch ($urlParts[0]) {
         if (isset($urlParts[1]) && $urlParts[1] === 'track') {
             $orderNumber = $_GET['order_number'] ?? '';
             $result = $order->getByOrderNumber($orderNumber);
-            if ($result) {
+            if ($result && (int) ($result['user_id'] ?? 0) === (int) ($_SESSION['user_id'] ?? 0)) {
                 jsonResponse(['order' => $result]);
             } else {
                 jsonResponse(['error' => 'Order not found'], 404);

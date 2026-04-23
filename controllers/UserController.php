@@ -56,23 +56,31 @@ class UserController {
         AuthMiddleware::csrf();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
 
+        $username = strtolower(trim($_POST['username'] ?? ''));
+        $generatedEmail = $username . '@staff.local';
+
         $data = [
             'role_id'    => intval($_POST['role_id']),
             'first_name' => trim($_POST['first_name']),
             'last_name'  => trim($_POST['last_name']),
-            'email'      => trim($_POST['email']),
+            'username'   => $username,
+            'email'      => $generatedEmail,
             'password'   => $_POST['password'],
             'phone'      => trim($_POST['phone'] ?? '')
         ];
 
-        if (empty($data['first_name']) || empty($data['last_name']) || empty($data['email']) || empty($data['password'])) {
-            flash('error', 'First name, last name, email, and password are required.');
-        } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            flash('error', 'Please enter a valid email address.');
+        if (empty($data['first_name']) || empty($data['last_name']) || empty($username) || empty($data['password'])) {
+            flash('error', 'First name, last name, username, and password are required.');
+        } elseif (!preg_match('/^[a-zA-Z0-9._-]+$/', $username)) {
+            flash('error', 'Username may only contain letters, numbers, underscore, dash, or dot.');
+        } elseif (strlen($username) < 3 || strlen($username) > 30) {
+            flash('error', 'Username must be between 3 and 30 characters.');
         } elseif (validate_password($data['password'])) {
             flash('error', validate_password($data['password']));
-        } elseif ($this->userModel->findByEmail($data['email'])) {
-            flash('error', 'Email already exists.');
+        } elseif ($this->userModel->findByUsername($username)) {
+            flash('error', 'Username already taken.');
+        } elseif ($this->userModel->findByEmail($generatedEmail)) {
+            flash('error', 'Username already taken.');
         } elseif ($this->userModel->create($data)) {
             // If super admin created a staff or inventory account, mark email verified
             // so the account can sign in immediately without email verification.
@@ -81,7 +89,7 @@ class UserController {
                 $this->userModel->markEmailVerified($newId);
             }
 
-            $this->logModel->create(LOG_USER_CREATE, "User created: {$data['email']} (Role ID: {$data['role_id']})");
+            $this->logModel->create(LOG_USER_CREATE, "User created: {$username} (Role ID: {$data['role_id']})");
             flash('success', 'User created successfully.');
         } else {
             flash('error', 'Failed to create user.');
@@ -242,16 +250,29 @@ class UserController {
             exit;
         }
 
+        $currentUser = $this->userModel->findById($_SESSION['user_id']);
+        if (!$currentUser) {
+            flash('error', 'User not found.');
+            header('Location: ' . APP_URL . '/index.php?url=profile');
+            exit;
+        }
+
         $data = [
             'first_name' => trim($_POST['first_name']),
             'last_name'  => trim($_POST['last_name']),
-            'email'      => trim($_POST['email']),
+            'email'      => trim((string) ($currentUser['email'] ?? '')),
             'phone'      => trim($_POST['phone'] ?? ''),
             'address'    => trim($_POST['address'] ?? ''),
             'city'       => trim($_POST['city'] ?? ''),
             'state'      => trim($_POST['state'] ?? ''),
             'zip_code'   => trim($_POST['zip_code'] ?? '')
         ];
+
+        if ($data['first_name'] === '' || $data['last_name'] === '') {
+            flash('error', 'First name and last name are required.');
+            header('Location: ' . APP_URL . '/index.php?url=profile');
+            exit;
+        }
 
         // Include username if supported and provided
         if ($this->userModel->hasColumn('username') && isset($_POST['username'])) {

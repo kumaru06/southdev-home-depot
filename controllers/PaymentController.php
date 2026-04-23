@@ -75,6 +75,19 @@ class PaymentController {
         return (strpos($sk, 'xxxxxxxxxxxx') !== false || $sk === '');
     }
 
+    private function failPaymentOrder(array $payment, $transactionRef = null, $logMessage = null) {
+        $this->paymentModel->updateStatus($payment['id'], PAYMENT_FAILED, $transactionRef);
+
+        $order = $this->orderModel->findById($payment['order_id']);
+        if ($order && in_array($order['status'], [ORDER_PENDING, ORDER_PROCESSING], true)) {
+            $this->orderModel->cancelOrder($order['id'], null, 'Payment failed or was cancelled through the payment gateway');
+        }
+
+        if ($order && $logMessage) {
+            $this->logModel->create(LOG_PAYMENT, $logMessage . ' for Order #' . $order['order_number']);
+        }
+    }
+
     /**
      * Create PayMongo GCash payment source via AJAX
      */
@@ -86,6 +99,12 @@ class PaymentController {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            exit;
+        }
+
+        if (!verify_csrf()) {
+            http_response_code(419);
+            echo json_encode(['success' => false, 'error' => 'Invalid security token']);
             exit;
         }
 
@@ -194,6 +213,10 @@ class PaymentController {
         header('Content-Type: application/json');
 
         try {
+            if (!$this->payMongoGateway) {
+                throw new Exception('PayMongo webhook handling is not configured');
+            }
+
             // Get raw payload for signature verification
             $payload = file_get_contents('php://input');
             $signature = $_SERVER['HTTP_X_PAYMONGO_SIGNATURE'] ?? '';
@@ -276,13 +299,7 @@ class PaymentController {
 
         $payment = $this->paymentModel->getBySourceId($sourceId);
         if ($payment) {
-            $this->paymentModel->updateStatus($payment['id'], PAYMENT_FAILED);
-            
-            $order = $this->orderModel->findById($payment['order_id']);
-            $this->logModel->create(
-                LOG_PAYMENT,
-                "Payment failed for Order #{$order['order_number']}"
-            );
+            $this->failPaymentOrder($payment, null, 'Payment failed');
         }
     }
 
@@ -326,12 +343,7 @@ class PaymentController {
 
         $payment = $this->paymentModel->getBySourceId($paymentIntentId);
         if ($payment) {
-            $this->paymentModel->updateStatus($payment['id'], PAYMENT_FAILED);
-            $order = $this->orderModel->findById($payment['order_id']);
-            $this->logModel->create(
-                LOG_PAYMENT,
-                "Card payment failed (webhook) for Order #{$order['order_number']}"
-            );
+            $this->failPaymentOrder($payment, $paymentIntentId, 'Card payment failed (webhook)');
         }
     }
     /**
@@ -345,6 +357,12 @@ class PaymentController {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            exit;
+        }
+
+        if (!verify_csrf()) {
+            http_response_code(419);
+            echo json_encode(['success' => false, 'error' => 'Invalid security token']);
             exit;
         }
 
@@ -441,6 +459,12 @@ class PaymentController {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            exit;
+        }
+
+        if (!verify_csrf()) {
+            http_response_code(419);
+            echo json_encode(['success' => false, 'error' => 'Invalid security token']);
             exit;
         }
 

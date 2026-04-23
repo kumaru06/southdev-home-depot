@@ -17,8 +17,9 @@ try {
     $categoryCount = 0;
 }
 
-$heroImage = APP_URL . '/assets/uploads/images/display1.jpg';
-$storyImage = APP_URL . '/assets/uploads/images/display2.jpg';
+$heroImage = APP_URL . '/assets/uploads/images/roomgallery/commercial/commercial4.png';
+$storyImage = APP_URL . '/assets/uploads/images/roomgallery/outside/outside3.png';
+$ctaImage = APP_URL . '/assets/uploads/images/roomgallery/livingroom/livingroom4.png';
 ?>
 
 <style>
@@ -326,7 +327,9 @@ $storyImage = APP_URL . '/assets/uploads/images/display2.jpg';
     padding: 0 1.5rem 4rem;
 }
 .about-cta-inner {
-    background: linear-gradient(135deg, #1b2a4a 0%, #22365d 55%, #2e4a7d 100%);
+    background:
+        linear-gradient(135deg, rgba(15,23,42,.76) 0%, rgba(30,41,59,.66) 52%, rgba(51,65,85,.58) 100%),
+        url('<?= $ctaImage ?>') center/cover no-repeat;
     border-radius: 28px;
     padding: 2.2rem;
     display: flex;

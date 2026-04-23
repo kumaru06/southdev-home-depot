@@ -36,19 +36,20 @@ require_once INCLUDES_PATH . '/sidebar.php';
                     <div class="form-col">
                         <div class="form-group">
                             <label class="form-label">First Name <span class="required">*</span></label>
-                            <input type="text" name="first_name" class="form-control" required>
+                            <input type="text" name="first_name" class="form-control js-auto-capitalize" required>
                         </div>
                     </div>
                     <div class="form-col">
                         <div class="form-group">
                             <label class="form-label">Last Name <span class="required">*</span></label>
-                            <input type="text" name="last_name" class="form-control" required>
+                            <input type="text" name="last_name" class="form-control js-auto-capitalize" required>
                         </div>
                     </div>
                     <div class="form-col">
                         <div class="form-group">
-                            <label class="form-label">Email <span class="required">*</span></label>
-                            <input type="email" name="email" class="form-control" required>
+                            <label class="form-label">Username <span class="required">*</span></label>
+                            <input type="text" name="username" class="form-control" required pattern="[a-zA-Z0-9._-]+" title="Letters, numbers, underscore, dash or dot only">
+                            <small class="text-muted">Used as the sign-in ID for staff, inventory in-charge, and super admin accounts.</small>
                         </div>
                     </div>
                 </div>
@@ -130,7 +131,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
                         <tr>
                             <th>ID</th>
                             <th>Name</th>
-                            <th>Email</th>
+                            <th>Username / Email</th>
                             <th>Role</th>
                             <th>Status</th>
                             <th>Joined</th>
@@ -141,6 +142,14 @@ require_once INCLUDES_PATH . '/sidebar.php';
                         <?php if (!empty($users)): ?>
                             <?php foreach ($users as $user): ?>
                                 <tr data-user-role="<?= htmlspecialchars($user['role_name'] ?? 'customer') ?>">
+                                    <?php
+                                    $roleName = (string) ($user['role_name'] ?? 'customer');
+                                    $usesUsernameLogin = in_array($roleName, ['super_admin', 'staff', 'inventory_incharge'], true);
+                                    $accountIdentifier = $usesUsernameLogin && !empty($user['username'])
+                                        ? $user['username']
+                                        : ($user['email'] ?? '');
+                                    $accountIdentifierLabel = $usesUsernameLogin && !empty($user['username']) ? 'Username' : 'Email';
+                                    ?>
                                     <td data-label="ID"><?= $user['id'] ?></td>
                                     <td data-label="Name">
                                         <div style="display:flex; align-items:center; gap:.5rem;">
@@ -150,7 +159,12 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                             <span class="user-name-text"><?= htmlspecialchars(trim($user['first_name'] . ' ' . $user['last_name'])) ?: '<em style="opacity:.4">No name</em>' ?></span>
                                         </div>
                                     </td>
-                                    <td data-label="Email"><span class="user-email-text"><?= htmlspecialchars($user['email']) ?></span></td>
+                                    <td data-label="<?= htmlspecialchars($accountIdentifierLabel) ?>">
+                                        <div class="user-account-meta">
+                                            <span class="user-email-text"><?= htmlspecialchars($accountIdentifier) ?></span>
+                                            <small class="user-account-type"><?= htmlspecialchars($accountIdentifierLabel) ?></small>
+                                        </div>
+                                    </td>
                                     <td data-label="Role">
                                         <?php
                                         $roleBadgeClass = 'badge-delivered';
@@ -173,15 +187,15 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                         </span>
                                     </td>
                                     <td data-label="Joined" style="white-space:nowrap;"><?= date('M d, Y', strtotime($user['created_at'])) ?></td>
-                                    <td data-label="Actions">
+                                    <td data-label="Actions" class="user-actions-cell">
                                         <?php if ($user['id'] != $_SESSION['user_id']): ?>
                                             <div class="action-dropdown">
-                                                <button type="button" class="action-dropdown-btn" onclick="toggleActionMenu(this)">
+                                                <button type="button" class="action-dropdown-btn" onclick="toggleActionMenu(this, event)">
                                                     <i data-lucide="more-horizontal" style="width:16px;height:16px;"></i>
                                                     Action
                                                     <i data-lucide="chevron-down" style="width:13px;height:13px;opacity:.6;"></i>
                                                 </button>
-                                                <div class="action-dropdown-menu" style="display:none">
+                                                <div class="action-dropdown-menu">
                                                     <?php if ($isCustomer): ?>
                                                         <a href="<?= APP_URL ?>/index.php?url=admin/users/<?= $user['id'] ?>/view" class="action-menu-item">
                                                             <i data-lucide="eye" style="width:14px;height:14px;"></i> View Profile
@@ -193,6 +207,9 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                                             <?= $user['is_active'] ? 'Block' : 'Unblock' ?>
                                                         </a>
                                                     <?php else: ?>
+                                                        <a href="<?= APP_URL ?>/index.php?url=admin/users/<?= $user['id'] ?>/view" class="action-menu-item">
+                                                            <i data-lucide="eye" style="width:14px;height:14px;"></i> View Profile
+                                                        </a>
                                                         <a href="<?= APP_URL ?>/index.php?url=admin/users/<?= $user['id'] ?>/toggle"
                                                            class="action-menu-item <?= $user['is_active'] ? 'danger' : 'success' ?>"
                                                            onclick="return confirm('<?= $user['is_active'] ? 'Deactivate' : 'Activate' ?> this user?');">
@@ -257,6 +274,18 @@ require_once INCLUDES_PATH . '/sidebar.php';
     color: var(--accent, #F97316);
     border-bottom-color: var(--accent, #F97316);
 }
+.user-account-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.user-account-type {
+    color: var(--steel, #6c7a8d);
+    font-size: .72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
 .tab-count {
     display: inline-flex;
     align-items: center;
@@ -278,6 +307,10 @@ require_once INCLUDES_PATH . '/sidebar.php';
 .action-dropdown {
     position: relative;
     display: inline-block;
+}
+.user-actions-cell {
+    position: relative;
+    overflow: visible;
 }
 .action-dropdown-btn {
     display: inline-flex;
@@ -306,9 +339,9 @@ require_once INCLUDES_PATH . '/sidebar.php';
     box-shadow: 0 0 0 3px rgba(249,115,22,.1);
 }
 .action-dropdown-menu {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 4px);
+    position: fixed;
+    right: auto;
+    top: auto;
     min-width: 155px;
     background: var(--white, #fff);
     border: 1px solid var(--border, #e8ecf1);
@@ -357,24 +390,93 @@ require_once INCLUDES_PATH . '/sidebar.php';
 </style>
 
 <script>
+function closeAllActionMenus() {
+    document.querySelectorAll('.action-dropdown.open').forEach(function(dropdown) {
+        dropdown.classList.remove('open');
+    });
+}
+
+function positionActionMenu(dropdown) {
+    var btn = dropdown.querySelector('.action-dropdown-btn');
+    var menu = dropdown.querySelector('.action-dropdown-menu');
+    if (!btn || !menu) return;
+
+    menu.style.visibility = 'hidden';
+    menu.style.display = 'block';
+
+    var btnRect = btn.getBoundingClientRect();
+    var menuRect = menu.getBoundingClientRect();
+    var viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+    var viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+
+    var top = btnRect.bottom + 6;
+    var left = btnRect.right - menuRect.width;
+
+    if (left < 8) left = 8;
+    if (left + menuRect.width > viewportWidth - 8) {
+        left = viewportWidth - menuRect.width - 8;
+    }
+
+    if (top + menuRect.height > viewportHeight - 8) {
+        top = Math.max(8, btnRect.top - menuRect.height - 6);
+    }
+
+    menu.style.left = left + 'px';
+    menu.style.top = top + 'px';
+    menu.style.visibility = 'visible';
+    menu.style.display = '';
+}
+
 /* Action dropdown toggle */
-function toggleActionMenu(btn) {
+function toggleActionMenu(btn, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
     var dropdown = btn.closest('.action-dropdown');
     var wasOpen = dropdown.classList.contains('open');
-    // Close all open dropdowns
-    document.querySelectorAll('.action-dropdown.open').forEach(function(d) { d.classList.remove('open'); });
-    if (!wasOpen) dropdown.classList.add('open');
+    closeAllActionMenus();
+    if (!wasOpen) {
+        dropdown.classList.add('open');
+        positionActionMenu(dropdown);
+    }
 }
 // Close dropdown when clicking outside
 document.addEventListener('click', function(e) {
     if (!e.target.closest('.action-dropdown')) {
-        document.querySelectorAll('.action-dropdown.open').forEach(function(d) { d.classList.remove('open'); });
+        closeAllActionMenus();
     }
 });
+
+window.addEventListener('resize', closeAllActionMenus);
+window.addEventListener('scroll', closeAllActionMenus, true);
 
 document.addEventListener('DOMContentLoaded', function() {
     var tabs = document.querySelectorAll('.user-role-tab');
     var rows = document.querySelectorAll('#usersTable tbody tr[data-user-role]');
+    var autoCapitalizeInputs = document.querySelectorAll('.js-auto-capitalize');
+
+    function capitalizeWords(value) {
+        return value.replace(/(^|[\s'\-])([a-z])/g, function(match, prefix, letter) {
+            return prefix + letter.toUpperCase();
+        });
+    }
+
+    autoCapitalizeInputs.forEach(function(input) {
+        input.addEventListener('input', function() {
+            var start = input.selectionStart;
+            var end = input.selectionEnd;
+            var updatedValue = capitalizeWords(input.value);
+
+            if (updatedValue !== input.value) {
+                input.value = updatedValue;
+                if (typeof start === 'number' && typeof end === 'number') {
+                    input.setSelectionRange(start, end);
+                }
+            }
+        });
+    });
 
     tabs.forEach(function(tab) {
         tab.addEventListener('click', function() {

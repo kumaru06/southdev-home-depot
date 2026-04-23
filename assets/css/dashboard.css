@@ -648,6 +648,9 @@
     min-width: 0;
     overflow: hidden;
 }
+.dashboard-grid-2 > *:only-child {
+    grid-column: 1 / -1;
+}
 
 /* Orders (wider) + Side panel */
 .dashboard-grid-orders {
