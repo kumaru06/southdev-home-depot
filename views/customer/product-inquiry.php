@@ -558,7 +558,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                 </div>
                 <div class="inquiry-item">
                     <span class="inquiry-item-icon" aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14.5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        <span style="font-size: 1.1rem; font-weight: 700; line-height: 1;">₱</span>
                     </span>
                     <div>
                         <strong>Pricing and bulk orders</strong>
