@@ -455,6 +455,15 @@
     display: inline-block;
     border: 1px solid transparent;
 }
+.admin-footer a {
+    color: var(--charcoal);
+    font-weight: 700;
+}
+
+.admin-footer a:hover,
+.admin-footer a:focus-visible {
+    color: var(--accent);
+}
 .admin-footer span::before { display: none !important; }
 
 /* Ensure admin footer does not sit under the fixed sidebar and text is visible */

@@ -130,7 +130,7 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
     display: grid;
     grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr);
     gap: 2rem;
-    align-items: center;
+    align-items: start;
 }
 
 .home-hero-copy {
