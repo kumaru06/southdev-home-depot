@@ -63,21 +63,6 @@ class AuthController {
             strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
         ) || (strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false);
 
-        // Rate limiting check
-        if ($this->rateLimiter->isLimited()) {
-            $mins = $this->rateLimiter->getLockoutMinutesRemaining();
-            $msg = "Too many login attempts. Please try again in {$mins} minute(s).";
-            if ($isAjax) {
-                session_write_close();
-                header('Content-Type: application/json; charset=utf-8');
-                echo json_encode(['success' => false, 'message' => $msg]);
-                exit;
-            }
-            flash('error', $msg);
-            header('Location: ' . APP_URL . '/index.php?url=login');
-            exit;
-        }
-
         $login    = trim($_POST['email'] ?? '');  // accepts email or username
         $password = $_POST['password'] ?? '';
 
@@ -89,6 +74,22 @@ class AuthController {
                 exit;
             }
             flash('error', 'Please fill in all fields.');
+            header('Location: ' . APP_URL . '/index.php?url=login');
+            exit;
+        }
+
+        // Rate limiting check — scoped to this specific email/username from this IP only.
+        // Other customers on the same network are NOT affected by someone else's failed attempts.
+        if ($this->rateLimiter->isLimited($login, 'customer')) {
+            $mins = $this->rateLimiter->getLockoutMinutesRemaining($login, 'customer');
+            $msg = "Too many login attempts. Please try again in {$mins} minute(s).";
+            if ($isAjax) {
+                session_write_close();
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['success' => false, 'message' => $msg]);
+                exit;
+            }
+            flash('error', $msg);
             header('Location: ' . APP_URL . '/index.php?url=login');
             exit;
         }
@@ -125,11 +126,25 @@ class AuthController {
                 exit;
             }
 
+            // Block non-customer roles from using the customer login modal
+            if ($user['role_id'] != ROLE_CUSTOMER) {
+                $this->rateLimiter->recordFailedAttempt($login, 'customer');
+                if ($isAjax) {
+                    session_write_close();
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode(['success' => false, 'message' => 'Invalid email/username or password.']);
+                    exit;
+                }
+                flash('error', 'Invalid email/username or password.');
+                header('Location: ' . APP_URL . '/index.php?url=login');
+                exit;
+            }
+
             // Regenerate session ID to prevent session fixation attacks
             session_regenerate_id(true);
 
             // Clear rate limit attempts on successful login
-            $this->rateLimiter->clearAttempts();
+            $this->rateLimiter->clearAttempts($login, 'customer');
 
             $_SESSION['user_id']    = $user['id'];
             $_SESSION['role_id']    = $user['role_id'];
@@ -152,7 +167,7 @@ class AuthController {
         }
 
         // Record failed login attempt for rate limiting
-        $this->rateLimiter->recordFailedAttempt($login);
+        $this->rateLimiter->recordFailedAttempt($login, 'customer');
 
         if ($isAjax) {
             session_write_close();
@@ -177,19 +192,19 @@ class AuthController {
 
         AuthMiddleware::csrf();
 
-        // Rate limiting check
-        if ($this->rateLimiter->isLimited()) {
-            $mins = $this->rateLimiter->getLockoutMinutesRemaining();
-            flash('error', "Too many login attempts. Please try again in {$mins} minute(s).");
-            header('Location: ' . APP_URL . '/index.php?url=admin-login');
-            exit;
-        }
-
         $email    = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
 
         if (empty($email) || empty($password)) {
             flash('error', 'Please fill in all fields.');
+            header('Location: ' . APP_URL . '/index.php?url=admin-login');
+            exit;
+        }
+
+        // Rate limiting check — scoped to this specific username/email from this IP only.
+        if ($this->rateLimiter->isLimited($email, 'admin')) {
+            $mins = $this->rateLimiter->getLockoutMinutesRemaining($email, 'admin');
+            flash('error', "Too many login attempts. Please try again in {$mins} minute(s).");
             header('Location: ' . APP_URL . '/index.php?url=admin-login');
             exit;
         }
@@ -224,7 +239,7 @@ class AuthController {
             session_regenerate_id(true);
 
             // Clear rate limit attempts on successful login
-            $this->rateLimiter->clearAttempts();
+            $this->rateLimiter->clearAttempts($email, 'admin');
 
             $_SESSION['user_id']    = $user['id'];
             $_SESSION['role_id']    = $user['role_id'];
@@ -241,7 +256,7 @@ class AuthController {
         }
 
         // Record failed login attempt for rate limiting
-        $this->rateLimiter->recordFailedAttempt($email);
+        $this->rateLimiter->recordFailedAttempt($email, 'admin');
 
         flash('error', 'Invalid username or password.');
         header('Location: ' . APP_URL . '/index.php?url=admin-login');

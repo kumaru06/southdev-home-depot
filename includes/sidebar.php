@@ -79,7 +79,7 @@ $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($
         <div class="nav-label">Inventory</div>
         <ul class="nav-menu">
             <li>
-                <a href="<?= APP_URL ?>/index.php?url=inventory/stock" class="<?= strpos($currentUrl, 'inventory/stock') !== false && strpos($currentUrl, 'movements') === false && strpos($currentUrl, 'price-history') === false ? 'active' : '' ?>">
+                <a href="<?= APP_URL ?>/index.php?url=inventory/stock" class="<?= strpos($currentUrl, 'inventory/stock') !== false && strpos($currentUrl, 'movements') === false && strpos($currentUrl, 'price-history') === false && strpos($currentUrl, 'damaged') === false ? 'active' : '' ?>">
                     <span class="nav-icon"><i class="lucide-warehouse"></i></span>
                     <span class="nav-text">Manage Stock</span>
                 </a>

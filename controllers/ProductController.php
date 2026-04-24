@@ -118,20 +118,27 @@ class ProductController {
         if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
             // Validate using actual file contents, not client-provided MIME type
             $imageInfo = @getimagesize($_FILES['image']['tmp_name']);
-            $allowed = ['image/jpeg','image/png','image/webp'];
+            $allowed = ['image/jpeg','image/png','image/webp','image/gif'];
+            $extMap   = ['image/jpeg' => '.jpg', 'image/png' => '.png', 'image/webp' => '.webp', 'image/gif' => '.gif'];
             if ($imageInfo && in_array($imageInfo['mime'], $allowed)) {
-                $ext = match($imageInfo['mime']) { 'image/jpeg' => '.jpg', 'image/png' => '.png', 'image/webp' => '.webp', default => '.jpg' };
+                $ext        = $extMap[$imageInfo['mime']] ?? '.jpg';
                 $fileName   = time() . '_' . uniqid() . $ext;
                 $targetPath = UPLOADS_PATH . '/' . $fileName;
                 if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
                     $data['image'] = $fileName;
+                } else {
+                    flash('error', 'Failed to save the uploaded image. Please try again.');
                 }
+            } elseif ($imageInfo) {
+                flash('error', 'Unsupported image format. Please upload a JPG, PNG, WEBP, or GIF.');
             }
+        } elseif (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+            flash('error', 'Image upload error (code ' . $_FILES['image']['error'] . '). Max size: 40 MB.');
         }
 
         if ($data['sku'] && $this->productModel->skuExists($data['sku'])) {
             flash('error', 'SKU "' . htmlspecialchars($data['sku']) . '" already exists. Please use a unique SKU.');
-            header('Location: ' . APP_URL . '/index.php?url=admin/products/create');
+            header('Location: ' . APP_URL . '/index.php?url=admin/products');
             exit;
         }
 
@@ -190,14 +197,26 @@ class ProductController {
         if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
             // Validate using actual file contents, not client-provided MIME type
             $imageInfo = @getimagesize($_FILES['image']['tmp_name']);
-            $allowed = ['image/jpeg','image/png','image/webp'];
+            $allowed  = ['image/jpeg','image/png','image/webp','image/gif'];
+            $extMap   = ['image/jpeg' => '.jpg', 'image/png' => '.png', 'image/webp' => '.webp', 'image/gif' => '.gif'];
             if ($imageInfo && in_array($imageInfo['mime'], $allowed)) {
-                $ext = match($imageInfo['mime']) { 'image/jpeg' => '.jpg', 'image/png' => '.png', 'image/webp' => '.webp', default => '.jpg' };
+                $ext        = $extMap[$imageInfo['mime']] ?? '.jpg';
                 $fileName   = time() . '_' . uniqid() . $ext;
                 $targetPath = UPLOADS_PATH . '/' . $fileName;
                 if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
                     $data['image'] = $fileName;
+                } else {
+                    if ($isAjax) {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'message' => 'Failed to save the uploaded image.']);
+                        exit;
+                    }
+                    flash('error', 'Failed to save the uploaded image. Please try again.');
                 }
+            } elseif ($imageInfo) {
+                $msg = 'Unsupported image format. Please upload a JPG, PNG, WEBP, or GIF.';
+                if ($isAjax) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => $msg]); exit; }
+                flash('error', $msg);
             }
         }
 

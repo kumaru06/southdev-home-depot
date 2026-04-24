@@ -133,8 +133,9 @@ class ReportController {
             case 'sales_monthly':  return $this->exportSalesMonthly();
             case 'sales_rows':     return $this->exportSalesRows();
             case 'current_inventory': return $this->exportCurrentInventory();
-            case 'inventory_added':   return $this->exportInventoryAdded();
-            case 'damaged_inventory': return $this->exportDamagedInventory();
+            case 'inventory_added':      return $this->exportInventoryAdded();
+            case 'inventory_combined':   return $this->exportInventoryCombined();
+            case 'damaged_inventory':    return $this->exportDamagedInventory();
             // legacy compat
             case 'sales':
                 $period = $_GET['period'] ?? 'rows';
@@ -169,42 +170,46 @@ class ReportController {
                        SUM(oi.quantity) as units_sold,
                        SUM(oi.subtotal) as gross_revenue,
                        SUM(CASE WHEN pay.status = 'refunded' THEN oi.subtotal ELSE 0 END) as refunded_amount,
-                       SUM(CASE WHEN pay.status != 'refunded' AND o.status != 'cancelled' THEN oi.subtotal ELSE 0 END) as net_revenue
+                       SUM(CASE WHEN (pay.status IS NULL OR pay.status != 'refunded') THEN oi.subtotal ELSE 0 END) as net_revenue
                 FROM order_items oi
                 JOIN orders o ON oi.order_id = o.id
                 LEFT JOIN payments pay ON pay.order_id = o.id
                 WHERE o.status != 'cancelled'
-                AND (pay.status IS NULL OR pay.status != 'refunded')
                 GROUP BY sale_date
                 ORDER BY sale_date DESC";
         $rows = $this->pdo->query($sql)->fetchAll();
 
         $out = $this->startCsv('SouthDev_Sales_Daily_' . date('Y-m-d') . '.csv');
 
-        // Title rows
         fputcsv($out, ['SOUTHDEV HOME DEPOT']);
         fputcsv($out, ['Sales Report - Daily Summary']);
-        fputcsv($out, ['Generated:', date('F d, Y h:i A')]);
-        fputcsv($out, []); // blank row
+        fputcsv($out, ['Generated: ' . date('D, d M Y, h:i A')]);
+        fputcsv($out, []);
 
-        fputcsv($out, ['Date', 'Total Orders', 'Units Sold', 'Revenue (PHP)']);
+        fputcsv($out, ['Date', 'Total Orders', 'Units Sold', 'Gross Revenue (PHP)', 'Refunds (PHP)', 'Net Revenue (PHP)']);
 
-        $grandOrders = 0; $grandUnits = 0; $grandRevenue = 0;
+        $grandOrders = 0; $grandUnits = 0; $grandGross = 0; $grandRefunds = 0; $grandNet = 0;
         foreach ($rows as $r) {
-            $revenue = floatval($r['net_revenue'] ?: $r['gross_revenue']);
+            $gross   = floatval($r['gross_revenue']);
+            $refunds = floatval($r['refunded_amount']);
+            $net     = floatval($r['net_revenue'] ?: ($gross - $refunds));
             fputcsv($out, [
                 date('M d, Y', strtotime($r['sale_date'])),
                 intval($r['total_orders']),
                 intval($r['units_sold']),
-                number_format($revenue, 2)
+                number_format($gross, 2),
+                number_format($refunds, 2),
+                number_format($net, 2)
             ]);
             $grandOrders  += intval($r['total_orders']);
             $grandUnits   += intval($r['units_sold']);
-            $grandRevenue += $revenue;
+            $grandGross   += $gross;
+            $grandRefunds += $refunds;
+            $grandNet     += $net;
         }
 
-        fputcsv($out, []); // blank row
-        fputcsv($out, ['TOTAL', $grandOrders, $grandUnits, number_format($grandRevenue, 2)]);
+        fputcsv($out, []);
+        fputcsv($out, ['TOTAL', $grandOrders, $grandUnits, number_format($grandGross, 2), number_format($grandRefunds, 2), number_format($grandNet, 2)]);
 
         fclose($out);
         exit;
@@ -217,12 +222,13 @@ class ReportController {
         $sql = "SELECT DATE_FORMAT(o.created_at, '%Y-%m') as sale_month,
                        COUNT(DISTINCT o.id) as total_orders,
                        SUM(oi.quantity) as units_sold,
-                       SUM(oi.subtotal) as revenue
+                       SUM(oi.subtotal) as gross_revenue,
+                       SUM(CASE WHEN pay.status = 'refunded' THEN oi.subtotal ELSE 0 END) as refunded_amount,
+                       SUM(CASE WHEN (pay.status IS NULL OR pay.status != 'refunded') THEN oi.subtotal ELSE 0 END) as net_revenue
                 FROM order_items oi
                 JOIN orders o ON oi.order_id = o.id
                 LEFT JOIN payments pay ON pay.order_id = o.id
                 WHERE o.status != 'cancelled'
-                AND (pay.status IS NULL OR pay.status != 'refunded')
                 GROUP BY sale_month
                 ORDER BY sale_month DESC";
         $rows = $this->pdo->query($sql)->fetchAll();
@@ -231,27 +237,33 @@ class ReportController {
 
         fputcsv($out, ['SOUTHDEV HOME DEPOT']);
         fputcsv($out, ['Sales Report - Monthly Summary']);
-        fputcsv($out, ['Generated:', date('F d, Y h:i A')]);
+        fputcsv($out, ['Generated: ' . date('D, d M Y, h:i A')]);
         fputcsv($out, []);
 
-        fputcsv($out, ['Month', 'Total Orders', 'Units Sold', 'Revenue (PHP)']);
+        fputcsv($out, ['Month', 'Total Orders', 'Units Sold', 'Gross Revenue (PHP)', 'Refunds (PHP)', 'Net Revenue (PHP)']);
 
-        $grandOrders = 0; $grandUnits = 0; $grandRevenue = 0;
+        $grandOrders = 0; $grandUnits = 0; $grandGross = 0; $grandRefunds = 0; $grandNet = 0;
         foreach ($rows as $r) {
-            $rev = floatval($r['revenue']);
+            $gross   = floatval($r['gross_revenue']);
+            $refunds = floatval($r['refunded_amount']);
+            $net     = floatval($r['net_revenue'] ?: ($gross - $refunds));
             fputcsv($out, [
                 date('F Y', strtotime($r['sale_month'] . '-01')),
                 intval($r['total_orders']),
                 intval($r['units_sold']),
-                number_format($rev, 2)
+                number_format($gross, 2),
+                number_format($refunds, 2),
+                number_format($net, 2)
             ]);
             $grandOrders  += intval($r['total_orders']);
             $grandUnits   += intval($r['units_sold']);
-            $grandRevenue += $rev;
+            $grandGross   += $gross;
+            $grandRefunds += $refunds;
+            $grandNet     += $net;
         }
 
         fputcsv($out, []);
-        fputcsv($out, ['TOTAL', $grandOrders, $grandUnits, number_format($grandRevenue, 2)]);
+        fputcsv($out, ['TOTAL', $grandOrders, $grandUnits, number_format($grandGross, 2), number_format($grandRefunds, 2), number_format($grandNet, 2)]);
 
         fclose($out);
         exit;
@@ -265,6 +277,7 @@ class ReportController {
                        u.first_name, u.last_name,
                        p.sku, p.name as product_name, c.name as category,
                        oi.quantity, oi.price, oi.subtotal,
+                       COALESCE(p.cost, 0) as unit_cost,
                        o.total_amount,
                        pay.payment_method, pay.status as payment_status
                 FROM order_items oi
@@ -274,7 +287,6 @@ class ReportController {
                 JOIN users u ON o.user_id = u.id
                 LEFT JOIN payments pay ON pay.order_id = o.id
                 WHERE o.status != 'cancelled'
-                AND (pay.status IS NULL OR pay.status != 'refunded')
                 ORDER BY o.created_at DESC";
         $rows = $this->pdo->query($sql)->fetchAll();
 
@@ -282,18 +294,32 @@ class ReportController {
 
         fputcsv($out, ['SOUTHDEV HOME DEPOT']);
         fputcsv($out, ['Sales Report - Detailed Transactions']);
-        fputcsv($out, ['Generated:', date('F d, Y h:i A')]);
+        fputcsv($out, ['Generated: ' . date('D, d M Y, h:i A')]);
         fputcsv($out, []);
 
-        fputcsv($out, ['Order #', 'Date', 'Customer', 'Category', 'SKU', 'Product', 'Qty', 'Unit Price (PHP)', 'Subtotal (PHP)', 'Order Total (PHP)', 'Payment Method', 'Payment Status', 'Order Status']);
+        fputcsv($out, ['Order #', 'Date', 'Customer', 'Category', 'SKU', 'Product', 'Qty', 'Unit Price (PHP)', 'Unit Cost (PHP)', 'Subtotal (PHP)', 'Profit (PHP)', 'Order Total (PHP)', 'Payment Method', 'Payment Status', 'Order Status']);
 
-        $grandTotal = 0;
+        $grandSubtotal = 0; $grandProfit = 0; $grandCost = 0;
         foreach ($rows as $r) {
             $pm = strtolower($r['payment_method'] ?? '');
             if (str_contains($pm, 'gcash')) $pmLabel = 'GCash';
             elseif (str_contains($pm, 'card')) $pmLabel = 'Card';
             elseif (str_contains($pm, 'cod') || str_contains($pm, 'cash')) $pmLabel = 'COD';
             else $pmLabel = ucfirst($r['payment_method'] ?? 'N/A');
+
+            $rawPayStatus = $r['payment_status'] ?? 'N/A';
+            // COD + pending + delivered = cash was collected on delivery but never updated in DB
+            if ($rawPayStatus === 'pending' && str_contains($pm, 'cod') && $r['order_status'] === 'delivered') {
+                $payStatusLabel = 'Completed (COD)';
+            } else {
+                $payStatusLabel = ucfirst($rawPayStatus);
+            }
+
+            $qty      = intval($r['quantity']);
+            $price    = floatval($r['price']);
+            $cost     = floatval($r['unit_cost']);
+            $subtotal = floatval($r['subtotal']);
+            $profit   = ($price - $cost) * $qty;
 
             fputcsv($out, [
                 $r['order_number'],
@@ -302,19 +328,25 @@ class ReportController {
                 $r['category'],
                 $r['sku'] ?? '',
                 $r['product_name'],
-                intval($r['quantity']),
-                number_format(floatval($r['price']), 2),
-                number_format(floatval($r['subtotal']), 2),
+                $qty,
+                number_format($price, 2),
+                number_format($cost, 2),
+                number_format($subtotal, 2),
+                number_format($profit, 2),
                 number_format(floatval($r['total_amount']), 2),
                 $pmLabel,
-                ucfirst($r['payment_status'] ?? 'N/A'),
+                $payStatusLabel,
                 ucfirst($r['order_status'])
             ]);
-            $grandTotal += floatval($r['subtotal']);
+            $grandSubtotal += $subtotal;
+            $grandCost     += $cost * $qty;
+            $grandProfit   += $profit;
         }
 
         fputcsv($out, []);
-        fputcsv($out, ['', '', '', '', '', '', '', 'GRAND TOTAL:', number_format($grandTotal, 2)]);
+        fputcsv($out, ['', '', '', '', '', '', '', '', 'GRAND TOTAL (Subtotal):', number_format($grandSubtotal, 2)]);
+        fputcsv($out, ['', '', '', '', '', '', '', '', 'Total COGS:', number_format($grandCost, 2)]);
+        fputcsv($out, ['', '', '', '', '', '', '', '', 'Total Gross Profit:', number_format($grandProfit, 2)]);
 
         fclose($out);
         exit;
@@ -345,7 +377,7 @@ class ReportController {
 
         fputcsv($out, ['SOUTHDEV HOME DEPOT']);
         fputcsv($out, ['Current Inventory Report']);
-        fputcsv($out, ['Generated:', date('F d, Y h:i A')]);
+        fputcsv($out, ['Generated: ' . date('D, d M Y, h:i A')]);
         fputcsv($out, []);
 
         fputcsv($out, ['Category', 'SKU', 'Product Name', 'Selling Price (PHP)', 'Unit Cost (PHP)', 'Current Stock', 'Reorder Level', 'Stock Status', 'Inventory Value (PHP)']);
@@ -404,7 +436,7 @@ class ReportController {
 
         fputcsv($out, ['SOUTHDEV HOME DEPOT']);
         fputcsv($out, ['Inventory Added Report - Stock-In Movements']);
-        fputcsv($out, ['Generated:', date('F d, Y h:i A')]);
+        fputcsv($out, ['Generated: ' . date('D, d M Y, h:i A')]);
         fputcsv($out, []);
 
         fputcsv($out, ['Date', 'Category', 'SKU', 'Product Name', 'Type', 'Quantity Added', 'Notes', 'Added By']);
@@ -428,6 +460,84 @@ class ReportController {
         fputcsv($out, ['SUMMARY']);
         fputcsv($out, ['Total Stock-In Entries:', count($rows)]);
         fputcsv($out, ['Total Units Added:', number_format($totalAdded)]);
+
+        fclose($out);
+        exit;
+    }
+
+    /* ==========================================================
+     *  5b. INVENTORY COMBINED – current + added + removed per product
+     * ========================================================== */
+    private function exportInventoryCombined() {
+        // Per-product aggregation of stock movements
+        $sql = "
+            SELECT
+                c.name  AS category,
+                p.sku,
+                p.name  AS product_name,
+                p.price AS selling_price,
+                COALESCE(i.quantity, 0) AS current_stock,
+                COALESCE(added.total_added, 0)   AS total_added,
+                COALESCE(removed.total_removed, 0) AS total_removed
+            FROM products p
+            JOIN categories c ON p.category_id = c.id
+            LEFT JOIN inventory i ON p.id = i.product_id
+            LEFT JOIN (
+                SELECT product_id, SUM(quantity) AS total_added
+                FROM stock_movements
+                WHERE quantity > 0
+                GROUP BY product_id
+            ) added ON p.id = added.product_id
+            LEFT JOIN (
+                SELECT product_id, SUM(ABS(quantity)) AS total_removed
+                FROM stock_movements
+                WHERE quantity < 0
+                GROUP BY product_id
+            ) removed ON p.id = removed.product_id
+            WHERE p.is_active = 1
+            ORDER BY c.name, p.name
+        ";
+        $rows = $this->pdo->query($sql)->fetchAll();
+
+        $out = $this->startCsv('SouthDev_Inventory_Combined_' . date('Y-m-d') . '.csv');
+
+        fputcsv($out, ['SOUTHDEV HOME DEPOT']);
+        fputcsv($out, ['Inventory Combined Report — Stock Added vs Removed vs Current']);
+        fputcsv($out, ['Generated: ' . date('D, d M Y, h:i A')]);
+        fputcsv($out, []);
+        fputcsv($out, ['Category', 'SKU', 'Product Name', 'Selling Price (PHP)', 'Opening Stock', 'Total Added', 'Total Removed', 'Current Total', 'Formula']);
+
+        $grandOpening = 0; $grandAdded = 0; $grandRemoved = 0; $grandCurrent = 0;
+        foreach ($rows as $r) {
+            $added   = intval($r['total_added']);
+            $removed = intval($r['total_removed']);
+            $current = intval($r['current_stock']);
+            // Opening = what was there before any stock movements recorded
+            $opening = $current - $added + $removed;
+            fputcsv($out, [
+                $r['category'],
+                $r['sku'] ?? '',
+                $r['product_name'],
+                number_format(floatval($r['selling_price']), 2),
+                $opening,
+                $added,
+                $removed,
+                $current,
+                $opening . ' + ' . $added . ' - ' . $removed . ' = ' . $current
+            ]);
+            $grandOpening += $opening;
+            $grandAdded   += $added;
+            $grandRemoved += $removed;
+            $grandCurrent += $current;
+        }
+
+        fputcsv($out, []);
+        fputcsv($out, ['SUMMARY']);
+        fputcsv($out, ['Total Products:', count($rows)]);
+        fputcsv($out, ['Total Opening Stock:', number_format($grandOpening)]);
+        fputcsv($out, ['Total Units Added:', number_format($grandAdded)]);
+        fputcsv($out, ['Total Units Removed:', number_format($grandRemoved)]);
+        fputcsv($out, ['Total Current Stock:', number_format($grandCurrent)]);
 
         fclose($out);
         exit;
@@ -461,13 +571,13 @@ class ReportController {
 
         fputcsv($out, ['SOUTHDEV HOME DEPOT']);
         fputcsv($out, ['Damaged Inventory Report']);
-        fputcsv($out, ['Generated:', date('F d, Y h:i A')]);
+        fputcsv($out, ['Generated: ' . date('D, d M Y, h:i A')]);
         fputcsv($out, []);
 
         fputcsv($out, ['Date Reported', 'Order #', 'Category', 'SKU', 'Product Name', 'Qty', 'Unit Price (PHP)', 'Estimated Loss (PHP)', 'Return Reason', 'Damage Description', 'Status', 'Admin Notes', 'Reported By', 'Last Updated']);
 
         $totalQty = 0; $totalLoss = 0;
-        $statusCounts = ['received' => 0, 'inspected' => 0, 'written_off' => 0, 'repaired' => 0];
+        $statusCounts = ['received' => 0, 'inspected' => 0, 'written_off' => 0];
         foreach ($rows as $r) {
             $loss = floatval($r['estimated_loss']);
             $qty  = intval($r['quantity']);
@@ -503,7 +613,6 @@ class ReportController {
         fputcsv($out, ['Received:', $statusCounts['received']]);
         fputcsv($out, ['Inspected:', $statusCounts['inspected']]);
         fputcsv($out, ['Written Off:', $statusCounts['written_off']]);
-        fputcsv($out, ['Repaired:', $statusCounts['repaired']]);
 
         fclose($out);
         exit;

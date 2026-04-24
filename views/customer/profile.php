@@ -219,10 +219,24 @@ $locationLabel = $locationLabel !== '' ? $locationLabel : 'No delivery area save
                                 <span class="profile-section-chip">Delivery setup</span>
                                 <h3>Shipping Address</h3>
                                 <p>Manage your default delivery address.</p>
+                                <p class="profile-address-hint">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0;color:#16a34a;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    Save once here &mdash; we&rsquo;ll auto-fill it every time you check out.
+                                </p>
                             </div>
                         </div>
+                        <?php
+                        $returnAfterSave = '';
+                        $rawReturn = trim((string)($_GET['return'] ?? ''));
+                        if (preg_match('/^[a-z0-9\-\/]+$/i', $rawReturn) && !str_starts_with($rawReturn, '/') && !str_contains($rawReturn, '..')) {
+                            $returnAfterSave = $rawReturn;
+                        }
+                        ?>
                         <form action="<?= APP_URL ?>/index.php?url=profile" method="POST" id="address-form">
                             <?= csrf_field() ?>
+                            <?php if ($returnAfterSave !== ''): ?>
+                            <input type="hidden" name="return_url" value="<?= htmlspecialchars($returnAfterSave) ?>">
+                            <?php endif; ?>
                             <!-- Carry personal info fields as hidden so they don't get blanked -->
                             <input type="hidden" name="first_name" value="<?= htmlspecialchars($user['first_name']) ?>">
                             <input type="hidden" name="last_name" value="<?= htmlspecialchars($user['last_name']) ?>">

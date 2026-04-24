@@ -5,12 +5,15 @@
 
 require_once __DIR__ . '/../models/Cart.php';
 require_once __DIR__ . '/../models/Product.php';
+require_once __DIR__ . '/../models/User.php';
 
 class CartController {
     private $cartModel;
     private $productModel;
+    private $pdo;
 
     public function __construct($pdo) {
+        $this->pdo          = $pdo;
         $this->cartModel   = new Cart($pdo);
         $this->productModel = new Product($pdo);
     }
@@ -93,6 +96,10 @@ class CartController {
             header('Location: ' . APP_URL . '/index.php?url=cart');
             exit;
         }
+
+        // Fetch saved profile address so checkout can pre-fill fields
+        $userModel = new User($this->pdo);
+        $savedUser = $userModel->findById($_SESSION['user_id']) ?: null;
 
         $pageTitle = 'Checkout';
         $extraCss  = ['customer.css'];

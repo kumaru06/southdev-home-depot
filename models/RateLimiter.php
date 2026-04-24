@@ -1,8 +1,12 @@
 <?php
 /**
- * Rate Limiter – tracks and enforces login attempt limits
- * 
- * Limits: 5 failed attempts per IP within 15 minutes = 15-minute lockout
+ * Rate Limiter – tracks and enforces login attempt limits.
+ *
+ * Lockout is per (IP address + email/username + login_type) so that:
+ *  - Typing the wrong password for YOUR account only blocks YOUR account from that IP.
+ *  - Other customers on the same network (same public IP) are completely unaffected.
+ *
+ * Limits: 5 failed attempts within 15 minutes → 15-minute lockout for that IP+email combo.
  */
 class RateLimiter {
     private $pdo;
@@ -18,7 +22,7 @@ class RateLimiter {
     }
 
     /**
-     * Create the login_attempts table if it doesn't exist
+     * Create / migrate the login_attempts table if needed.
      */
     private function ensureTable() {
         try {
@@ -27,67 +31,86 @@ class RateLimiter {
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     ip_address VARCHAR(45) NOT NULL,
                     email VARCHAR(255) DEFAULT NULL,
+                    login_type VARCHAR(20) NOT NULL DEFAULT 'customer',
                     attempted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    INDEX idx_ip_time (ip_address, attempted_at),
-                    INDEX idx_email_time (email, attempted_at)
+                    INDEX idx_ip_email_type_time (ip_address, email, login_type, attempted_at)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             ");
         } catch (PDOException $e) {
-            // Silently fail – table may already exist or user lacks CREATE permission
             error_log('RateLimiter: Could not ensure table: ' . $e->getMessage());
+        }
+        // Add login_type column to tables created before this version
+        try {
+            $cols = $this->pdo->query("SHOW COLUMNS FROM login_attempts LIKE 'login_type'")->fetchAll();
+            if (empty($cols)) {
+                $this->pdo->exec("ALTER TABLE login_attempts ADD COLUMN login_type VARCHAR(20) NOT NULL DEFAULT 'customer'");
+            }
+        } catch (PDOException $e) {
+            error_log('RateLimiter: Could not migrate table: ' . $e->getMessage());
         }
     }
 
     /**
-     * Get the client IP address
+     * Get the client IP address.
      */
     public static function getClientIp() {
-        // Only trust REMOTE_ADDR (server-set), not X-Forwarded-For (client-set, spoofable)
         return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
     }
 
     /**
-     * Record a failed login attempt
+     * Record a failed login attempt for this IP + email + type.
+     *
+     * @param string $email     The email or username that was attempted (required).
+     * @param string $loginType 'customer' or 'admin'
      */
-    public function recordFailedAttempt($email = null) {
+    public function recordFailedAttempt($email, $loginType = 'customer') {
         try {
             $stmt = $this->pdo->prepare(
-                "INSERT INTO login_attempts (ip_address, email, attempted_at) VALUES (?, ?, NOW())"
+                "INSERT INTO login_attempts (ip_address, email, login_type, attempted_at) VALUES (?, ?, ?, NOW())"
             );
-            $stmt->execute([self::getClientIp(), $email]);
+            $stmt->execute([self::getClientIp(), strtolower(trim($email)), $loginType]);
         } catch (PDOException $e) {
             error_log('RateLimiter: Could not record attempt: ' . $e->getMessage());
         }
     }
 
     /**
-     * Check if the current IP is rate-limited
-     * @return bool True if too many attempts (should block)
+     * Check if this IP + email combo is currently locked out.
+     * Other customers (different emails) on the same IP are NOT affected.
+     *
+     * @param string $email     The email or username being attempted.
+     * @param string $loginType 'customer' or 'admin'
+     * @return bool  True = blocked, False = allow through
      */
-    public function isLimited() {
+    public function isLimited($email, $loginType = 'customer') {
         try {
             $stmt = $this->pdo->prepare(
-                "SELECT COUNT(*) FROM login_attempts 
-                 WHERE ip_address = ? AND attempted_at > DATE_SUB(NOW(), INTERVAL ? MINUTE)"
+                "SELECT COUNT(*) FROM login_attempts
+                 WHERE ip_address = ? AND email = ? AND login_type = ?
+                   AND attempted_at > DATE_SUB(NOW(), INTERVAL ? MINUTE)"
             );
-            $stmt->execute([self::getClientIp(), self::WINDOW_MINUTES]);
+            $stmt->execute([self::getClientIp(), strtolower(trim($email)), $loginType, self::WINDOW_MINUTES]);
             return $stmt->fetchColumn() >= self::MAX_ATTEMPTS;
         } catch (PDOException $e) {
             error_log('RateLimiter: Could not check limit: ' . $e->getMessage());
-            return false; // fail open rather than locking out everyone
+            return false;
         }
     }
 
     /**
-     * Get remaining attempts for the current IP
+     * How many attempts remain before lockout for this IP + email.
+     *
+     * @param string $email
+     * @param string $loginType
      */
-    public function remainingAttempts() {
+    public function remainingAttempts($email, $loginType = 'customer') {
         try {
             $stmt = $this->pdo->prepare(
-                "SELECT COUNT(*) FROM login_attempts 
-                 WHERE ip_address = ? AND attempted_at > DATE_SUB(NOW(), INTERVAL ? MINUTE)"
+                "SELECT COUNT(*) FROM login_attempts
+                 WHERE ip_address = ? AND email = ? AND login_type = ?
+                   AND attempted_at > DATE_SUB(NOW(), INTERVAL ? MINUTE)"
             );
-            $stmt->execute([self::getClientIp(), self::WINDOW_MINUTES]);
+            $stmt->execute([self::getClientIp(), strtolower(trim($email)), $loginType, self::WINDOW_MINUTES]);
             $used = $stmt->fetchColumn();
             return max(0, self::MAX_ATTEMPTS - $used);
         } catch (PDOException $e) {
@@ -96,19 +119,24 @@ class RateLimiter {
     }
 
     /**
-     * Clear attempts for a specific IP (call after successful login)
+     * Clear failed attempts for this IP + email on successful login.
+     *
+     * @param string $email
+     * @param string $loginType
      */
-    public function clearAttempts() {
+    public function clearAttempts($email, $loginType = 'customer') {
         try {
-            $stmt = $this->pdo->prepare("DELETE FROM login_attempts WHERE ip_address = ?");
-            $stmt->execute([self::getClientIp()]);
+            $stmt = $this->pdo->prepare(
+                "DELETE FROM login_attempts WHERE ip_address = ? AND email = ? AND login_type = ?"
+            );
+            $stmt->execute([self::getClientIp(), strtolower(trim($email)), $loginType]);
         } catch (PDOException $e) {
             error_log('RateLimiter: Could not clear attempts: ' . $e->getMessage());
         }
     }
 
     /**
-     * Purge old records (call periodically or via cron)
+     * Purge records older than 1 day (call via cron or on login).
      */
     public function purgeOld() {
         try {
@@ -121,20 +149,23 @@ class RateLimiter {
     }
 
     /**
-     * Get minutes until lockout expires
+     * Minutes remaining until the lockout expires for this IP + email.
+     *
+     * @param string $email
+     * @param string $loginType
      */
-    public function getLockoutMinutesRemaining() {
+    public function getLockoutMinutesRemaining($email, $loginType = 'customer') {
         try {
             $stmt = $this->pdo->prepare(
-                "SELECT attempted_at FROM login_attempts 
-                 WHERE ip_address = ? 
-                 ORDER BY attempted_at ASC 
+                "SELECT attempted_at FROM login_attempts
+                 WHERE ip_address = ? AND email = ? AND login_type = ?
+                 ORDER BY attempted_at ASC
                  LIMIT 1 OFFSET " . (self::MAX_ATTEMPTS - 1)
             );
-            $stmt->execute([self::getClientIp()]);
+            $stmt->execute([self::getClientIp(), strtolower(trim($email)), $loginType]);
             $oldest = $stmt->fetchColumn();
             if ($oldest) {
-                $expiry = strtotime($oldest) + (self::WINDOW_MINUTES * 60);
+                $expiry    = strtotime($oldest) + (self::WINDOW_MINUTES * 60);
                 $remaining = ceil(($expiry - time()) / 60);
                 return max(1, $remaining);
             }

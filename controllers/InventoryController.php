@@ -226,7 +226,7 @@ class InventoryController {
         $status     = $_POST['status'] ?? '';
         $adminNotes = trim($_POST['admin_notes'] ?? '');
 
-        $validStatuses = ['received', 'inspected', 'written_off', 'repaired'];
+        $validStatuses = ['received', 'inspected', 'written_off'];
         if (!in_array($status, $validStatuses)) {
             flash('error', 'Invalid status.');
             header('Location: ' . $this->inventoryUrl() . '/damaged');
@@ -241,22 +241,6 @@ class InventoryController {
         }
 
         $this->damagedProductModel->updateStatus($id, $status, $adminNotes);
-
-        // If repaired, add the quantity back to inventory
-        if ($status === 'repaired') {
-            $this->inventoryModel->adjustQuantity($damaged['product_id'], $damaged['quantity']);
-            $this->stockMovementModel->record(
-                $damaged['product_id'],
-                'adjustment',
-                $damaged['quantity'],
-                $damaged['return_request_id'],
-                'Repaired damaged product restored to inventory (Damage Record #' . $id . ')',
-                $_SESSION['user_id']
-            );
-            $this->logModel->create(LOG_STOCK_MOVEMENT,
-                "Repaired item restored: {$damaged['product_name']} (qty: {$damaged['quantity']}) from Damage Record #{$id}"
-            );
-        }
 
         $this->logModel->create(LOG_STOCK_MOVEMENT,
             "Damaged product #{$id} ({$damaged['product_name']}) status updated to: {$status}"

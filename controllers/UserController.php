@@ -349,7 +349,14 @@ class UserController {
         $_SESSION['user_name']  = $data['first_name'] . ' ' . $data['last_name'];
 
         flash('success', 'Profile updated.');
-        header('Location: ' . APP_URL . '/index.php?url=profile');
+
+        // If submitted from a specific page (e.g. checkout), redirect back there
+        $returnUrl = trim((string)($_POST['return_url'] ?? ''));
+        if ($returnUrl !== '' && preg_match('/^[a-z0-9\-\/]+$/i', $returnUrl) && !str_starts_with($returnUrl, '/') && !str_contains($returnUrl, '..')) {
+            header('Location: ' . APP_URL . '/index.php?url=' . $returnUrl);
+        } else {
+            header('Location: ' . APP_URL . '/index.php?url=profile');
+        }
         exit;
     }
 

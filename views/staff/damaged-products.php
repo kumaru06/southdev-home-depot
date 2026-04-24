@@ -51,13 +51,6 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
                 </div>
                 <div class="stat-icon" style="background:var(--danger-bg);color:var(--danger);"><i data-lucide="trash-2"></i></div>
             </div>
-            <div class="stat-card">
-                <div class="stat-info">
-                    <span class="stat-label">Repaired</span>
-                    <span class="stat-value"><?= $summary['repaired'] ?? 0 ?></span>
-                </div>
-                <div class="stat-icon" style="background:#D4EDDA;color:#155724;"><i data-lucide="check-circle"></i></div>
-            </div>
         </div>
 
         <!-- Filter Bar -->
@@ -66,7 +59,7 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
                 <input type="hidden" name="url" value="<?= htmlspecialchars($_GET['url'] ?? '') ?>">
                 <select name="status" class="form-control">
                     <option value="">All Statuses</option>
-                    <?php foreach (['received', 'inspected', 'written_off', 'repaired'] as $s): ?>
+                    <?php foreach (['received', 'inspected', 'written_off'] as $s): ?>
                         <option value="<?= $s ?>" <?= (isset($_GET['status']) && $_GET['status'] == $s) ? 'selected' : '' ?>>
                             <?= ucfirst(str_replace('_', ' ', $s)) ?>
                         </option>
@@ -99,7 +92,6 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
                                     'received'    => 'badge-pending',
                                     'inspected'   => 'badge-processing',
                                     'written_off' => 'badge-cancelled',
-                                    'repaired'    => 'badge-delivered',
                                     default       => 'badge-pending'
                                 };
                             ?>

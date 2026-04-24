@@ -72,7 +72,10 @@
                                 <div style="width:72px;height:72px;border:1px solid var(--neutral);border-radius:6px;overflow:hidden;background:var(--neutral);">
                                     <img src="<?= APP_URL ?>/assets/uploads/<?= $product['image'] ?: 'placeholder.svg' ?>" alt="" style="width:100%;height:100%;object-fit:cover;">
                                 </div>
-                                <input type="file" name="image" accept="image/*">
+                                <label for="edit_product_image" style="display:inline-flex; align-items:center; gap:.4rem; padding:.5rem 1rem; border:1.5px solid var(--border); border-radius:var(--radius-sm); background:var(--white); cursor:pointer; font-size:.875rem; color:var(--text-primary); transition:border-color .2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+                                    <i data-lucide="upload" style="width:15px;height:15px;"></i> Choose Image
+                                </label>
+                                <input type="file" id="edit_product_image" name="image" accept="image/jpeg,image/png,image/webp,image/gif" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;" onchange="(function(e){var f=e.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){e.target.closest('.form-row').querySelector('img').src=ev.target.result;};r.readAsDataURL(f);})(event)">
                             </div>
                         </div>
                     </div>

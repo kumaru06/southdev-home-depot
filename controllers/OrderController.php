@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/../models/Order.php';
 require_once __DIR__ . '/../models/Cart.php';
+require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Inventory.php';
 require_once __DIR__ . '/../models/Log.php';
 require_once __DIR__ . '/../models/CancelRequest.php';
@@ -424,6 +425,18 @@ class OrderController {
         $this->orderModel->updateStatus($id, $status);
         $this->logModel->create(LOG_ORDER_STATUS, "Order #{$id} status changed to: {$status}");
 
+        // Auto-mark COD payment as paid when order is delivered
+        if ($status === ORDER_DELIVERED) {
+            try {
+                $paymentModel = new Payment($this->pdo);
+                $payment = $paymentModel->getByOrderId($id);
+                if ($payment && strtolower($payment['payment_method']) === PAYMENT_METHOD_COD
+                    && $payment['status'] === PAYMENT_PENDING) {
+                    $paymentModel->updateStatus($payment['id'], PAYMENT_COMPLETED);
+                }
+            } catch (Throwable $e) { /* silent */ }
+        }
+
         // Notify customer about order status change
         if ($order) {
             try {
@@ -473,6 +486,10 @@ class OrderController {
             header('Location: ' . APP_URL . '/index.php?url=cart');
             exit;
         }
+
+        // Fetch saved profile address so checkout can pre-fill fields
+        $userModel = new User($this->pdo);
+        $savedUser = $userModel->findById($_SESSION['user_id']) ?: null;
 
         $pageTitle = 'Checkout';
         $extraCss = ['customer.css'];

@@ -55,6 +55,50 @@ require_once INCLUDES_PATH . '/navbar.php';
                         </div>
                     </div>
                     <div class="co-card-body">
+                        <?php
+                        $hasSavedAddress = !empty($savedUser['address']);
+                        $hasSavedPhone   = !empty($savedUser['phone']);
+                        ?>
+                        <?php if ($hasSavedAddress || $hasSavedPhone): ?>
+                        <div class="co-saved-addr-bar" id="savedAddrBar">
+                            <div class="co-saved-addr-info">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;flex-shrink:0;">
+                                    <path d="M12 21s-6-4.35-6-10a6 6 0 1 1 12 0c0 5.65-6 10-6 10Z"></path>
+                                    <circle cx="12" cy="11" r="2.5"></circle>
+                                </svg>
+                                <span>
+                                    <?php
+                                    $parts = array_filter([
+                                        htmlspecialchars($savedUser['address'] ?? ''),
+                                        htmlspecialchars($savedUser['zip_code'] ?? ''),
+                                    ]);
+                                    echo implode(' &bull; ', $parts) ?: 'Saved address on file';
+                                    ?>
+                                </span>
+                            </div>
+                            <button type="button" class="co-saved-addr-btn" id="useSavedAddr"
+                                data-address="<?= htmlspecialchars($savedUser['address'] ?? '') ?>"
+                                data-zip="<?= htmlspecialchars($savedUser['zip_code'] ?? '8000') ?>"
+                                data-phone="<?= htmlspecialchars($savedUser['phone'] ?? '') ?>">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                Use saved address
+                            </button>
+                        </div>
+                        <?php else: ?>
+                        <div class="co-saved-addr-bar co-saved-addr-bar--empty" id="savedAddrBar">
+                            <div class="co-saved-addr-info">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;flex-shrink:0;">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                                <span>No saved address &mdash; save one in your profile to skip this next time.</span>
+                            </div>
+                            <a href="<?= APP_URL ?>/index.php?url=profile&amp;return=checkout#address-section" class="co-saved-addr-btn co-saved-addr-btn--outline">
+                                Save address
+                            </a>
+                        </div>
+                        <?php endif; ?>
                         <div class="co-location-tag">Davao City, Davao del Sur &bull; 8000</div>
                         <div class="form-group">
                             <label for="shipping_barangay">Barangay <span class="required">*</span></label>
@@ -73,7 +117,9 @@ require_once INCLUDES_PATH . '/navbar.php';
                             </div>
                             <div class="form-group form-col">
                                 <label for="contact_phone">Contact Phone <span class="required">*</span></label>
-                                <input type="text" id="contact_phone" name="contact_phone" class="form-control" placeholder="09XX XXX XXXX" required>
+                                <input type="text" id="contact_phone" name="contact_phone" class="form-control"
+                                    value="<?= htmlspecialchars($savedUser['phone'] ?? '') ?>"
+                                    placeholder="09XX XXX XXXX" required>
                             </div>
                         </div>
                         <div class="form-group" style="margin-bottom:0">

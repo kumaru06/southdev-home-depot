@@ -1,0 +1,370 @@
+/* ============================================================
+   System Logs – logs.css
+   ============================================================ */
+
+/* ---------- Filter Card ---------- */
+.logs-filter-card {
+    margin-bottom: 1.5rem;
+    padding: 1.1rem 1.25rem;
+}
+
+.logs-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    align-items: flex-end;
+}
+
+.logs-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+}
+
+.logs-filter-label {
+    font-size: .72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--steel);
+}
+
+.logs-filter-select,
+.logs-filter-date,
+.logs-filter-input {
+    height: 38px;
+    font-size: .85rem;
+    border-radius: 8px;
+}
+
+.logs-filter-select  { width: 195px; }
+.logs-filter-date    { width: 148px; }
+
+.logs-filter-search  { flex: 1; min-width: 180px; }
+
+.logs-search-wrap {
+    position: relative;
+}
+
+.logs-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 15px;
+    height: 15px;
+    color: var(--steel);
+    pointer-events: none;
+}
+
+.logs-filter-input {
+    width: 100%;
+    padding-left: 32px;
+}
+
+.logs-filter-actions {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    padding-top: 1.3rem; /* align with inputs (accounts for label height) */
+}
+
+.logs-btn-filter,
+.logs-btn-clear {
+    height: 38px;
+    padding: 0 16px;
+    font-size: .85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 8px;
+}
+
+/* ---------- Card Header ---------- */
+.logs-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+
+.logs-card-title {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--charcoal);
+}
+
+.logs-total-badge {
+    background: rgba(230, 81, 0, .1);
+    color: var(--accent);
+    font-size: .78rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: .02em;
+}
+
+/* ---------- Table ---------- */
+.logs-table .logs-id-cell {
+    font-size: .78rem;
+    color: var(--steel);
+    font-weight: 600;
+}
+
+.logs-detail-cell {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: .85rem;
+    color: var(--charcoal);
+}
+
+/* ---------- Action Badges ---------- */
+.log-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: .73rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    white-space: nowrap;
+}
+
+.log-badge-icon {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+}
+
+/* Login / Logout */
+.log-badge--login {
+    background: rgba(46, 125, 50, .12);
+    color: #2a7d32;
+}
+.log-badge--logout {
+    background: rgba(96, 125, 139, .13);
+    color: #546e7a;
+}
+
+/* Orders */
+.log-badge--order {
+    background: rgba(2, 136, 209, .12);
+    color: #0277bd;
+}
+.log-badge--status {
+    background: rgba(245, 124, 0, .12);
+    color: #e65100;
+}
+.log-badge--cancel {
+    background: rgba(198, 40, 40, .11);
+    color: #c62828;
+}
+
+/* Products */
+.log-badge--product {
+    background: rgba(0, 131, 143, .12);
+    color: #00838f;
+}
+.log-badge--edit {
+    background: rgba(81, 45, 168, .11);
+    color: #512da8;
+}
+
+/* Danger (delete / reject / payment fail) */
+.log-badge--danger {
+    background: rgba(229, 57, 53, .11);
+    color: #e53935;
+}
+
+/* Users */
+.log-badge--user {
+    background: rgba(25, 118, 210, .12);
+    color: #1565c0;
+}
+
+/* Payment */
+.log-badge--payment {
+    background: rgba(46, 125, 50, .12);
+    color: #2a7d32;
+}
+
+/* Stock / inventory */
+.log-badge--stock {
+    background: rgba(2, 119, 189, .12);
+    color: #0277bd;
+}
+
+/* Returns */
+.log-badge--return {
+    background: rgba(245, 124, 0, .12);
+    color: #e65100;
+}
+
+/* Damaged */
+.log-badge--damaged {
+    background: rgba(249, 168, 37, .15);
+    color: #e65100;
+}
+
+/* Fallback */
+.log-badge--default {
+    background: rgba(96, 125, 139, .1);
+    color: #546e7a;
+}
+
+/* ---------- User Cell ---------- */
+.logs-user-cell {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.logs-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: .68rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    letter-spacing: .03em;
+}
+
+.logs-username {
+    font-size: .83rem;
+    font-weight: 500;
+    color: var(--charcoal);
+    white-space: nowrap;
+}
+
+.logs-system-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: .8rem;
+    color: var(--steel);
+    font-style: italic;
+}
+
+/* ---------- IP ---------- */
+.logs-ip {
+    font-size: .78rem;
+    font-family: monospace;
+    color: var(--steel);
+    background: #f4f4f5;
+    padding: 2px 7px;
+    border-radius: 5px;
+}
+
+/* ---------- Timestamp ---------- */
+.logs-time-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.logs-time-main {
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--charcoal);
+}
+
+.logs-time-sub {
+    font-size: .74rem;
+    color: var(--steel);
+}
+
+/* ---------- Empty State ---------- */
+.logs-empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.logs-empty-icon {
+    width: 44px;
+    height: 44px;
+    color: var(--steel);
+    display: block;
+    margin: 0 auto .75rem;
+}
+
+.logs-empty-state p {
+    color: var(--steel);
+    font-size: .9rem;
+}
+
+/* ---------- Pagination ---------- */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 8px;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--charcoal);
+    background: #f5f5f5;
+    border: 1.5px solid #e0e0e0;
+    text-decoration: none;
+    transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.page-btn:hover {
+    background: #fff;
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 1px 6px rgba(230,81,0,.15);
+}
+
+.page-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(230,81,0,.3);
+    cursor: default;
+    pointer-events: none;
+}
+
+/* Prev / Next get a slightly wider pill */
+.page-btn:first-child,
+.page-btn:last-child {
+    padding: 0 14px;
+    background: #fff;
+    border-color: #d0d0d0;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 767px) {
+    .logs-filter-bar      { flex-direction: column; }
+    .logs-filter-select,
+    .logs-filter-date,
+    .logs-filter-search   { width: 100%; }
+    .logs-filter-actions  { padding-top: 0; width: 100%; }
+    .logs-btn-filter,
+    .logs-btn-clear       { flex: 1; justify-content: center; }
+    .logs-time-cell       { flex-direction: row; gap: 6px; align-items: center; }
+}

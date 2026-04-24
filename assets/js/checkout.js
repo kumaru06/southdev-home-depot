@@ -54,6 +54,52 @@
         /* Populate barangay dropdown */
         initBarangays();
 
+        /* ── Use Saved Address ── */
+        var useSavedBtn = document.getElementById('useSavedAddr');
+        if (useSavedBtn) {
+            useSavedBtn.addEventListener('click', function () {
+                var address = this.dataset.address || '';
+                var zip     = this.dataset.zip     || '8000';
+                var phone   = this.dataset.phone   || '';
+
+                /* Fill street address */
+                var streetEl = document.getElementById('street_address');
+                if (streetEl && address) {
+                    streetEl.value = address;
+                    streetEl.classList.remove('is-invalid');
+                }
+
+                /* Fill zip */
+                var zipEl = document.getElementById('shipping_zip');
+                if (zipEl && zip) zipEl.value = zip;
+
+                /* Fill phone */
+                var phoneEl = document.getElementById('contact_phone');
+                if (phoneEl && phone) {
+                    phoneEl.value = phone;
+                    phoneEl.classList.remove('is-invalid');
+                }
+
+                /* Try to auto-select barangay if address contains a known one */
+                var brgySelect = document.getElementById('shipping_barangay');
+                if (brgySelect && address) {
+                    var normalized = address.toLowerCase();
+                    for (var i = 0; i < DAVAO_BARANGAYS.length; i++) {
+                        if (normalized.indexOf(DAVAO_BARANGAYS[i].toLowerCase()) !== -1) {
+                            brgySelect.value = DAVAO_BARANGAYS[i];
+                            brgySelect.classList.remove('is-invalid');
+                            break;
+                        }
+                    }
+                }
+
+                /* Visual feedback – change button to "Applied" */
+                this.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><polyline points="20 6 9 17 4 12"></polyline></svg> Applied';
+                this.disabled = true;
+                this.style.opacity = '0.7';
+            });
+        }
+
         if (form) {
             form.addEventListener('submit', function (e) {
                 if (!validateCheckout()) {

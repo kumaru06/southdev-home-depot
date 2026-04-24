@@ -80,6 +80,13 @@ $activeTab = $_GET['tab'] ?? 'sales';
                                 <small>All stock-in movements</small>
                             </span>
                         </a>
+                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($_GET['url'] ?? 'staff/reports') ?>&export=inventory_combined" class="export-btn export-btn--inv">
+                            <i data-lucide="bar-chart-2" style="width:16px;height:16px;"></i>
+                            <span>
+                                <strong>Inventory Combined</strong>
+                                <small>Added + Removed = Current Stock</small>
+                            </span>
+                        </a>
                         <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($_GET['url'] ?? 'staff/reports') ?>&export=damaged_inventory" class="export-btn export-btn--dmg">
                             <i data-lucide="alert-octagon" style="width:16px;height:16px;"></i>
                             <span>

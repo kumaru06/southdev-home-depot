@@ -102,15 +102,6 @@
 .stat-card.stat-charcoal-c::before  { background: var(--charcoal);}
 .stat-card.stat-red-c::before       { background: var(--danger);  }
 
-/* Fallback nth-child colors */
-.stat-card:nth-child(1)::before { background: var(--accent); }
-.stat-card:nth-child(2)::before { background: var(--info); }
-.stat-card:nth-child(3)::before { background: var(--warning); }
-.stat-card:nth-child(4)::before { background: var(--success); }
-.stat-card:nth-child(5)::before { background: var(--charcoal); }
-.stat-card:nth-child(6)::before { background: var(--danger); }
-.stat-card:nth-child(7)::before { background: #6A1B9A; }
-
 .stat-card .stat-info {
     flex: 1;
     min-width: 0;

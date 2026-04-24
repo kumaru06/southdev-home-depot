@@ -69,7 +69,16 @@ require_once INCLUDES_PATH . '/sidebar.php';
                 </div>
                 <div class="form-group">
                     <label class="form-label">Product Image</label>
-                    <input type="file" name="image" class="form-control" accept="image/*">
+                    <div style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap;">
+                        <div id="add_image_preview_wrap" style="display:none; width:72px; height:72px; border:1px solid var(--border); border-radius:6px; overflow:hidden; background:var(--neutral);">
+                            <img id="add_image_preview" src="" alt="Preview" style="width:100%;height:100%;object-fit:cover;">
+                        </div>
+                        <label for="add_product_image" style="display:inline-flex; align-items:center; gap:.4rem; padding:.5rem 1rem; border:1.5px solid var(--border); border-radius:var(--radius-sm); background:var(--white); cursor:pointer; font-size:.875rem; color:var(--text-primary); transition:border-color .2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+                            <i data-lucide="upload" style="width:15px;height:15px;"></i> Choose Image
+                        </label>
+                        <input type="file" id="add_product_image" name="image" accept="image/jpeg,image/png,image/webp,image/gif" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;">
+                        <span id="add_image_filename" style="font-size:.8rem; color:var(--text-muted);">No file chosen</span>
+                    </div>
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-accent">
@@ -226,8 +235,11 @@ require_once INCLUDES_PATH . '/sidebar.php';
                         <img id="pe_image_preview" src="<?= APP_URL ?>/assets/uploads/placeholder.svg" alt="" style="width:100%;height:100%;object-fit:cover;">
                     </div>
                     <div style="flex:1;">
-                        <label class="form-label">Replace Image</label>
-                        <input type="file" name="image" id="pe_image_input" accept="image/*">
+                        <label class="form-label">Replace Image</label><br>
+                        <label for="pe_image_input" style="display:inline-flex; align-items:center; gap:.4rem; padding:.45rem .85rem; border:1.5px solid var(--border); border-radius:var(--radius-sm); background:var(--white); cursor:pointer; font-size:.8rem; color:var(--text-primary); transition:border-color .2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+                            <i data-lucide="upload" style="width:13px;height:13px;"></i> Choose Image
+                        </label>
+                        <input type="file" name="image" id="pe_image_input" accept="image/jpeg,image/png,image/webp,image/gif" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;">
                     </div>
                     <div style="width:120px;">
                         <label class="form-label">Quantity</label>
@@ -258,178 +270,189 @@ var cropperScript = document.createElement('script');
 cropperScript.src = 'https://unpkg.com/cropperjs@1.5.13/dist/cropper.min.js';
 document.head.appendChild(cropperScript);
 
-// Populate and open product edit modal
 (function(){
     var appUrl = '<?= APP_URL ?>';
+
+    // ── Shared crop state ──────────────────────────────────────────────────
+    var cropper         = null;
+    var cropContext     = null;   // 'add' | 'edit'
+    var addCroppedBlob  = null;
+    var editCroppedBlob = null;
+    var addOriginalName = '';    // original filename (no extension) for display
+
+    function waitForCropper(cb){ if(typeof Cropper==='undefined'){ setTimeout(function(){ waitForCropper(cb); },120); return; } cb(); }
+
+    function openCropModal(src, context){
+        cropContext = context;
+        waitForCropper(function(){
+            var overlay = document.getElementById('imageCropModal');
+            var img     = document.getElementById('cropperImage');
+            img.src = src;
+            overlay.classList.add('active');
+            if(cropper){ try{ cropper.destroy(); }catch(e){} cropper=null; }
+            cropper = new Cropper(img, { aspectRatio:1, viewMode:1, autoCropArea:1 });
+        });
+    }
+
+    function closeCropModal(){
+        var overlay = document.getElementById('imageCropModal');
+        overlay.classList.remove('active');
+        if(cropper){ try{ cropper.destroy(); }catch(e){} cropper=null; }
+    }
+
+    // Apply / Cancel crop buttons
+    document.addEventListener('click', function(e){
+        if(e.target && (e.target.id==='cropCancelBtn' || e.target.id==='cropCancelBtn2')){
+            closeCropModal();
+        }
+        if(e.target && e.target.id==='cropApplyBtn'){
+            if(!cropper) return;
+            cropper.getCroppedCanvas({ width:800, height:800 }).toBlob(function(blob){
+                if(cropContext === 'add'){
+                    addCroppedBlob = blob;
+                    var wrap    = document.getElementById('add_image_preview_wrap');
+                    var preview = document.getElementById('add_image_preview');
+                    var span    = document.getElementById('add_image_filename');
+                    if(wrap)    wrap.style.display = 'block';
+                    if(preview) preview.src = URL.createObjectURL(blob);
+                    if(span)    span.textContent = addOriginalName || 'Cropped image';
+                } else if(cropContext === 'edit'){
+                    editCroppedBlob = blob;
+                    var preview = document.getElementById('pe_image_preview');
+                    if(preview) preview.src = URL.createObjectURL(blob);
+                }
+                closeCropModal();
+            }, 'image/jpeg', 0.9);
+        }
+    });
+
+    // ── ADD PRODUCT: file input → open crop modal ──────────────────────────
+    var addInput = document.getElementById('add_product_image');
+    if(addInput){
+        addInput.addEventListener('change', function(){
+            var f = this.files[0];
+            if(!f) return;
+            addOriginalName = f.name.replace(/\.[^/.]+$/, ''); // strip extension
+            var reader = new FileReader();
+            reader.onload = function(ev){ openCropModal(ev.target.result, 'add'); };
+            reader.readAsDataURL(f);
+        });
+    }
+
+    // ADD PRODUCT: inject cropped blob into the file input before normal submit
+    var addForm = document.querySelector('form[action*="admin/products/create"]');
+    if(addForm){
+        addForm.addEventListener('submit', function(){
+            if(!addCroppedBlob) return; // no crop — let browser submit as-is
+            try {
+                var dt = new DataTransfer();
+                dt.items.add(new File([addCroppedBlob], 'cropped_'+Date.now()+'.jpg', { type:'image/jpeg' }));
+                var inp = document.getElementById('add_product_image');
+                if(inp) inp.files = dt.files;
+            } catch(ex) { /* DataTransfer not supported — fall back to uncropped */ }
+            // let the form submit normally so server redirects & flash messages work
+        });
+    }
+
+    // ── EDIT PRODUCT MODAL ─────────────────────────────────────────────────
     document.querySelectorAll('.product-edit-trigger').forEach(function(btn){
         btn.addEventListener('click', function(e){
             e.preventDefault();
-            var id = this.dataset.id;
-            var name = this.dataset.name || '';
-            var price = this.dataset.price || '';
-            var sku = this.dataset.sku || '';
-            var desc = this.dataset.desc || '';
-            var cat = this.dataset.categoryId || '';
-            var stock = this.dataset.stock || 0;
-            // Prefer current row image src (keeps modal in sync if image changed)
+            var id    = this.dataset.id;
             var rowImg = this.closest('tr') ? this.closest('tr').querySelector('td[data-label="Image"] img') : null;
-            var image = rowImg && rowImg.src ? rowImg.src : (this.dataset.image || (appUrl + '/assets/uploads/placeholder.svg'));
+            var image  = rowImg && rowImg.src ? rowImg.src : (this.dataset.image || (appUrl+'/assets/uploads/placeholder.svg'));
 
-            document.getElementById('productEditTitle').textContent = 'Edit Product — ' + name;
-            document.getElementById('pe_name').value = name;
-            document.getElementById('pe_price').value = price;
-            document.getElementById('pe_sku').value = sku;
-            document.getElementById('pe_desc').value = desc;
-            document.getElementById('pe_category').value = cat;
-            document.getElementById('pe_quantity').value = stock;
-            document.getElementById('pe_existing_image').value = image.replace(appUrl + '/assets/uploads/', '');
+            document.getElementById('productEditTitle').textContent = 'Edit Product — '+(this.dataset.name||'');
+            document.getElementById('pe_name').value        = this.dataset.name    || '';
+            document.getElementById('pe_price').value       = this.dataset.price   || '';
+            document.getElementById('pe_sku').value         = this.dataset.sku     || '';
+            document.getElementById('pe_desc').value        = this.dataset.desc    || '';
+            document.getElementById('pe_category').value    = this.dataset.categoryId || '';
+            document.getElementById('pe_quantity').value    = this.dataset.stock   || 0;
+            document.getElementById('pe_existing_image').value = image.replace(appUrl+'/assets/uploads/','');
             document.getElementById('pe_image_preview').src = image;
 
             var form = document.getElementById('productEditForm');
-            form.action = appUrl + '/index.php?url=admin/products/' + id + '/update';
+            form.action = appUrl+'/index.php?url=admin/products/'+id+'/update';
 
-            // open modal
-            var overlay = document.getElementById('productEditModal');
-            if(overlay) overlay.classList.add('active');
+            editCroppedBlob = null; // reset any previous crop
+            document.getElementById('productEditModal').classList.add('active');
         });
     });
 
-    // Image preview for replacement
-    var input = document.getElementById('pe_image_input');
-    if(input){
-        input.addEventListener('change', function(){
-            var file = this.files[0];
-            if(!file) return;
+    // Edit image input → open crop modal
+    var peInput = document.getElementById('pe_image_input');
+    if(peInput){
+        peInput.addEventListener('change', function(){
+            var f = this.files[0];
+            if(!f) return;
             var reader = new FileReader();
-            reader.onload = function(ev){
-                var img = document.getElementById('pe_image_preview');
-                if(img) img.src = ev.target.result;
-                // offer cropping: open crop modal automatically after loading image
-                setTimeout(function(){ openImageCropModal(ev.target.result); }, 120);
-            };
-            reader.readAsDataURL(file);
+            reader.onload = function(ev){ openCropModal(ev.target.result, 'edit'); };
+            reader.readAsDataURL(f);
         });
     }
 
-    // --- Image Crop Modal ---
-    var cropper = null;
-    var croppedBlob = null;
-    function openImageCropModal(src){
-        // wait until cropper script loaded
-        if(typeof Cropper === 'undefined'){
-            setTimeout(function(){ openImageCropModal(src); }, 120);
-            return;
-        }
-        var overlay = document.getElementById('imageCropModal');
-        var img = document.getElementById('cropperImage');
-        img.src = src;
-        overlay.classList.add('active');
-        // destroy existing cropper
-        if(cropper){ try{ cropper.destroy(); }catch(e){} cropper = null; }
-        cropper = new Cropper(img, { aspectRatio: 1, viewMode: 1, autoCropArea: 1 });
-    }
-
-    function closeImageCropModal(){
-        var overlay = document.getElementById('imageCropModal');
-        overlay.classList.remove('active');
-        if(cropper){ try{ cropper.destroy(); }catch(e){} cropper = null; }
-    }
-
-    document.addEventListener('click', function(e){
-        if(e.target && e.target.id === 'cropApplyBtn'){
-            if(!cropper) return;
-            cropper.getCroppedCanvas({ width: 800, height: 800 }).toBlob(function(blob){
-                croppedBlob = blob;
-                // show preview inside modal
-                var preview = document.getElementById('pe_image_preview');
-                preview.src = URL.createObjectURL(blob);
-                // close crop modal
-                closeImageCropModal();
-            }, 'image/jpeg', 0.9);
-        }
-        if(e.target && e.target.id === 'cropCancelBtn'){
-            closeImageCropModal();
-        }
-    });
-
-    // Intercept product edit form submit to attach cropped image (if any)
+    // Edit form submit — inject cropped blob if present
     var peForm = document.getElementById('productEditForm');
     if(peForm){
         peForm.addEventListener('submit', function(e){
-            // if user provided a cropped blob, submit via AJAX with cropped image
-            if(croppedBlob){
-                e.preventDefault();
-                var formData = new FormData(peForm);
-                var filename = 'cropped_' + Date.now() + '.jpg';
-                var file = new File([croppedBlob], filename, { type: croppedBlob.type });
-                formData.set('image', file);
-                fetch(peForm.action, {
-                    method: 'POST',
-                    body: formData,
-                    credentials: 'same-origin',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                })
-                .then(function(resp){
-                    return resp.json().catch(function(){ throw new Error('Invalid JSON response'); });
-                })
-                .then(function(data){
-                    if(data && data.success){
-                        // Show toast
-                        if(typeof showNotification === 'function') showNotification(data.message || 'Saved', 'success');
-                        // Update row image (cache-busted)
-                        try{
-                            var m = peForm.action.match(/admin\/products\/(\d+)\/update/);
-                            var pid = m ? m[1] : (data.id || null);
-                            if(pid){
-                                var trigger = document.querySelector('.product-edit-trigger[data-id="' + pid + '"]');
-                                var row = trigger ? trigger.closest('tr') : null;
-                                if(row){
-                                    var img = row.querySelector('td[data-label="Image"] img');
-                                    if(img){
-                                        var newSrc = data.image ? (appUrl + '/assets/uploads/' + data.image + '?v=' + Date.now()) : (appUrl + '/assets/uploads/placeholder.svg');
-                                        img.src = newSrc;
-                                    }
-                                    // update name/price text quickly
-                                    var nameCell = row.querySelector('td[data-label="Name"] strong');
-                                    if(nameCell) nameCell.textContent = document.getElementById('pe_name').value;
-                                    var priceCell = row.querySelector('td[data-label="Price"] strong');
-                                    if(priceCell) priceCell.textContent = '₱' + parseFloat(document.getElementById('pe_price').value || 0).toFixed(2);
-                                }
+            if(!editCroppedBlob) return;
+            e.preventDefault();
+            var fd = new FormData(peForm);
+            fd.set('image', new File([editCroppedBlob], 'cropped_'+Date.now()+'.jpg', { type:'image/jpeg' }));
+            fetch(peForm.action, {
+                method: 'POST',
+                body: fd,
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(resp){ return resp.json().catch(function(){ throw new Error('Invalid JSON'); }); })
+            .then(function(data){
+                if(data && data.success){
+                    if(typeof showNotification==='function') showNotification(data.message||'Saved','success');
+                    try{
+                        var m   = peForm.action.match(/admin\/products\/(\d+)\/update/);
+                        var pid = m ? m[1] : (data.id||null);
+                        if(pid){
+                            var trigger = document.querySelector('.product-edit-trigger[data-id="'+pid+'"]');
+                            var row     = trigger ? trigger.closest('tr') : null;
+                            if(row){
+                                var img = row.querySelector('td[data-label="Image"] img');
+                                if(img) img.src = data.image ? (appUrl+'/assets/uploads/'+data.image+'?v='+Date.now()) : (appUrl+'/assets/uploads/placeholder.svg');
+                                var nc = row.querySelector('td[data-label="Name"] strong');
+                                if(nc) nc.textContent = document.getElementById('pe_name').value;
+                                var pc = row.querySelector('td[data-label="Price"] strong');
+                                if(pc) pc.textContent = '₱'+parseFloat(document.getElementById('pe_price').value||0).toFixed(2);
                             }
-                        }catch(e){/* ignore */}
-
-                        // close modal and reset
-                        var overlay = document.getElementById('productEditModal');
-                        if(overlay) overlay.classList.remove('active');
-                        croppedBlob = null;
-                        clearProductEditModal();
-                    } else {
-                        throw new Error((data && data.message) ? data.message : 'Save failed');
-                    }
-                })
-                .catch(function(err){ if(typeof showNotification === 'function') showNotification(err.message || 'Failed to save product', 'error'); else alert('Failed to save product: ' + err.message); });
-            }
+                        }
+                    }catch(ex){}
+                    document.getElementById('productEditModal').classList.remove('active');
+                    editCroppedBlob = null;
+                    clearEditModal();
+                } else {
+                    throw new Error((data&&data.message)||'Save failed');
+                }
+            })
+            .catch(function(err){ if(typeof showNotification==='function') showNotification(err.message||'Failed','error'); else alert(err.message); });
         });
     }
-    
-    // Reset modal preview and file input when modal is closed or cancelled
-    function clearProductEditModal(){
-        var input = document.getElementById('pe_image_input');
-        if(input){ input.value = ''; }
-        var preview = document.getElementById('pe_image_preview');
+
+    function clearEditModal(){
+        var inp = document.getElementById('pe_image_input');
+        if(inp) inp.value = '';
+        var preview  = document.getElementById('pe_image_preview');
         var existing = document.getElementById('pe_existing_image');
         if(preview && existing){
-            preview.src = existing.value ? (appUrl + '/assets/uploads/' + existing.value) : (appUrl + '/assets/uploads/placeholder.svg');
+            preview.src = existing.value ? (appUrl+'/assets/uploads/'+existing.value) : (appUrl+'/assets/uploads/placeholder.svg');
         }
     }
 
-    // Close handlers: close button(s) and backdrop click will call clear
-    var modalOverlay = document.getElementById('productEditModal');
-    if(modalOverlay){
-        modalOverlay.addEventListener('click', function(e){
-            if(e.target === modalOverlay || e.target.closest('.modal-close')){
-                modalOverlay.classList.remove('active');
-                clearProductEditModal();
+    var editModalOverlay = document.getElementById('productEditModal');
+    if(editModalOverlay){
+        editModalOverlay.addEventListener('click', function(e){
+            if(e.target===editModalOverlay || e.target.closest('.modal-close')){
+                editModalOverlay.classList.remove('active');
+                clearEditModal();
             }
         });
     }
@@ -457,19 +480,20 @@ document.head.appendChild(cropperScript);
 
 <script>
 document.addEventListener('DOMContentLoaded', function(){
+    // Category filter
     var sel = document.getElementById('adminCategoryFilter');
-    if(!sel) return;
-    sel.addEventListener('change', function(){
-        var v = this.value.trim().toLowerCase();
-        var rows = document.querySelectorAll('.data-table tbody tr');
-        rows.forEach(function(r){
-            var catTd = r.querySelector('td[data-label="Category"]');
-            if(!catTd) return;
-            var text = catTd.textContent.trim().toLowerCase();
-            // show row when filter empty or matches exactly
-            r.style.display = (v === '' || text === v) ? '' : 'none';
+    if(sel){
+        sel.addEventListener('change', function(){
+            var v = this.value.trim().toLowerCase();
+            var rows = document.querySelectorAll('.data-table tbody tr');
+            rows.forEach(function(r){
+                var catTd = r.querySelector('td[data-label="Category"]');
+                if(!catTd) return;
+                var text = catTd.textContent.trim().toLowerCase();
+                r.style.display = (v === '' || text === v) ? '' : 'none';
+            });
         });
-    });
+    }
 });
 </script>
 

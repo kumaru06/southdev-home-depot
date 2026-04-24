@@ -87,8 +87,8 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
                         <th>Image</th>
                         <th>Product</th>
                         <th>Price</th>
-                        <th>Quantity</th>
-                        <th>Reorder Level</th>
+                        <th>Current Stock</th>
+                        <th title="Alert threshold — triggers Low Stock warning when stock falls to this level">Reorder At <span style="font-size:.7rem;color:var(--text-muted);font-weight:400;">(alert threshold)</span></th>
                         <th>Status</th>
                         <?php if ($canManageStock): ?>
                         <th>Actions</th>
@@ -211,7 +211,11 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
             </div>
             <div class="form-group">
                 <label class="form-label">Quantity to Add</label>
-                <input type="number" name="add_quantity" class="form-control" min="1" required placeholder="e.g. 50">
+                <input type="number" name="add_quantity" id="addQuantityInput" class="form-control" min="1" required placeholder="e.g. 50" oninput="updateNewTotal()">
+            </div>
+            <div class="form-group">
+                <label class="form-label">New Total After Adding</label>
+                <input type="text" id="addNewTotal" class="form-control" readonly style="font-weight:700; color:var(--accent); background:#fff8f0;">
             </div>
             <div class="form-group">
                 <label class="form-label">Reason</label>
@@ -397,6 +401,9 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
             $('addProductId').value           = productId;
             $('addProductName').value         = productName;
             $('addCurrentStock').value        = currentQty + ' units';
+            $('addQuantityInput').value       = '';
+            $('addNewTotal').value            = '—';
+            window._addCurrentQty            = currentQty;   // store for live calc
             $('formAddStock').style.display   = 'block';
         } else if (mode === 'supplier') {
             $('stockModalTitle').textContent  = 'Request Supplier — ' + productName;
@@ -415,6 +422,20 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
     /* Expose globally so inline onclick still works as fallback */
     window.openStockModal  = openStockModal;
     window.closeStockModal = closeStockModal;
+
+    /* Live "New Total" calculation in Add Stock modal */
+    window.updateNewTotal = function() {
+        var addedInput = document.getElementById('addQuantityInput');
+        var totalInput = document.getElementById('addNewTotal');
+        if (!addedInput || !totalInput) return;
+        var added   = parseInt(addedInput.value, 10);
+        var current = parseInt(window._addCurrentQty || 0, 10);
+        if (!isNaN(added) && added > 0) {
+            totalInput.value = (current + added) + ' units  (was ' + current + ' + ' + added + ' added)';
+        } else {
+            totalInput.value = '—';
+        }
+    };
 
     /* ---- event delegation (catches clicks on SVG icons inside buttons too) ---- */
     document.addEventListener('click', function (e) {

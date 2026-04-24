@@ -269,14 +269,15 @@ function _dash_action_label(string $raw): string {
                                     'received'    => 'badge-pending',
                                     'inspected'   => 'badge-processing',
                                     'written_off' => 'badge-cancelled',
-                                    'repaired'    => 'badge-delivered',
                                     default       => 'badge-pending'
                                 };
+                                $orderNum   = $dmg['order_number'];
+                                $orderShort = '#' . substr($orderNum, strrpos($orderNum, '-') + 1);
                             ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($dmg['product_name']) ?></td>
+                                    <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<?= htmlspecialchars($dmg['product_name']) ?>"><?= htmlspecialchars($dmg['product_name']) ?></td>
                                     <td><strong><?= $dmg['quantity'] ?></strong></td>
-                                    <td><?= htmlspecialchars($dmg['order_number']) ?></td>
+                                    <td><span title="<?= htmlspecialchars($orderNum) ?>"><?= htmlspecialchars($orderShort) ?></span></td>
                                     <td><span class="badge <?= $dmgClass ?>"><?= ucfirst(str_replace('_', ' ', $dmg['status'])) ?></span></td>
                                 </tr>
                             <?php endforeach; ?>
