@@ -340,7 +340,7 @@ $blogPosts = [
 </style>
 
 <div class="inspire-page">
-    <section class="inspire-hero" data-inspire-slider>
+    <section class="inspire-hero reveal-on-scroll reveal-right" data-inspire-slider>
         <div class="inspire-hero-track" data-slider-track>
             <?php foreach ($heroSlides as $index => $slide): ?>
                 <article class="inspire-slide" aria-hidden="<?= $index === 0 ? 'false' : 'true' ?>">
@@ -369,8 +369,8 @@ $blogPosts = [
 
     <div class="inspire-shell">
         <section class="inspire-grid">
-            <?php foreach ($blogPosts as $post): ?>
-                <article class="inspire-card">
+            <?php foreach ($blogPosts as $index => $post): ?>
+                <article class="inspire-card reveal-on-scroll <?= $index % 2 === 0 ? 'reveal-left' : 'reveal-right' ?>">
                     <button
                         type="button"
                         class="inspire-card-image"

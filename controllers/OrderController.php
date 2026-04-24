@@ -48,10 +48,47 @@ class OrderController {
         return $selected;
     }
 
+    private function requirePost(string $fallbackUrl): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . $fallbackUrl);
+            exit;
+        }
+    }
+
     public function index() {
         AuthMiddleware::handle();
         $pageTitle = 'My Orders';
-        $orders = $this->orderModel->getByUserId($_SESSION['user_id']);
+        $allOrders = $this->orderModel->getByUserId($_SESSION['user_id']);
+
+        $selectedOrderDate = trim((string) ($_GET['order_date'] ?? ''));
+        $hasOrderDateFilter = false;
+
+        if ($selectedOrderDate !== '') {
+            $date = DateTime::createFromFormat('Y-m-d', $selectedOrderDate);
+            $hasOrderDateFilter = $date && $date->format('Y-m-d') === $selectedOrderDate;
+            if (!$hasOrderDateFilter) {
+                $selectedOrderDate = '';
+            }
+        }
+
+        $filteredOrders = $allOrders;
+        if ($hasOrderDateFilter) {
+            $filteredOrders = array_values(array_filter($allOrders, function ($order) use ($selectedOrderDate) {
+                return !empty($order['created_at']) && substr((string) $order['created_at'], 0, 10) === $selectedOrderDate;
+            }));
+        }
+
+        $ordersForStats = $filteredOrders;
+        $totalFilteredOrders = count($filteredOrders);
+        $ordersPerPage = 8;
+        $totalPages = max(1, (int) ceil($totalFilteredOrders / $ordersPerPage));
+        $page = max(1, (int) ($_GET['page'] ?? 1));
+        if ($page > $totalPages) {
+            $page = $totalPages;
+        }
+
+        $offset = ($page - 1) * $ordersPerPage;
+        $orders = array_slice($filteredOrders, $offset, $ordersPerPage);
 
         // Load return request data for all orders so we can show refund badges
         $returnModel = new ReturnRequest($this->pdo);
@@ -100,6 +137,7 @@ class OrderController {
     /* ===== Place Order (from checkout) ===== */
     public function create() {
         AuthMiddleware::handle();
+        $this->requirePost(APP_URL . '/index.php?url=checkout');
         AuthMiddleware::csrf();
 
         $cartItems = $this->cartModel->getByUserId($_SESSION['user_id']);
@@ -181,6 +219,7 @@ class OrderController {
     /* ===== Customer: Direct Cancel (pending only) ===== */
     public function cancel($id) {
         AuthMiddleware::handle();
+        $this->requirePost(APP_URL . '/index.php?url=orders/' . intval($id));
         AuthMiddleware::csrf();
 
         // Reason is optional for pending orders (direct cancel)
@@ -228,9 +267,9 @@ class OrderController {
     /* ===== Customer: Submit Cancel Request (for processing orders) ===== */
     public function requestCancel($orderId) {
         AuthMiddleware::handle();
-        AuthMiddleware::csrf();
-
         $orderId = intval($orderId);
+        $this->requirePost(APP_URL . '/index.php?url=orders/' . $orderId);
+        AuthMiddleware::csrf();
         $reason  = $this->buildCancelReasonFromPost();
         $order   = $this->orderModel->findById($orderId);
 
@@ -286,6 +325,7 @@ class OrderController {
     /* ===== Staff/Admin: Approve Cancel Request ===== */
     public function approveCancel($requestId) {
         AuthMiddleware::adminOrStaff();
+        $this->requirePost(APP_URL . '/index.php?url=staff/cancel-requests');
         AuthMiddleware::csrf();
 
         $request = $this->cancelModel->findById($requestId);
@@ -323,6 +363,7 @@ class OrderController {
     /* ===== Staff/Admin: Reject Cancel Request ===== */
     public function rejectCancel($requestId) {
         AuthMiddleware::adminOrStaff();
+        $this->requirePost(APP_URL . '/index.php?url=staff/cancel-requests');
         AuthMiddleware::csrf();
 
         $adminNotes = trim($_POST['admin_notes'] ?? '');
@@ -368,6 +409,7 @@ class OrderController {
     /* ===== Staff: Update Order Status ===== */
     public function updateStatus($id) {
         AuthMiddleware::adminOrStaff();
+        $this->requirePost(APP_URL . '/index.php?url=staff/orders/' . intval($id));
         AuthMiddleware::csrf();
 
         $status = $_POST['status'] ?? '';

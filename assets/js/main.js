@@ -38,6 +38,48 @@
 
     });
 
+    document.addEventListener('DOMContentLoaded', function () {
+        const revealItems = Array.from(document.querySelectorAll('.reveal-on-scroll:not(.is-visible)'));
+
+        if (!revealItems.length) {
+            return;
+        }
+
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            revealItems.forEach(function (item) {
+                item.classList.add('is-visible');
+            });
+            return;
+        }
+
+        if (!('IntersectionObserver' in window)) {
+            revealItems.forEach(function (item) {
+                item.classList.add('is-visible');
+            });
+            return;
+        }
+
+        const observer = new IntersectionObserver(function (entries, obs) {
+            entries.forEach(function (entry) {
+                if (!entry.isIntersecting) {
+                    return;
+                }
+
+                entry.target.classList.add('is-visible');
+                obs.unobserve(entry.target);
+            });
+        }, {
+            threshold: 0.16,
+            rootMargin: '0px 0px -8% 0px'
+        });
+
+        revealItems.forEach(function (item, index) {
+            var customDelay = parseInt(item.getAttribute('data-reveal-delay'), 10);
+            item.style.transitionDelay = (Number.isFinite(customDelay) ? customDelay : Math.min(index * 60, 240)) + 'ms';
+            observer.observe(item);
+        });
+    });
+
     /* Ensure auth links visible when server indicates logged out.
        Some browser states or client scripts may hide the topbar links —
        force-show them when the server-side flag `window.appLoggedIn` is false. */
@@ -264,6 +306,9 @@
             e.preventDefault();
 
             var go = function () {
+                try {
+                    localStorage.setItem('__pendingToast', JSON.stringify({ message: 'You have been logged out.', type: 'success' }));
+                } catch (err) {}
                 window.location.href = href;
             };
 
@@ -382,6 +427,9 @@
                     .then(function (res) { return res.json(); })
                     .then(function (data) {
                         if (data.success) {
+                            // Store toast in localStorage — fires after redirect lands, not before
+                            var welcomeMsg = data.message || 'Welcome back! You are now logged in.';
+                            try { localStorage.setItem('__pendingToast', JSON.stringify({ message: welcomeMsg, type: 'success' })); } catch (err) {}
                             window.location.href = data.redirect;
                         } else {
                             showLoginError(data.message || 'Invalid email or password.');
@@ -617,7 +665,56 @@
     };
 
     /* Toast Notification */
-        /* Toast Notification: modern toast that stacks in top-right container */
+
+        /* ---- Bootstrap PHP-rendered flash toasts (from header.php) ---- */
+        function initFlashToast(toast) {
+            var duration = parseInt(toast.getAttribute('data-auto-dismiss'), 10) || 5000;
+
+            // Set progress bar animation duration
+            var bar = toast.querySelector('.toast-progress-bar');
+            if (bar) bar.style.animationDuration = duration + 'ms';
+
+            // Render lucide icons if not yet rendered
+            if (window.lucide) lucide.createIcons({ nodes: [toast] });
+
+            // Wire close button
+            var closeBtn = toast.querySelector('.toast-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function () { dismissFlashToast(toast); });
+            }
+
+            // Auto-dismiss
+            setTimeout(function () { dismissFlashToast(toast); }, duration);
+        }
+
+        function dismissFlashToast(el) {
+            if (!el || el.classList.contains('toast--leaving')) return;
+            el.classList.add('toast--leaving');
+            setTimeout(function () { if (el && el.parentNode) el.remove(); }, 300);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Show any pending toast carried via localStorage (e.g. from logout)
+            try {
+                var pending = localStorage.getItem('__pendingToast');
+                if (pending) {
+                    localStorage.removeItem('__pendingToast');
+                    var t = JSON.parse(pending);
+                    if (t && t.message && typeof window.showNotification === 'function') {
+                        setTimeout(function () {
+                            window.showNotification(t.message, t.type || 'success');
+                        }, 300);
+                    }
+                }
+            } catch (err) {}
+
+            // Bootstrap PHP-rendered flash toasts
+            document.querySelectorAll('.toast-container .toast[data-auto-dismiss]').forEach(function (t) {
+                initFlashToast(t);
+            });
+        });
+
+        /* ---- JS showNotification (used by cart, AJAX responses, etc.) ---- */
         window.showNotification = function (message, type) {
             type = type || 'info';
             var typeMap = {

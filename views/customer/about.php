@@ -4,7 +4,7 @@ require_once INCLUDES_PATH . '/navbar.php';
 
 $productCount = 0;
 $categoryCount = 0;
-$yearsServing = max(1, (int) date('Y') - 2020);
+$yearsServing = 8;
 
 try {
     $pdo = $GLOBALS['pdo'] ?? null;
@@ -191,14 +191,53 @@ $ctaImage = APP_URL . '/assets/uploads/images/roomgallery/livingroom/livingroom4
 }
 .about-section-media {
     position: relative;
+    display: grid;
+    grid-template-rows: auto auto;
+    gap: .75rem;
+}
+.about-section-media .about-media-main {
+    position: relative;
 }
 .about-section-media img {
     width: 100%;
-    border-radius: 24px;
-    min-height: 360px;
+    border-radius: 20px;
     object-fit: cover;
-    box-shadow: 0 22px 50px rgba(15,23,42,.12);
+    box-shadow: 0 18px 40px rgba(15,23,42,.11);
+    display: block;
 }
+.about-section-media .about-media-main img {
+    min-height: 300px;
+}
+.about-media-thumbs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .75rem;
+}
+.about-media-thumbs img {
+    min-height: 160px;
+    transition: transform .3s ease, box-shadow .3s ease;
+}
+.about-media-thumbs img:hover {
+    transform: scale(1.03);
+    box-shadow: 0 22px 48px rgba(15,23,42,.16);
+}
+/* Reveal up variant for individual images */
+.reveal-up {
+    opacity: 0;
+    transform: translate3d(0, 36px, 0);
+    filter: blur(6px);
+    transition: opacity .65s ease, transform .65s ease, filter .65s ease;
+    will-change: opacity, transform, filter;
+}
+.reveal-up.is-visible {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+}
+.stagger-1 { transition-delay: .05s; }
+.stagger-2 { transition-delay: .15s; }
+.stagger-3 { transition-delay: .25s; }
+.stagger-4 { transition-delay: .35s; }
 .about-badge {
     position: absolute;
     right: 1.25rem;
@@ -364,6 +403,12 @@ $ctaImage = APP_URL . '/assets/uploads/images/roomgallery/livingroom/livingroom4
 }
 
 @media (max-width: 640px) {
+    .about-media-thumbs {
+        grid-template-columns: 1fr 1fr;
+    }
+    .about-media-thumbs img {
+        min-height: 120px;
+    }
     .about-hero {
         padding: 4rem 1rem 3.75rem;
     }
@@ -429,7 +474,7 @@ $ctaImage = APP_URL . '/assets/uploads/images/roomgallery/livingroom/livingroom4
     <section class="about-hero">
         <div class="about-hero-inner">
             <div class="about-hero-grid">
-                <div class="about-hero-copy">
+                <div class="about-hero-copy reveal-on-scroll reveal-left">
                     <span class="about-kicker">About <?= htmlspecialchars(APP_NAME) ?></span>
                     <h1>An expanding hardware and construction supply company.</h1>
                     <p>Southdev Home Depot aims at delivering quality goods and services to its clients while meeting the growing needs for construction materials and home improvement supplies in the community.</p>
@@ -439,7 +484,7 @@ $ctaImage = APP_URL . '/assets/uploads/images/roomgallery/livingroom/livingroom4
                     </div>
                 </div>
 
-                <aside class="about-highlight-card">
+                <aside class="about-highlight-card reveal-on-scroll reveal-right">
                     <img src="<?= $storyImage ?>" alt="<?= htmlspecialchars(APP_NAME) ?> showroom display">
                     <h2><?= htmlspecialchars(APP_TAGLINE) ?></h2>
                     <p>From the beginning, the company has continued to grow in order to serve both individual customers and contractors with dependable products, low prices, and reliable customer service.</p>
@@ -449,34 +494,42 @@ $ctaImage = APP_URL . '/assets/uploads/images/roomgallery/livingroom/livingroom4
     </section>
 
     <section class="about-stats about-hero-inner" aria-label="Business highlights">
-        <div class="about-stat">
+        <div class="about-stat reveal-on-scroll reveal-left">
             <strong><?= $yearsServing ?>+</strong>
             <span>Years supporting residential and commercial improvement projects.</span>
         </div>
-        <div class="about-stat">
+        <div class="about-stat reveal-on-scroll reveal-right">
             <strong><?= $productCount > 0 ? number_format($productCount) . '+' : 'Wide' ?></strong>
             <span>Selection of active products ready for modern, practical spaces.</span>
         </div>
-        <div class="about-stat">
+        <div class="about-stat reveal-on-scroll reveal-left">
             <strong><?= $categoryCount > 0 ? number_format($categoryCount) : 'Multiple' ?></strong>
             <span>Product categories covering surfaces, fixtures, tools, and more.</span>
         </div>
-        <div class="about-stat">
+        <div class="about-stat reveal-on-scroll reveal-right">
             <strong>100%</strong>
             <span>Focused on a customer-first buying experience from inquiry to checkout.</span>
         </div>
     </section>
 
     <section class="about-section">
-        <div class="about-section-media">
-            <img src="<?= $heroImage ?>" alt="Interior tile and showroom display at <?= htmlspecialchars(APP_NAME) ?>">
-            <div class="about-badge">
-                <strong>Trusted local source</strong>
-                <span>Serving customers across Davao City and nearby areas.</span>
+        <div class="about-section-media reveal-on-scroll reveal-left">
+            <div class="about-media-main">
+                <img src="<?= $heroImage ?>" alt="Interior tile and showroom display at <?= htmlspecialchars(APP_NAME) ?>">
+                <div class="about-badge">
+                    <strong>Trusted local source</strong>
+                    <span>Serving customers across Davao City and nearby areas.</span>
+                </div>
+            </div>
+            <div class="about-media-thumbs">
+                <img class="reveal-on-scroll reveal-up stagger-1" src="<?= APP_URL ?>/assets/uploads/images/roomgallery/kitchen/kitchen.png" alt="Kitchen showroom display" loading="lazy">
+                <img class="reveal-on-scroll reveal-up stagger-2" src="<?= APP_URL ?>/assets/uploads/images/roomgallery/livingroom/livingroom.png" alt="Living room showcase" loading="lazy">
+                <img class="reveal-on-scroll reveal-up stagger-3" src="<?= APP_URL ?>/assets/uploads/images/roomgallery/bathroom/bathroom.png" alt="Bathroom design" loading="lazy">
+                <img class="reveal-on-scroll reveal-up stagger-4" src="<?= APP_URL ?>/assets/uploads/images/roomgallery/dining/dining.png" alt="Dining area showcase" loading="lazy">
             </div>
         </div>
 
-        <div class="about-section-copy">
+        <div class="about-section-copy reveal-on-scroll reveal-right">
             <h2>Supplying essential products for residential and commercial projects.</h2>
             <p>Since its inception, Southdev Home Depot has concentrated on selling a variety of products such as hardware tools, building materials, electrical supplies, and other useful items required in residential and commercial projects. The company prides itself on providing low prices, reliable supply of products, and service to its customers.</p>
             <p>As part of its drive towards innovation and efficiency, Southdev Home Depot is undergoing a digital transformation through an Online Management System. The goal of this system is to streamline transactions, improve inventory management, and give customers a more accessible and convenient shopping experience.</p>
@@ -509,25 +562,25 @@ $ctaImage = APP_URL . '/assets/uploads/images/roomgallery/livingroom/livingroom4
     </section>
 
     <section class="about-values">
-        <div class="about-values-header">
+        <div class="about-values-header reveal-on-scroll reveal-left">
             <h2>What defines Southdev Home Depot</h2>
             <p>The company continues building its reputation around quality, dependable service, and a willingness to improve through technology so customers can enjoy a more efficient shopping experience.</p>
         </div>
 
         <div class="about-values-grid">
-            <article class="about-value-card">
+            <article class="about-value-card reveal-on-scroll reveal-left">
                 <div class="icon">01</div>
                 <h3>Quality goods and services</h3>
                 <p>Southdev Home Depot aims to deliver dependable products and support that meet the expectations of customers working on important projects.</p>
             </article>
 
-            <article class="about-value-card">
+            <article class="about-value-card reveal-on-scroll reveal-right">
                 <div class="icon">02</div>
                 <h3>Reliable supply for the community</h3>
                 <p>The company continues to serve both individual buyers and contractors by maintaining practical product availability for residential and commercial work.</p>
             </article>
 
-            <article class="about-value-card">
+            <article class="about-value-card reveal-on-scroll reveal-left">
                 <div class="icon">03</div>
                 <h3>Innovation and efficiency</h3>
                 <p>Through its Online Management System, the business is embracing digital solutions that improve transactions, inventory management, and customer convenience.</p>
@@ -536,7 +589,7 @@ $ctaImage = APP_URL . '/assets/uploads/images/roomgallery/livingroom/livingroom4
     </section>
 
     <section class="about-cta">
-        <div class="about-cta-inner">
+        <div class="about-cta-inner reveal-on-scroll reveal-right">
             <div class="about-cta-copy">
                 <h2>Ready to explore products for your next project?</h2>
                 <p>Browse available items online or stop by the store to see selections up close and plan with confidence.</p>

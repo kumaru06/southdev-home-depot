@@ -97,6 +97,10 @@ require_once INCLUDES_PATH . '/navbar.php';
 ?>
 
 <style>
+.site-header .main-nav {
+    margin-bottom: 0;
+}
+
 .gallery-page {
     --gallery-surface: #ffffff;
     --gallery-border: rgba(15, 23, 42, 0.08);
@@ -107,7 +111,7 @@ require_once INCLUDES_PATH . '/navbar.php';
         radial-gradient(circle at top left, rgba(249, 115, 22, 0.14), transparent 28%),
         radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 24%),
         linear-gradient(180deg, #fff7ed 0%, #f8fafc 14%, #eff6ff 100%);
-    padding: 2rem 1.25rem 4.5rem;
+    padding: .75rem 1.25rem 4.5rem;
 }
 
 .gallery-shell {
@@ -234,8 +238,7 @@ require_once INCLUDES_PATH . '/navbar.php';
 .gallery-card-link:hover,
 .gallery-thumb:hover,
 .gallery-modal-thumb:hover,
-.gallery-modal-close:hover,
-.gallery-modal-arrow:hover {
+.gallery-modal-close:hover {
     transform: translateY(-2px);
 }
 
@@ -339,8 +342,8 @@ require_once INCLUDES_PATH . '/navbar.php';
     grid-column: span 6;
     position: relative;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.72);
-    border: 1px solid rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 1);
+    border: 1px solid rgba(255, 255, 255, 1);
     border-radius: 28px;
     box-shadow: var(--gallery-shadow);
     backdrop-filter: blur(12px);
@@ -379,7 +382,7 @@ require_once INCLUDES_PATH . '/navbar.php';
 }
 
 .gallery-card-panel {
-    background: rgba(255, 255, 255, 0.78);
+    background: rgba(255, 255, 255, 1);
     border: 1px solid rgba(15, 23, 42, 0.06);
     border-radius: 24px;
     padding: 1.3rem;
@@ -661,6 +664,13 @@ require_once INCLUDES_PATH . '/navbar.php';
     cursor: pointer;
 }
 
+.gallery-modal-arrow:hover,
+.gallery-modal-arrow:focus-visible {
+    transform: translateY(-50%);
+    background: #ffffff;
+    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.22);
+}
+
 .gallery-modal-arrow--prev { left: 1.2rem; }
 .gallery-modal-arrow--next { right: 1.2rem; }
 
@@ -793,7 +803,7 @@ body.gallery-modal-open {
 <div class="gallery-page">
     <div class="gallery-shell">
         <section class="gallery-hero">
-            <div class="gallery-hero-content">
+            <div class="gallery-hero-content reveal-on-scroll reveal-left">
                 <h1>Room Gallery</h1>
                 <p>Explore real design directions for every space in the home and beyond. Tap any image set to open a full-screen preview, then move through the collection using the next and previous controls.</p>
 
@@ -813,7 +823,7 @@ body.gallery-modal-open {
                 </div>
             </div>
 
-            <div class="gallery-hero-visual">
+            <div class="gallery-hero-visual reveal-on-scroll reveal-right">
                 <?php if ($featuredCollection): ?>
                     <button
                         type="button"
@@ -850,7 +860,7 @@ body.gallery-modal-open {
             </div>
         </section>
 
-        <div class="gallery-section-head">
+        <div class="gallery-section-head reveal-on-scroll reveal-left">
             <div>
                 <h2>Browse all room concepts</h2>
                 <p>Select a collection to focus on a room type, then click any preview image to explore it in a large lightbox just like a next/previous slideshow.</p>
@@ -865,8 +875,8 @@ body.gallery-modal-open {
 
         <?php if (!empty($roomGalleryCollections)): ?>
             <section class="gallery-collection-grid" id="galleryCollectionGrid">
-                <?php foreach ($roomGalleryCollections as $collection): ?>
-                    <article class="gallery-collection-card" data-category="<?= htmlspecialchars($collection['slug']) ?>">
+                <?php foreach ($roomGalleryCollections as $index => $collection): ?>
+                    <article class="gallery-collection-card reveal-on-scroll <?= $index % 2 === 0 ? 'reveal-left' : 'reveal-right' ?>" data-category="<?= htmlspecialchars($collection['slug']) ?>">
                         <div class="gallery-card-media">
                             <img src="<?= htmlspecialchars($collection['cover']) ?>" alt="<?= htmlspecialchars($collection['title']) ?> cover image">
                         </div>

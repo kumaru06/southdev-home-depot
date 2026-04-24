@@ -2,218 +2,365 @@
 /* $pageTitle, $extraCss set by controller */
 require_once INCLUDES_PATH . '/header.php';
 require_once INCLUDES_PATH . '/navbar.php';
+
+$profileImage = $user['profile_image'] ?? '';
+$profileImageUrl = $profileImage ? (APP_URL . '/assets/uploads/profiles/' . rawurlencode($profileImage)) : '';
+$initials = strtoupper(substr($user['first_name'] ?? 'U', 0, 1) . substr($user['last_name'] ?? '', 0, 1));
+$fullName = trim((string) (($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')));
+$fullName = $fullName !== '' ? $fullName : 'Your Profile';
+$addressReady = trim((string) ($user['address'] ?? '')) !== '' || trim((string) ($user['city'] ?? '')) !== '' || trim((string) ($user['state'] ?? '')) !== '' || trim((string) ($user['zip_code'] ?? '')) !== '';
+$contactReady = trim((string) ($user['email'] ?? '')) !== '' && trim((string) ($user['phone'] ?? '')) !== '';
+$profileFields = [
+    $user['first_name'] ?? '',
+    $user['last_name'] ?? '',
+    $user['email'] ?? '',
+    $user['phone'] ?? '',
+    $user['address'] ?? '',
+    $user['city'] ?? '',
+    $user['state'] ?? '',
+    $user['zip_code'] ?? '',
+];
+if (!empty($usernameEnabled)) {
+    $profileFields[] = $user['username'] ?? '';
+}
+$completedProfileFields = count(array_filter($profileFields, static fn($value) => trim((string) $value) !== ''));
+$profileCompletion = (int) round(($completedProfileFields / max(count($profileFields), 1)) * 100);
+$locationLabel = trim((string) (($user['city'] ?? '') . (($user['city'] ?? '') && ($user['state'] ?? '') ? ', ' : '') . ($user['state'] ?? '')));
+$locationLabel = $locationLabel !== '' ? $locationLabel : 'No delivery area saved yet';
 ?>
 
-<div class="container">
+<div class="container profile-page">
     <div class="profile-hero">
         <div class="profile-hero-bg"></div>
         <div class="profile-hero-content">
-            <?php
-                $profileImage = $user['profile_image'] ?? '';
-                $profileImageUrl = $profileImage ? (APP_URL . '/assets/uploads/profiles/' . rawurlencode($profileImage)) : '';
-                $initials = strtoupper(substr($user['first_name'] ?? 'U', 0, 1) . substr($user['last_name'] ?? '', 0, 1));
-            ?>
-            <div class="profile-hero-avatar">
-                <div class="profile-photo profile-photo--lg">
-                    <?php if (!empty($profileImage)): ?>
-                        <img src="<?= $profileImageUrl ?>" alt="Profile photo" class="profile-avatar-img">
-                    <?php else: ?>
-                        <div class="profile-avatar-fallback" aria-label="Profile initials"><?= htmlspecialchars($initials) ?></div>
-                    <?php endif; ?>
+            <div class="profile-hero-main">
+                <div class="profile-hero-avatar">
+                    <div class="profile-photo profile-photo--lg">
+                        <?php if (!empty($profileImage)): ?>
+                            <img src="<?= $profileImageUrl ?>" alt="Profile photo" class="profile-avatar-img">
+                        <?php else: ?>
+                            <div class="profile-avatar-fallback" aria-label="Profile initials"><?= htmlspecialchars($initials) ?></div>
+                        <?php endif; ?>
+                    </div>
+                    <form action="<?= APP_URL ?>/index.php?url=profile" method="POST" enctype="multipart/form-data" id="photo-form" class="profile-photo-upload-btn">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="first_name" value="<?= htmlspecialchars($user['first_name'] ?? '') ?>">
+                        <input type="hidden" name="last_name" value="<?= htmlspecialchars($user['last_name'] ?? '') ?>">
+                        <input type="hidden" name="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>">
+                        <input type="hidden" name="phone" value="<?= htmlspecialchars($user['phone'] ?? '') ?>">
+                        <?php if (!empty($usernameEnabled)): ?>
+                        <input type="hidden" name="username" value="<?= htmlspecialchars($user['username'] ?? '') ?>">
+                        <?php endif; ?>
+                        <input type="hidden" name="address" value="<?= htmlspecialchars($user['address'] ?? '') ?>">
+                        <input type="hidden" name="city" value="<?= htmlspecialchars($user['city'] ?? '') ?>">
+                        <input type="hidden" name="state" value="<?= htmlspecialchars($user['state'] ?? '') ?>">
+                        <input type="hidden" name="zip_code" value="<?= htmlspecialchars($user['zip_code'] ?? '') ?>">
+                        <label class="profile-camera-btn" title="Change photo">
+                            &#128247;
+                            <input type="file" name="profile_image" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="this.form.submit()">
+                        </label>
+                    </form>
                 </div>
-                <form action="<?= APP_URL ?>/index.php?url=profile" method="POST" enctype="multipart/form-data" id="photo-form" class="profile-photo-upload-btn">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="first_name" value="<?= htmlspecialchars($user['first_name'] ?? '') ?>">
-                    <input type="hidden" name="last_name" value="<?= htmlspecialchars($user['last_name'] ?? '') ?>">
-                    <input type="hidden" name="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>">
-                    <input type="hidden" name="phone" value="<?= htmlspecialchars($user['phone'] ?? '') ?>">
-                    <?php if (!empty($usernameEnabled)): ?>
-                    <input type="hidden" name="username" value="<?= htmlspecialchars($user['username'] ?? '') ?>">
-                    <?php endif; ?>
-                    <input type="hidden" name="address" value="<?= htmlspecialchars($user['address'] ?? '') ?>">
-                    <input type="hidden" name="city" value="<?= htmlspecialchars($user['city'] ?? '') ?>">
-                    <input type="hidden" name="state" value="<?= htmlspecialchars($user['state'] ?? '') ?>">
-                    <input type="hidden" name="zip_code" value="<?= htmlspecialchars($user['zip_code'] ?? '') ?>">
-                    <label class="profile-camera-btn" title="Change photo">
-                        &#128247;
-                        <input type="file" name="profile_image" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="this.form.submit()">
-                    </label>
-                </form>
+                <div class="profile-hero-info">
+                    <span class="profile-hero-kicker">Customer profile</span>
+                    <h1 class="profile-hero-name"><?= htmlspecialchars($fullName) ?></h1>
+                    <div class="profile-hero-meta">
+                        <?php if (!empty($user['username'])): ?>
+                            <span class="profile-meta-tag">@<?= htmlspecialchars($user['username']) ?></span>
+                        <?php endif; ?>
+                        <span class="profile-meta-tag">
+                            <?= htmlspecialchars($user['email']) ?>
+                            <?php if (!empty($user['email_verified_at'])): ?>
+                                <span class="profile-email-badge profile-email-badge--verified" title="Email verified">&#10003; Verified</span>
+                            <?php else: ?>
+                                <span class="profile-email-badge profile-email-badge--unverified" title="Email not verified">&#10007; Unverified</span>
+                            <?php endif; ?>
+                        </span>
+                        <?php if (!empty($user['phone'])): ?>
+                            <span class="profile-meta-tag"><?= htmlspecialchars($user['phone']) ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="profile-hero-badges">
+                        <span class="profile-hero-badge <?= $contactReady ? 'is-ready' : '' ?>">
+                            <span class="profile-status-dot"></span>
+                            <?= $contactReady ? 'Contact ready' : 'Add a phone number' ?>
+                        </span>
+                        <span class="profile-hero-badge <?= $addressReady ? 'is-ready' : '' ?>">
+                            <span class="profile-status-dot"></span>
+                            <?= $addressReady ? 'Delivery address saved' : 'Set your delivery address' ?>
+                        </span>
+                    </div>
+                </div>
             </div>
-            <div class="profile-hero-info">
-                <h1 class="profile-hero-name"><?= htmlspecialchars(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?></h1>
-                <div class="profile-hero-meta">
-                    <?php if (!empty($user['username'])): ?>
-                        <span class="profile-meta-tag">@<?= htmlspecialchars($user['username']) ?></span>
-                    <?php endif; ?>
-                    <span class="profile-meta-tag"><?= htmlspecialchars($user['email']) ?></span>
-                    <?php if (!empty($user['phone'])): ?>
-                        <span class="profile-meta-tag"><?= htmlspecialchars($user['phone']) ?></span>
-                    <?php endif; ?>
+
+            <div class="profile-hero-panels">
+                <div class="profile-overview-card">
+                    <div class="profile-ring-row">
+                        <?php $circ = 289.03; $ringOffset = round($circ * (1 - $profileCompletion / 100), 2); ?>
+                        <div class="profile-ring-wrap">
+                            <svg class="profile-ring-svg" viewBox="0 0 120 120" aria-hidden="true">
+                                <defs>
+                                    <linearGradient id="profileRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#f97316"/>
+                                        <stop offset="100%" stop-color="#fb923c"/>
+                                    </linearGradient>
+                                </defs>
+                                <circle cx="60" cy="60" r="46" class="profile-ring-track"/>
+                                <circle cx="60" cy="60" r="46" class="profile-ring-fill"
+                                        stroke-dasharray="<?= $circ ?>"
+                                        stroke-dashoffset="<?= $ringOffset ?>"/>
+                            </svg>
+                            <span class="profile-ring-pct"><?= $profileCompletion ?>%</span>
+                        </div>
+                        <div class="profile-ring-info">
+                            <span class="profile-overview-label">Profile</span>
+                            <p class="profile-ring-title">Completion</p>
+                            <p class="profile-ring-desc">Complete personal &amp; delivery details for a smoother checkout.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-overview-grid" aria-label="Profile overview">
+                    <div class="profile-overview-item">
+                        <strong><?= $contactReady ? 'Ready' : 'Pending' ?></strong>
+                        <span>Contact setup</span>
+                    </div>
+                    <div class="profile-overview-item">
+                        <strong><?= $addressReady ? 'Saved' : 'Pending' ?></strong>
+                        <span>Address book</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="profile-nav-tabs">
-        <button class="profile-tab active" data-target="personal-section">Personal Info</button>
-        <button class="profile-tab" data-target="address-section">Address</button>
-        <button class="profile-tab" data-target="security-section">Security</button>
+    <div class="profile-nav-shell">
+        <div class="profile-nav-copy">
+            <span class="profile-nav-kicker">Account workspace</span>
+            <h2>Manage every detail in one polished place.</h2>
+        </div>
+        <div class="profile-nav-tabs" role="tablist" aria-label="Profile sections">
+            <button class="profile-tab active" data-target="personal-section" type="button">Personal Info</button>
+            <button class="profile-tab" data-target="address-section" type="button">Address</button>
+            <button class="profile-tab" data-target="security-section" type="button">Security</button>
+        </div>
     </div>
 
-    <div class="profile-sections">
-        <!-- Personal Information -->
-        <div class="profile-section-block" id="personal-section">
-            <div class="card profile-section-card">
-                <div class="profile-section-header">
-                    <div>
-                        <h3>Personal Information</h3>
-                        <p>Update your name, username, and contact details.</p>
+    <div class="profile-content-grid">
+        <div class="profile-main-column">
+
+            <div class="profile-sections">
+                <!-- Personal Information -->
+                <div class="profile-section-block" id="personal-section">
+                    <div class="card profile-section-card">
+                        <div class="profile-section-header">
+                            <div>
+                                <span class="profile-section-chip">Core details</span>
+                                <h3>Personal Information</h3>
+                                <p>Update your name, username, and contact details.</p>
+                            </div>
+                        </div>
+                        <form action="<?= APP_URL ?>/index.php?url=profile" method="POST" id="profile-form">
+                            <?= csrf_field() ?>
+                            <!-- Carry address fields as hidden so they don't get blanked -->
+                            <input type="hidden" name="address" value="<?= htmlspecialchars($user['address'] ?? '') ?>">
+                            <input type="hidden" name="city" value="<?= htmlspecialchars($user['city'] ?? '') ?>">
+                            <input type="hidden" name="state" value="<?= htmlspecialchars($user['state'] ?? '') ?>">
+                            <input type="hidden" name="zip_code" value="<?= htmlspecialchars($user['zip_code'] ?? '') ?>">
+
+                            <div class="form-row">
+                                <div class="form-group form-col">
+                                    <label for="first_name">First Name <span class="required">*</span></label>
+                                    <input type="text" id="first_name" name="first_name" class="form-control" value="<?= htmlspecialchars($user['first_name']) ?>" required>
+                                </div>
+                                <div class="form-group form-col">
+                                    <label for="last_name">Last Name <span class="required">*</span></label>
+                                    <input type="text" id="last_name" name="last_name" class="form-control" value="<?= htmlspecialchars($user['last_name']) ?>" required>
+                                </div>
+                            </div>
+
+                            <?php if (!empty($usernameEnabled)): ?>
+                            <div class="form-group">
+                                <label for="username">Username</label>
+                                <div class="input-icon-wrap">
+                                    <span class="input-icon-prefix">@</span>
+                                    <input type="text" id="username" name="username" class="form-control form-control--prefixed" value="<?= htmlspecialchars($user['username'] ?? '') ?>">
+                                </div>
+                                <small class="text-muted">Letters, numbers, underscore, dash or dot (3–30 chars).</small>
+                            </div>
+                            <?php endif; ?>
+
+                            <div class="form-row">
+                                <div class="form-group form-col">
+                                    <label for="email">Email <span class="required">*</span></label>
+                                    <div class="input-with-action">
+                                        <input type="text" id="email" name="email" class="form-control" value="<?= htmlspecialchars($user['email']) ?>" required readonly aria-readonly="true">
+                                        <button type="button" id="change-email-btn" class="btn btn-outline small">Change</button>
+                                    </div>
+                                    <small class="text-muted">Email updates require verification via an OTP sent to your current email.</small>
+                                </div>
+                                <div class="form-group form-col">
+                                    <label for="phone">Phone</label>
+                                    <input type="text" id="phone" name="phone" class="form-control" value="<?= htmlspecialchars($user['phone'] ?? '') ?>" placeholder="e.g. 09123456789">
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-accent">Save Changes</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
-                <form action="<?= APP_URL ?>/index.php?url=profile" method="POST" id="profile-form">
-                    <?= csrf_field() ?>
-                    <!-- Carry address fields as hidden so they don't get blanked -->
-                    <input type="hidden" name="address" value="<?= htmlspecialchars($user['address'] ?? '') ?>">
-                    <input type="hidden" name="city" value="<?= htmlspecialchars($user['city'] ?? '') ?>">
-                    <input type="hidden" name="state" value="<?= htmlspecialchars($user['state'] ?? '') ?>">
-                    <input type="hidden" name="zip_code" value="<?= htmlspecialchars($user['zip_code'] ?? '') ?>">
 
-                    <div class="form-row">
-                        <div class="form-group form-col">
-                            <label for="first_name">First Name <span class="required">*</span></label>
-                            <input type="text" id="first_name" name="first_name" class="form-control" value="<?= htmlspecialchars($user['first_name']) ?>" required>
-                        </div>
-                        <div class="form-group form-col">
-                            <label for="last_name">Last Name <span class="required">*</span></label>
-                            <input type="text" id="last_name" name="last_name" class="form-control" value="<?= htmlspecialchars($user['last_name']) ?>" required>
-                        </div>
-                    </div>
-
-                    <?php if (!empty($usernameEnabled)): ?>
-                    <div class="form-group">
-                        <label for="username">Username</label>
-                        <div class="input-icon-wrap">
-                            <span class="input-icon-prefix">@</span>
-                            <input type="text" id="username" name="username" class="form-control form-control--prefixed" value="<?= htmlspecialchars($user['username'] ?? '') ?>">
-                        </div>
-                        <small class="text-muted">Letters, numbers, underscore, dash or dot (3–30 chars).</small>
-                    </div>
-                    <?php endif; ?>
-
-                    <div class="form-row">
-                        <div class="form-group form-col">
-                            <label for="email">Email <span class="required">*</span></label>
-                            <div class="input-with-action">
-                                <input type="text" id="email" name="email" class="form-control" value="<?= htmlspecialchars($user['email']) ?>" required readonly aria-readonly="true">
-                                <button type="button" id="change-email-btn" class="btn btn-outline small">Change</button>
+                <!-- Shipping Address -->
+                <div class="profile-section-block" id="address-section">
+                    <div class="card profile-section-card">
+                        <div class="profile-section-header">
+                            <div>
+                                <span class="profile-section-chip">Delivery setup</span>
+                                <h3>Shipping Address</h3>
+                                <p>Manage your default delivery address.</p>
                             </div>
-                            <small class="text-muted">Email updates require verification via an OTP sent to your current email.</small>
                         </div>
-                        <div class="form-group form-col">
-                            <label for="phone">Phone</label>
-                            <input type="text" id="phone" name="phone" class="form-control" value="<?= htmlspecialchars($user['phone'] ?? '') ?>" placeholder="e.g. 09123456789">
-                        </div>
-                    </div>
+                        <form action="<?= APP_URL ?>/index.php?url=profile" method="POST" id="address-form">
+                            <?= csrf_field() ?>
+                            <!-- Carry personal info fields as hidden so they don't get blanked -->
+                            <input type="hidden" name="first_name" value="<?= htmlspecialchars($user['first_name']) ?>">
+                            <input type="hidden" name="last_name" value="<?= htmlspecialchars($user['last_name']) ?>">
+                            <input type="hidden" name="email" value="<?= htmlspecialchars($user['email']) ?>">
+                            <?php if (!empty($usernameEnabled)): ?>
+                            <input type="hidden" name="username" value="<?= htmlspecialchars($user['username'] ?? '') ?>">
+                            <?php endif; ?>
+                            <input type="hidden" name="phone" value="<?= htmlspecialchars($user['phone'] ?? '') ?>">
 
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-accent">Save Changes</button>
+                            <div class="form-group">
+                                <label for="address">Street Address</label>
+                                <textarea id="address" name="address" class="form-control" rows="2" placeholder="House/Unit No., Street, Barangay"><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group form-col">
+                                    <label for="city">City / Municipality</label>
+                                    <input type="text" id="city" name="city" class="form-control" value="<?= htmlspecialchars($user['city'] ?? '') ?>" placeholder="e.g. Davao">
+                                </div>
+                                <div class="form-group form-col">
+                                    <label for="state">Province</label>
+                                    <input type="text" id="state" name="state" class="form-control" value="<?= htmlspecialchars($user['state'] ?? '') ?> " placeholder="e.g. Davao Del Sur">
+                                </div>
+                                <div class="form-group form-col">
+                                    <label for="zip_code">Zip Code</label>
+                                    <input type="text" id="zip_code" name="zip_code" class="form-control" value="<?= htmlspecialchars($user['zip_code'] ?? '') ?>" placeholder="e.g. 1000">
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-accent">Save Address</button>
+                            </div>
+                        </form>
                     </div>
-                </form>
+                </div>
+
+                <!-- Security -->
+                <div class="profile-section-block" id="security-section">
+                    <div class="card profile-section-card">
+                        <div class="profile-section-header">
+                            <div>
+                                <span class="profile-section-chip">Protection</span>
+                                <h3>Security</h3>
+                                <p>Change your password to keep your account secure.</p>
+                            </div>
+                        </div>
+                        <form action="<?= APP_URL ?>/index.php?url=profile" method="POST" id="password-form">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="action" value="change_password">
+
+                            <div class="form-group">
+                                <label for="current_password">Current Password <span class="required">*</span></label>
+                                <div class="input-password-wrap">
+                                    <input type="password" id="current_password" name="current_password" class="form-control" autocomplete="current-password" required>
+                                    <button type="button" class="password-toggle" data-target="current_password" tabindex="-1">Show</button>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group form-col">
+                                    <label for="new_password">New Password <span class="required">*</span></label>
+                                    <div class="input-password-wrap">
+                                        <input type="password" id="new_password" name="new_password" class="form-control" autocomplete="new-password" minlength="8" required>
+                                        <button type="button" class="password-toggle" data-target="new_password" tabindex="-1">Show</button>
+                                    </div>
+                                </div>
+                                <div class="form-group form-col">
+                                    <label for="confirm_password">Confirm New Password <span class="required">*</span></label>
+                                    <div class="input-password-wrap">
+                                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" autocomplete="new-password" minlength="8" required>
+                                        <button type="button" class="password-toggle" data-target="confirm_password" tabindex="-1">Show</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-outline">Update Password</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Shipping Address -->
-        <div class="profile-section-block" id="address-section">
-            <div class="card profile-section-card">
-                <div class="profile-section-header">
-                    <div>
-                        <h3>Shipping Address</h3>
-                        <p>Manage your default delivery address.</p>
-                    </div>
-                </div>
-                <form action="<?= APP_URL ?>/index.php?url=profile" method="POST" id="address-form">
-                    <?= csrf_field() ?>
-                    <!-- Carry personal info fields as hidden so they don't get blanked -->
-                    <input type="hidden" name="first_name" value="<?= htmlspecialchars($user['first_name']) ?>">
-                    <input type="hidden" name="last_name" value="<?= htmlspecialchars($user['last_name']) ?>">
-                    <input type="hidden" name="email" value="<?= htmlspecialchars($user['email']) ?>">
-                    <?php if (!empty($usernameEnabled)): ?>
-                    <input type="hidden" name="username" value="<?= htmlspecialchars($user['username'] ?? '') ?>">
-                    <?php endif; ?>
-                    <input type="hidden" name="phone" value="<?= htmlspecialchars($user['phone'] ?? '') ?>">
-
-                    <div class="form-group">
-                        <label for="address">Street Address</label>
-                        <textarea id="address" name="address" class="form-control" rows="2" placeholder="House/Unit No., Street, Barangay"><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group form-col">
-                            <label for="city">City / Municipality</label>
-                            <input type="text" id="city" name="city" class="form-control" value="<?= htmlspecialchars($user['city'] ?? '') ?>" placeholder="e.g. Davao">
-                        </div>
-                        <div class="form-group form-col">
-                            <label for="state">Province</label>
-                            <input type="text" id="state" name="state" class="form-control" value="<?= htmlspecialchars($user['state'] ?? '') ?> " placeholder="e.g. Davao Del Sur">
-                        </div>
-                        <div class="form-group form-col">
-                            <label for="zip_code">Zip Code</label>
-                            <input type="text" id="zip_code" name="zip_code" class="form-control" value="<?= htmlspecialchars($user['zip_code'] ?? '') ?>" placeholder="e.g. 1000">
-                        </div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-accent">Save Address</button>
-                    </div>
-                </form>
+        <aside class="profile-side-rail">
+            <div class="profile-side-card">
+                <span class="profile-side-kicker">Quick snapshot</span>
+                <h3>Account highlights</h3>
+                <ul class="profile-side-list">
+                    <li>
+                        <strong>Delivery area</strong>
+                        <span><?= htmlspecialchars($locationLabel) ?></span>
+                    </li>
+                    <li>
+                        <strong>Email status</strong>
+                        <?php if (!empty($user['email_verified_at'])): ?>
+                            <span class="profile-side-verified">&#10003; Verified</span>
+                        <?php elseif (!empty($user['email'])): ?>
+                            <span class="profile-side-unverified">&#10007; Not verified</span>
+                        <?php else: ?>
+                            <span>Not yet added</span>
+                        <?php endif; ?>
+                    </li>
+                    <li>
+                        <strong>Profile progress</strong>
+                        <span><?= $profileCompletion ?>% completed</span>
+                    </li>
+                </ul>
             </div>
-        </div>
 
-        <!-- Security -->
-        <div class="profile-section-block" id="security-section">
-            <div class="card profile-section-card">
-                <div class="profile-section-header">
-                    <div>
-                        <h3>Security</h3>
-                        <p>Change your password to keep your account secure.</p>
-                    </div>
-                </div>
-                <form action="<?= APP_URL ?>/index.php?url=profile" method="POST" id="password-form">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="action" value="change_password">
-
-                    <div class="form-group">
-                        <label for="current_password">Current Password <span class="required">*</span></label>
-                        <div class="input-password-wrap">
-                            <input type="password" id="current_password" name="current_password" class="form-control" autocomplete="current-password" required>
-                            <button type="button" class="password-toggle" data-target="current_password" tabindex="-1">Show</button>
+            <div class="profile-side-card profile-side-card--accent">
+                <span class="profile-side-kicker">Polish checklist</span>
+                <h3>Make checkout feel effortless.</h3>
+                <ul class="profile-checklist-simple">
+                    <li class="profile-check-row <?= $contactReady ? 'is-done' : 'is-pending' ?>">
+                        <span class="profile-check-dot" aria-hidden="true"></span>
+                        <div class="profile-check-copy">
+                            <strong>Add a reachable contact number</strong>
+                            <p><?= $contactReady ? 'Your contact details are ready for order updates.' : 'Save a phone number for delivery updates and call confirmation.' ?></p>
                         </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group form-col">
-                            <label for="new_password">New Password <span class="required">*</span></label>
-                            <div class="input-password-wrap">
-                                <input type="password" id="new_password" name="new_password" class="form-control" autocomplete="new-password" minlength="8" required>
-                                <button type="button" class="password-toggle" data-target="new_password" tabindex="-1">Show</button>
-                            </div>
+                    </li>
+                    <li class="profile-check-row <?= $addressReady ? 'is-done' : 'is-pending' ?>">
+                        <span class="profile-check-dot" aria-hidden="true"></span>
+                        <div class="profile-check-copy">
+                            <strong>Save your preferred delivery address</strong>
+                            <p><?= $addressReady ? 'Your address is already saved for faster checkout.' : 'Add your full street, city, and zip code for smoother order processing.' ?></p>
                         </div>
-                        <div class="form-group form-col">
-                            <label for="confirm_password">Confirm New Password <span class="required">*</span></label>
-                            <div class="input-password-wrap">
-                                <input type="password" id="confirm_password" name="confirm_password" class="form-control" autocomplete="new-password" minlength="8" required>
-                                <button type="button" class="password-toggle" data-target="confirm_password" tabindex="-1">Show</button>
-                            </div>
+                    </li>
+                    <li class="profile-check-row is-done">
+                        <span class="profile-check-dot" aria-hidden="true"></span>
+                        <div class="profile-check-copy">
+                            <strong>Keep your password fresh</strong>
+                            <p>Update your password anytime in the security tab for extra protection.</p>
                         </div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-outline">Update Password</button>
-                    </div>
-                </form>
+                    </li>
+                </ul>
             </div>
-        </div>
+        </aside>
     </div>
 </div>
 
@@ -223,20 +370,25 @@ document.addEventListener('DOMContentLoaded', function(){
     // Tab navigation
     var tabs = document.querySelectorAll('.profile-tab');
     var sections = document.querySelectorAll('.profile-section-block');
+    function activateTab(target) {
+        tabs.forEach(function(t){
+            t.classList.toggle('active', t.dataset.target === target);
+        });
+        sections.forEach(function(s){
+            var active = s.id === target;
+            s.style.display = active ? '' : 'none';
+            s.classList.toggle('fade-in', active);
+        });
+    }
+
+    var activeTab = document.querySelector('.profile-tab.active');
+    if (activeTab) {
+        activateTab(activeTab.dataset.target);
+    }
+
     tabs.forEach(function(tab){
         tab.addEventListener('click', function(){
-            var target = this.dataset.target;
-            tabs.forEach(function(t){ t.classList.remove('active'); });
-            this.classList.add('active');
-            sections.forEach(function(s){
-                if (s.id === target) {
-                    s.style.display = '';
-                    s.classList.add('fade-in');
-                } else {
-                    s.style.display = 'none';
-                    s.classList.remove('fade-in');
-                }
-            });
+            activateTab(this.dataset.target);
         });
     });
 

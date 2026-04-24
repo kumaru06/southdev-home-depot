@@ -53,6 +53,11 @@ define('APP_MAP_LAT', env('APP_MAP_LAT', ''));
 define('APP_MAP_LNG', env('APP_MAP_LNG', ''));
 define('APP_GOOGLE_MAPS_API_KEY', env('APP_GOOGLE_MAPS_API_KEY', ''));
 
+// Google OAuth Configuration
+define('GOOGLE_CLIENT_ID',     env('GOOGLE_CLIENT_ID', ''));
+define('GOOGLE_CLIENT_SECRET', env('GOOGLE_CLIENT_SECRET', ''));
+define('GOOGLE_REDIRECT_URI',  env('GOOGLE_REDIRECT_URI', APP_URL . '/index.php?url=google-callback'));
+
 // PayMongo Configuration
 define('PAYMONGO_ENABLED', env('PAYMONGO_ENABLED', true));
 define('PAYMONGO_SECRET_KEY', env('PAYMONGO_SECRET_KEY', ''));

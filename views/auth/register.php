@@ -43,10 +43,14 @@ require_once INCLUDES_PATH . '/header.php';
 
                     <div class="form-row">
                         <div class="form-group form-col fl-group">
-                            <div class="fl-wrap">
-                                <input type="text" id="phone" name="phone" class="form-control form-control-sm fl-input" placeholder=" " autocomplete="tel">
-                                <label for="phone" class="fl-label">Phone Number</label>
+                            <div class="fl-wrap phone-fl-wrap">
+                                <span class="phone-prefix-fl">+63</span>
+                                <input type="text" id="phone_number" class="fl-input" placeholder=" " autocomplete="tel" inputmode="numeric" maxlength="12">
+                                <label for="phone_number" class="fl-label phone-fl-label">Phone Number</label>
+                                <input type="hidden" id="phone_code" name="phone_code" value="+63">
+                                <input type="hidden" id="phone" name="phone">
                             </div>
+                            <small class="phone-hint">e.g. 912 345 6789</small>
                         </div>
                         <div class="form-group form-col fl-group">
                             <div class="fl-wrap">
@@ -708,6 +712,44 @@ document.addEventListener('DOMContentLoaded', function(){
         });
     }
 });
+
+// Phone number: fixed +63, auto-format 9XX XXX XXXX
+(function () {
+    var numberInput = document.getElementById('phone_number');
+    var hiddenPhone  = document.getElementById('phone');
+    if (!numberInput || !hiddenPhone) return;
+
+    function getDigits(val) {
+        return val.replace(/\D/g, '').slice(0, 10);
+    }
+
+    function formatPhone(digits) {
+        if (digits.length > 6) return digits.slice(0,3) + ' ' + digits.slice(3,6) + ' ' + digits.slice(6);
+        if (digits.length > 3) return digits.slice(0,3) + ' ' + digits.slice(3);
+        return digits;
+    }
+
+    numberInput.addEventListener('input', function () {
+        var digits    = getDigits(this.value);
+        this.value    = formatPhone(digits);
+        hiddenPhone.value = digits ? '+63' + digits : '';
+    });
+
+    // Block non-numeric keystrokes (spaces handled by formatter)
+    numberInput.addEventListener('keypress', function (e) {
+        if (!/[0-9]/.test(e.key) && !['Backspace','Delete','ArrowLeft','ArrowRight','Tab'].includes(e.key)) {
+            e.preventDefault();
+        }
+    });
+
+    // Sync before submit
+    var registerForm = numberInput.closest('form');
+    if (registerForm) {
+        registerForm.addEventListener('submit', function () {
+            hiddenPhone.value = getDigits(numberInput.value) ? '+63' + getDigits(numberInput.value) : '';
+        });
+    }
+})();
 </script>
 
 <?php require_once INCLUDES_PATH . '/footer.php'; ?>

@@ -213,7 +213,14 @@ $staffProfileFields = [
                     <?php if ($isCustomer): ?>
                     <div class="vp-detail-item">
                         <span class="vp-detail-label"><i data-lucide="mail"></i> Email</span>
-                        <span class="vp-detail-value"><?= htmlspecialchars($user['email'] ?? '') ?: '<em class="vp-empty">Not set</em>' ?></span>
+                        <span class="vp-detail-value" style="display:inline-flex;align-items:center;gap:8px;">
+                            <?= htmlspecialchars($user['email'] ?? '') ?: '<em class="vp-empty">Not set</em>' ?>
+                            <?php if (!empty($user['email_verified_at'])): ?>
+                                <span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:#d1fae5;color:#065f46;border:1px solid #6ee7b7;">&#10003; Verified</span>
+                            <?php else: ?>
+                                <span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;">&#10007; Unverified</span>
+                            <?php endif; ?>
+                        </span>
                     </div>
                     <?php else: ?>
                     <div class="vp-detail-item">

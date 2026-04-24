@@ -74,7 +74,7 @@ $mosaicPanels = [
     [
         'title' => 'Private Retreats',
         'copy' => 'Comfort rooms made lighter, cleaner, and more refined.',
-        'image' => 'assets/uploads/images/home/comfortroom.png',
+        'image' => 'assets/uploads/images/home/cr.png',
     ],
     [
         'title' => 'Outdoor Statements',
@@ -119,6 +119,18 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
     background:
         radial-gradient(circle at top left, rgba(255,255,255,.18), transparent 28%),
         linear-gradient(180deg, rgba(255,255,255,.05), transparent 35%);
+    pointer-events: none;
+}
+
+.home-hero::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 170px;
+    background:
+        radial-gradient(120% 90px at 50% 0%, rgba(255, 255, 255, .22) 0%, rgba(255, 255, 255, 0) 70%),
+        linear-gradient(180deg, rgba(248, 250, 252, 0) 0%, rgba(248, 250, 252, .24) 28%, rgba(248, 250, 252, .72) 68%, rgba(248, 250, 252, .96) 88%, rgba(248, 250, 252, 1) 100%);
+    filter: blur(8px);
     pointer-events: none;
 }
 
@@ -570,6 +582,38 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
     font-weight: 700;
 }
 
+.reveal-on-scroll {
+    opacity: 0;
+    filter: blur(10px);
+    transition: opacity .7s ease, transform .7s ease, filter .7s ease;
+    will-change: opacity, transform, filter;
+}
+
+.reveal-left {
+    transform: translate3d(-42px, 0, 0);
+}
+
+.reveal-right {
+    transform: translate3d(42px, 0, 0);
+}
+
+.reveal-on-scroll.is-visible {
+    opacity: 1;
+    filter: blur(0);
+    transform: translate3d(0, 0, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reveal-on-scroll,
+    .reveal-left,
+    .reveal-right {
+        opacity: 1;
+        filter: none;
+        transform: none;
+        transition: none;
+    }
+}
+
 @media (max-width: 1100px) {
     .home-hero-inner,
     .home-mosaic-wrap,
@@ -704,7 +748,7 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
 <div class="home-shell">
     <section class="home-hero">
         <div class="home-hero-inner">
-            <div class="home-hero-copy">
+            <div class="home-hero-copy reveal-on-scroll reveal-left">
                 <div class="home-eyebrow">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4Z"></path>
@@ -741,7 +785,7 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
                 </div>
             </div>
 
-            <div class="home-hero-side">
+            <div class="home-hero-side reveal-on-scroll reveal-right">
                 <article class="home-primary-card">
                     <img src="<?= APP_URL ?>/<?= htmlspecialchars($homeHero['image']) ?>" alt="Southdev Home Depot exterior showcase">
                     <div class="home-primary-card-copy">
@@ -768,7 +812,7 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
 
     <div class="home-content">
         <section>
-            <div class="home-section-head">
+            <div class="home-section-head reveal-on-scroll reveal-left">
                 <div>
                     <h2>Signature spaces with a more elevated showroom feel.</h2>
                 </div>
@@ -776,8 +820,8 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
             </div>
 
             <div class="home-signature-grid">
-                <?php foreach ($signatureSpaces as $space): ?>
-                    <article class="home-signature-card">
+                <?php foreach ($signatureSpaces as $index => $space): ?>
+                    <article class="home-signature-card reveal-on-scroll <?= $index % 2 === 0 ? 'reveal-left' : 'reveal-right' ?>">
                         <img src="<?= APP_URL ?>/<?= htmlspecialchars($space['image']) ?>" alt="<?= htmlspecialchars($space['tag']) ?> showcase">
                         <div class="home-signature-copy">
                             <span><?= htmlspecialchars($space['tag']) ?></span>
@@ -790,7 +834,7 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
         </section>
 
         <section style="margin-top: 2rem;">
-            <div class="home-section-head">
+            <div class="home-section-head reveal-on-scroll reveal-right">
                 <div>
                     <h2>Curated corners that make the page feel more editorial.</h2>
                 </div>
@@ -798,7 +842,7 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
             </div>
 
             <div class="home-mosaic-wrap">
-                <article class="home-mosaic-feature">
+                <article class="home-mosaic-feature reveal-on-scroll reveal-left">
                     <img src="<?= APP_URL ?>/<?= htmlspecialchars($mosaicPanels[0]['image']) ?>" alt="<?= htmlspecialchars($mosaicPanels[0]['title']) ?>">
                     <div class="home-mosaic-copy">
                         <h3><?= htmlspecialchars($mosaicPanels[0]['title']) ?></h3>
@@ -807,8 +851,8 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
                 </article>
 
                 <div class="home-mosaic-stack">
-                    <?php foreach (array_slice($mosaicPanels, 1) as $panel): ?>
-                        <article>
+                    <?php foreach (array_slice($mosaicPanels, 1) as $index => $panel): ?>
+                        <article class="reveal-on-scroll <?= $index % 2 === 0 ? 'reveal-right' : 'reveal-left' ?>">
                             <img src="<?= APP_URL ?>/<?= htmlspecialchars($panel['image']) ?>" alt="<?= htmlspecialchars($panel['title']) ?>">
                             <div class="home-mosaic-copy">
                                 <h3><?= htmlspecialchars($panel['title']) ?></h3>
@@ -820,7 +864,7 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
             </div>
         </section>
 
-        <section class="home-polish">
+        <section class="home-polish reveal-on-scroll reveal-right">
             <div class="home-polish-media">
                 <img src="<?= APP_URL ?>/<?= htmlspecialchars($storeFeatureImage) ?>" alt="Southdev Home Depot showroom interior">
             </div>
@@ -847,5 +891,40 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
         </section>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const revealItems = Array.from(document.querySelectorAll('.reveal-on-scroll'));
+
+    if (!revealItems.length) {
+        return;
+    }
+
+    if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(function (entries, obs) {
+            entries.forEach(function (entry) {
+                if (!entry.isIntersecting) {
+                    return;
+                }
+
+                entry.target.classList.add('is-visible');
+                obs.unobserve(entry.target);
+            });
+        }, {
+            threshold: 0.16,
+            rootMargin: '0px 0px -8% 0px'
+        });
+
+        revealItems.forEach(function (item, index) {
+            item.style.transitionDelay = Math.min(index * 60, 240) + 'ms';
+            observer.observe(item);
+        });
+    } else {
+        revealItems.forEach(function (item) {
+            item.classList.add('is-visible');
+        });
+    }
+});
+</script>
 
 <?php require_once INCLUDES_PATH . '/footer.php'; ?>

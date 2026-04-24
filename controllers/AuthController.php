@@ -143,9 +143,10 @@ class AuthController {
             $redirect = ($user['role_id'] == ROLE_CUSTOMER) ? 'products' : 'dashboard';
             if ($isAjax) {
                 header('Content-Type: application/json; charset=utf-8');
-                echo json_encode(['success' => true, 'redirect' => APP_URL . '/index.php?url=' . $redirect]);
+                echo json_encode(['success' => true, 'redirect' => APP_URL . '/index.php?url=' . $redirect, 'message' => 'Welcome back, ' . $user['first_name'] . '!']);
                 exit;
             }
+            flash('success', 'Welcome back, ' . $user['first_name'] . '! You are now logged in.');
             header('Location: ' . APP_URL . '/index.php?url=' . $redirect);
             exit;
         }
@@ -234,6 +235,7 @@ class AuthController {
 
             $this->logModel->create(LOG_LOGIN, 'Staff logged in: ' . $user['email'], $user['id']);
 
+            flash('success', 'Welcome back, ' . $user['first_name'] . '! You are now logged in.');
             header('Location: ' . APP_URL . '/index.php?url=dashboard');
             exit;
         }
@@ -294,6 +296,16 @@ class AuthController {
             flash('error', 'Please fill in all required fields.');
             header('Location: ' . APP_URL . '/index.php?url=register');
             exit;
+        }
+
+        // Validate phone number if provided
+        if (!empty($data['phone'])) {
+            // Must be Philippine mobile: +639 followed by exactly 9 digits
+            if (!preg_match('/^\+639\d{9}$/', preg_replace('/\s+/', '', $data['phone']))) {
+                flash('error', 'Invalid phone number. Must be a valid Philippine mobile number (+639XXXXXXXXX).');
+                header('Location: ' . APP_URL . '/index.php?url=register');
+                exit;
+            }
         }
 
         // Validate username
@@ -407,7 +419,8 @@ class AuthController {
             if ($emailResult['sent']) {
                 flash('success', 'Registration successful! Please verify your email.');
             } elseif ($this->isLocalEnvironment()) {
-                flash('warning', 'Registration successful, but email sending failed. For local testing, use this OTP: ' . $otpCode);
+                $_SESSION['dev_otp'] = $otpCode;
+                flash('warning', 'Email sending failed (local env). Use the OTP shown on this page.');
             } else {
                 flash('warning', 'Registration successful, but verification email could not be sent. Please configure SMTP and click Resend Verification Email.');
             }
@@ -422,9 +435,11 @@ class AuthController {
     public function showVerifyEmail() {
         $pageTitle = 'Verify Email';
 
-        // Do not expose OTPs in the UI. Verification must be done via email.
         $devOtp = null;
-        $devVerifyUrl = null;
+        if ($this->isLocalEnvironment() && !empty($_SESSION['dev_otp'])) {
+            $devOtp = $_SESSION['dev_otp'];
+            unset($_SESSION['dev_otp']);
+        }
 
         require_once VIEWS_PATH . '/auth/verify-email.php';
     }
@@ -693,9 +708,10 @@ class AuthController {
 
         $_SESSION['pending_verify_email'] = $email;
         if ($emailResult['sent']) {
-            flash('success', 'Verification email sent. Please check your inbox.');
+            flash('success', 'Verification email sent! Check your inbox for the OTP.');
         } elseif ($this->isLocalEnvironment()) {
-            flash('warning', 'Email sending failed. For local testing, use this OTP: ' . $otpCode);
+            $_SESSION['dev_otp'] = $otpCode;
+            flash('warning', 'Email sending failed (local env). Use the OTP shown on this page.');
         } else {
             flash('error', 'Could not send verification email. Please check SMTP configuration and try again.');
         }

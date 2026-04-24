@@ -23,10 +23,52 @@ if (!file_exists($display2Full)) {
 }
 ?>
 
+<style>
+.storefront-shell.products-reveal-sync .reveal-on-scroll {
+    opacity: 0;
+    filter: blur(10px);
+    transition: opacity .7s ease, transform .7s ease, filter .7s ease;
+    will-change: opacity, transform, filter;
+}
+
+.storefront-shell.products-reveal-sync .reveal-on-scroll::after {
+    display: none;
+}
+
+.storefront-shell.products-reveal-sync .reveal-left {
+    transform: translate3d(-42px, 0, 0);
+}
+
+.storefront-shell.products-reveal-sync .reveal-right {
+    transform: translate3d(42px, 0, 0);
+}
+
+.storefront-shell.products-reveal-sync .reveal-on-scroll.is-visible {
+    opacity: 1;
+    filter: blur(0);
+    transform: translate3d(0, 0, 0);
+}
+
+.storefront-shell.products-reveal-sync .product-card.reveal-on-scroll {
+    animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .storefront-shell.products-reveal-sync .reveal-on-scroll,
+    .storefront-shell.products-reveal-sync .reveal-left,
+    .storefront-shell.products-reveal-sync .reveal-right {
+        opacity: 1;
+        filter: none;
+        transform: none;
+        transition: none;
+    }
+}
+</style>
+
 <div class="container">
-    <div class="storefront-shell">
+    <div class="storefront-shell products-reveal-sync">
         <!-- Left Sidebar -->
-        <aside class="storefront-sidebar" aria-label="Browse categories">
+        <aside class="storefront-sidebar reveal-on-scroll reveal-left" aria-label="Browse categories">
             <div class="sidebar-card">
                 <div class="sidebar-title">Explore</div>
                 <nav class="sidebar-nav">
@@ -53,7 +95,7 @@ if (!file_exists($display2Full)) {
         <main class="storefront-main">
             <!-- Featured Tiles Banner -->
             <!-- Hero / Intro: left column shows display1 + display2 stacked, right column uses the main hero image -->
-            <section class="products-hero">
+            <section class="products-hero reveal-on-scroll reveal-right">
                 <div class="products-hero-inner">
                     <div class="hero-left">
                         <img src="<?= APP_URL ?>/<?= $display1 ?>" alt="Display 1" class="hero-thumb">
@@ -66,15 +108,15 @@ if (!file_exists($display2Full)) {
 
             <!-- Stats strip -->
             <div class="stats-strip">
-                <div class="stat-item">
+                <div class="stat-item reveal-on-scroll reveal-left">
                     <span class="stat-number"><?= isset($products) ? count($products) : '500' ?>+</span>
                     <span class="stat-label">PRODUCTS</span>
                 </div>
-                <div class="stat-item">
+                <div class="stat-item reveal-on-scroll reveal-right">
                     <span class="stat-number"><?= isset($categories) ? count($categories) : '5' ?></span>
                     <span class="stat-label">CATEGORIES</span>
                 </div>
-                <div class="stat-item">
+                <div class="stat-item reveal-on-scroll reveal-left">
                     <span class="stat-number">100%</span>
                     <span class="stat-label">QUALITY</span>
                 </div>
@@ -85,13 +127,13 @@ if (!file_exists($display2Full)) {
             <?php // Render the products section for any route that begins with 'products' (includes search and subpaths) ?>
             <?php if ((isset($_GET['url']) && strpos($_GET['url'], 'products') === 0) || (isset($currentUrl) && strpos($currentUrl, 'products') === 0)): ?>
             <!-- Section heading -->
-            <div class="section-heading">
+            <div class="section-heading reveal-on-scroll reveal-left" data-reveal-delay="0">
                 <span class="section-badge">OUR PRODUCTS</span>
                 <h2 class="section-title">Everything You Need in <span class="accent-text">One Place</span></h2>
                 <p class="section-subtitle">Browse our complete range of premium building materials, fixtures, and finishes.</p>
             </div>
 
-            <div class="category-bar storefront-chips">
+            <div class="category-bar storefront-chips reveal-on-scroll reveal-right" data-reveal-delay="120">
                 <a href="<?= APP_URL ?>/index.php?url=products" class="<?= !isset($_GET['category']) ? 'active' : '' ?>">
                     <img src="<?= APP_URL ?>/assets/uploads/images/png-icon/tile.png" alt="All Products" style="width:14px;height:14px"> All Products
                 </a>
@@ -129,9 +171,10 @@ if (!file_exists($display2Full)) {
             <!-- Product Grid -->
             <?php if (!empty($products)): ?>
         <div id="product-list" class="product-grid">
-            <?php foreach ($products as $product): ?>
+            <?php foreach ($products as $index => $product): ?>
                 <?php $isOutOfStock = isset($product['stock']) && $product['stock'] <= 0; ?>
-                <div class="product-card <?= $isOutOfStock ? 'product-card--unavailable' : '' ?>">
+                <?php $col = $index % 4; $delay = [0, 100, 200, 300][$col]; ?>
+                <div class="product-card <?= $isOutOfStock ? 'product-card--unavailable' : '' ?> reveal-on-scroll <?= $col < 2 ? 'reveal-left' : 'reveal-right' ?>" data-reveal-delay="<?= $delay ?>">
                     <a href="<?= APP_URL ?>/index.php?url=products/<?= $product['id'] ?>">
                         <div class="product-img-wrap">
                             <?php if (!empty($product['image']) && file_exists(ROOT_PATH . '/assets/uploads/' . $product['image'])): ?>
@@ -193,7 +236,7 @@ if (!file_exists($display2Full)) {
 
             <!-- Pagination -->
             <?php if (isset($totalPages) && $totalPages > 1): ?>
-        <div class="pagination">
+        <div class="pagination reveal-on-scroll reveal-right">
                 <?php if ($page > 1): ?>
                     <a href="<?= APP_URL ?>/index.php?url=products&page=<?= $page - 1 ?><?= isset($_GET['category']) ? '&category=' . $_GET['category'] : '' ?>" class="btn btn-outline">&laquo; Prev</a>
                 <?php endif; ?>
@@ -206,7 +249,7 @@ if (!file_exists($display2Full)) {
         </div>
             <?php endif; ?>
             <?php else: ?>
-        <div class="empty-state">
+        <div class="empty-state reveal-on-scroll reveal-left">
             <h3>No products found</h3>
             <p>Try adjusting your search or browse a different category.</p>
             <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-accent">View All Products</a>

@@ -106,7 +106,7 @@ require_once INCLUDES_PATH . '/navbar.php';
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: .9rem;
+    gap: .8rem;
     box-shadow: 0 18px 42px rgba(15,23,42,.08);
     transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
 }
@@ -115,18 +115,22 @@ require_once INCLUDES_PATH . '/navbar.php';
     box-shadow: 0 24px 50px rgba(15,23,42,.12);
     border-color: rgba(249,115,22,.22);
 }
-.loc-card-icon {
-    width: 64px; height: 64px;
-    border-radius: 18px;
-    display: flex;
+.loc-card-badge {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
+    min-height: 34px;
+    padding: .45rem .9rem;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
 }
-.loc-card-icon svg { width: 28px; height: 28px; }
-.loc-card-icon.orange  { background: rgba(249,115,22,.1); color: #F97316; }
-.loc-card-icon.blue    { background: rgba(59,130,246,.1);  color: #3B82F6; }
-.loc-card-icon.green   { background: rgba(22,163,74,.1);   color: #16A34A; }
+.loc-card-badge.orange  { background: rgba(249,115,22,.08); border-color: rgba(249,115,22,.12); color: #F97316; }
+.loc-card-badge.blue    { background: rgba(59,130,246,.08); border-color: rgba(59,130,246,.12); color: #3B82F6; }
+.loc-card-badge.green   { background: rgba(22,163,74,.08); border-color: rgba(22,163,74,.12); color: #16A34A; }
 .loc-card-text h3 {
     font-size: .78rem;
     font-weight: 800;
@@ -359,35 +363,21 @@ require_once INCLUDES_PATH . '/navbar.php';
 <!-- Info Cards -->
 <div class="loc-cards">
     <div class="loc-card">
-        <div class="loc-card-icon orange">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 21s-6-4.35-6-10a6 6 0 1 1 12 0c0 5.65-6 10-6 10Z"/>
-                <circle cx="12" cy="11" r="2.5"/>
-            </svg>
-        </div>
+        <span class="loc-card-badge orange">Visit us</span>
         <div class="loc-card-text">
             <h3>Address</h3>
             <p>3H3W+MJ8, Juna Ave, Talomo,<br>Davao City, Davao del Sur</p>
         </div>
     </div>
     <div class="loc-card">
-        <div class="loc-card-icon blue">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 8v4l3 3"/>
-                <circle cx="12" cy="12" r="9"/>
-            </svg>
-        </div>
+        <span class="loc-card-badge blue">Open hours</span>
         <div class="loc-card-text">
             <h3>Store Hours</h3>
             <p>Mon – Sat: 8:00 AM – 5:00 PM<br>Sunday: Closed</p>
         </div>
     </div>
     <div class="loc-card">
-        <div class="loc-card-icon green">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.62a2 2 0 0 1-.45 2.11L8 9.91a16 16 0 0 0 6.09 6.09l1.46-1.28a2 2 0 0 1 2.11-.45c.84.29 1.72.5 2.62.62A2 2 0 0 1 22 16.92z"/>
-            </svg>
-        </div>
+        <span class="loc-card-badge green">Reach out</span>
         <div class="loc-card-text">
             <h3>Contact</h3>
             <p>+63 (939) 939 8250</p>

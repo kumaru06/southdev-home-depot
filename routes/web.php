@@ -26,6 +26,16 @@ switch ($urlParts[0]) {
         }
         break;
 
+    case 'google-auth':
+        require_once CONTROLLERS_PATH . '/GoogleAuthController.php';
+        (new GoogleAuthController($pdo))->redirect();
+        break;
+
+    case 'google-callback':
+        require_once CONTROLLERS_PATH . '/GoogleAuthController.php';
+        (new GoogleAuthController($pdo))->handleCallback();
+        break;
+
     case 'admin-login':
         require_once CONTROLLERS_PATH . '/AuthController.php';
         $controller = new AuthController($pdo);

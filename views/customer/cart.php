@@ -3,19 +3,58 @@
 $extraJs = ['cart.js'];
 require_once INCLUDES_PATH . '/header.php';
 require_once INCLUDES_PATH . '/navbar.php';
+
+$cartItemCount = is_array($cartItems ?? null) ? count($cartItems) : 0;
+$cartQuantityTotal = 0;
+foreach (($cartItems ?? []) as $cartItemSummary) {
+    $cartQuantityTotal += (int) ($cartItemSummary['quantity'] ?? 0);
+}
 ?>
 
-<div class="container">
-    <div class="page-heading-row">
-        <h1 class="page-heading">Shopping Cart</h1>
+<div class="container cart-page">
+    <section class="cart-hero-panel">
+        <div class="cart-hero-copy">
+            <div class="page-heading-row cart-heading-row">
+                <h1 class="page-heading">Shopping Cart</h1>
+                <?php if ($cartItemCount > 0): ?>
+                    <span class="page-heading-badge"><?= $cartItemCount ?> item<?= $cartItemCount > 1 ? 's' : '' ?></span>
+                <?php endif; ?>
+            </div>
+            <p class="cart-hero-subtitle">Review your selected products, adjust quantities, and continue to checkout when everything looks right.</p>
+        </div>
+
         <?php if (!empty($cartItems)): ?>
-            <span class="page-heading-badge"><?= count($cartItems) ?> item<?= count($cartItems) > 1 ? 's' : '' ?></span>
+            <div class="cart-hero-stats" aria-label="Cart overview">
+                <div class="cart-stat-card">
+                    <strong><?= $cartItemCount ?></strong>
+                    <span>Unique items</span>
+                </div>
+                <div class="cart-stat-card">
+                    <strong><?= $cartQuantityTotal ?></strong>
+                    <span>Total quantity</span>
+                </div>
+                <div class="cart-stat-card">
+                    <strong>Free</strong>
+                    <span>Shipping</span>
+                </div>
+                <div class="cart-stat-card">
+                    <strong>₱<?= number_format($cartTotal, 0) ?></strong>
+                    <span>Current total</span>
+                </div>
+            </div>
         <?php endif; ?>
-    </div>
+    </section>
 
     <?php if (!empty($cartItems)): ?>
         <div class="cart-layout">
             <div class="cart-items-wrap">
+                <div class="cart-table-topbar">
+                    <div>
+                        <h2>Your selected items</h2>
+                        <p>Update quantities or remove products before proceeding to checkout.</p>
+                    </div>
+                    <span class="cart-table-pill"><?= $cartQuantityTotal ?> total unit<?= $cartQuantityTotal !== 1 ? 's' : '' ?></span>
+                </div>
                 <table class="cart-table">
                     <thead>
                         <tr>
@@ -72,6 +111,10 @@ require_once INCLUDES_PATH . '/navbar.php';
                 <div class="cart-summary-header">
                     <h3>Order Summary</h3>
                 </div>
+                <div class="cart-summary-meta">
+                    <span>Ready for checkout</span>
+                    <span>Davao delivery</span>
+                </div>
                 <div class="cart-summary-body">
                     <div class="summary-row">
                         <span>Subtotal (<?= count($cartItems) ?> item<?= count($cartItems) > 1 ? 's' : '' ?>)</span>
@@ -90,6 +133,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                     <a href="<?= APP_URL ?>/index.php?url=checkout" class="btn btn-accent btn-lg btn-block">Proceed to Checkout</a>
                     <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-outline btn-lg btn-block">&larr; Continue Shopping</a>
                 </div>
+                <div class="cart-summary-note">Prices and quantities stay editable here until you place the order.</div>
                 <div class="cart-summary-secure">
                     <span>Secure checkout guaranteed</span>
                 </div>

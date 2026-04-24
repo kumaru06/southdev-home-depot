@@ -5,10 +5,14 @@ require_once INCLUDES_PATH . '/header.php';
 require_once INCLUDES_PATH . '/navbar.php';
 ?>
 
-<div class="container">
+<div class="container checkout-page">
     <!-- Checkout Progress Header -->
-    <div class="co-header">
-        <h1 class="co-title">Secure Checkout</h1>
+    <div class="co-header reveal-on-scroll reveal-left">
+        <div class="co-title-wrap">
+            <span class="co-kicker">Fast checkout • Secure payment • Davao delivery</span>
+            <h1 class="co-title">Secure Checkout</h1>
+            <p class="co-intro">Review your delivery details, choose a payment option, and place your order with confidence.</p>
+        </div>
         <div class="co-steps">
             <div class="co-step done">
                 <span class="co-step-num">&check;</span>
@@ -37,9 +41,14 @@ require_once INCLUDES_PATH . '/navbar.php';
             <!-- Main Column -->
             <div class="checkout-main">
                 <!-- Delivery Address -->
-                <div class="co-card">
+                <div class="co-card co-card--address reveal-on-scroll reveal-left">
                     <div class="co-card-header">
-                        <div class="co-card-icon"></div>
+                        <div class="co-card-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 21s-6-4.35-6-10a6 6 0 1 1 12 0c0 5.65-6 10-6 10Z"></path>
+                                <circle cx="12" cy="11" r="2.5"></circle>
+                            </svg>
+                        </div>
                         <div>
                             <h3 class="co-card-title">Delivery Address</h3>
                             <p class="co-card-sub">Davao City delivery area only</p>
@@ -75,9 +84,15 @@ require_once INCLUDES_PATH . '/navbar.php';
                 </div>
 
                 <!-- Payment Method -->
-                <div class="co-card">
+                <div class="co-card co-card--payment reveal-on-scroll reveal-left">
                     <div class="co-card-header">
-                        <div class="co-card-icon co-card-icon--blue"></div>
+                        <div class="co-card-icon co-card-icon--blue" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h13A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5v-9Z"></path>
+                                <path d="M3 9h18"></path>
+                                <path d="M7 14h3"></path>
+                            </svg>
+                        </div>
                         <div>
                             <h3 class="co-card-title">Payment Method</h3>
                             <p class="co-card-sub">Choose how you'd like to pay</p>
@@ -124,11 +139,15 @@ require_once INCLUDES_PATH . '/navbar.php';
             </div>
 
             <!-- Order Summary Sidebar -->
-            <div class="checkout-sidebar">
+            <div class="checkout-sidebar reveal-on-scroll reveal-right">
                 <div class="co-summary">
                     <div class="co-summary-head">
                         <h3>Order Summary</h3>
                         <span class="co-badge"><?= count($cartItems) ?></span>
+                    </div>
+                    <div class="co-summary-meta">
+                        <span>Ready to dispatch</span>
+                        <span>Davao City only</span>
                     </div>
                     <div class="co-summary-items">
                         <?php foreach ($cartItems as $item): ?>
@@ -157,6 +176,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                         <button type="submit" class="btn btn-accent btn-block btn-lg">Place Order</button>
                         <a href="<?= APP_URL ?>/index.php?url=cart" class="btn btn-outline btn-block btn-lg">&larr; Back to Cart</a>
                     </div>
+                    <div class="co-summary-note">Your order details will be confirmed before final processing.</div>
                     <div class="co-trust">
                         <span>Secure</span>
                         <span>Davao Delivery</span>

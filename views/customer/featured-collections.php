@@ -903,21 +903,21 @@ $featuredCollections = [
 
 <div class="collections-page">
     <div class="collections-shell">
-        <header class="collections-header">
+        <header class="collections-header reveal-on-scroll reveal-left">
             <div class="collections-kicker">Design-Led Selections</div>
             <h1>Featured Collections</h1>
             <p>Curated surface stories built from your featured collections image assets. Explore each concept through a polished editorial layout with hero scenes, finish swatches, and styling cues that make every collection feel premium at first glance.</p>
 
             <div class="collections-metrics" aria-hidden="true">
-                <div class="collections-metric-card">
+                <div class="collections-metric-card reveal-on-scroll reveal-left">
                     <strong>5 curated concepts</strong>
                     <span>Each collection presents a distinct interior mood so shoppers can compare finishes faster.</span>
                 </div>
-                <div class="collections-metric-card">
+                <div class="collections-metric-card reveal-on-scroll reveal-right">
                     <strong>Scene-led presentation</strong>
                     <span>Main visuals and tile swatches now work together in a cleaner, showroom-inspired composition.</span>
                 </div>
-                <div class="collections-metric-card">
+                <div class="collections-metric-card reveal-on-scroll reveal-left">
                     <strong>Professional browsing flow</strong>
                     <span>Clear navigation, strong hierarchy, and refined spacing make the experience feel high-end.</span>
                 </div>
@@ -929,7 +929,7 @@ $featuredCollections = [
                 <?php foreach ($featuredCollections as $index => $collection): ?>
                     <button
                         type="button"
-                        class="collection-tab<?= $index === 0 ? ' is-active' : '' ?>"
+                        class="collection-tab reveal-on-scroll <?= $index % 2 === 0 ? 'reveal-left' : 'reveal-right' ?><?= $index === 0 ? ' is-active' : '' ?>"
                         data-collection-trigger="<?= $index ?>"
                         style="--collection-accent: <?= htmlspecialchars($collection['accent']) ?>;"
                         role="tab"
@@ -951,7 +951,7 @@ $featuredCollections = [
                 <?php endforeach; ?>
             </div>
 
-            <div class="collections-stage">
+            <div class="collections-stage reveal-on-scroll reveal-right">
                 <?php foreach ($featuredCollections as $index => $collection): ?>
                     <article
                         id="collection-panel-<?= htmlspecialchars($collection['slug']) ?>"
@@ -1061,7 +1061,7 @@ $featuredCollections = [
             </div>
         </section>
 
-        <p class="collections-helper">Tip: use the selector cards, the next button, or tap the hero image to move through Grove, Lithos, Slate, Solarstone, and Textile.</p>
+        <p class="collections-helper reveal-on-scroll reveal-left">Tip: use the selector cards, the next button, or tap the hero image to move through Grove, Lithos, Slate, Solarstone, and Textile.</p>
     </div>
 </div>
 

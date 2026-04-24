@@ -2,27 +2,117 @@
 /* $pageTitle, $extraCss set by controller */
 require_once INCLUDES_PATH . '/header.php';
 require_once INCLUDES_PATH . '/navbar.php';
+
+$ordersForStats = is_array($ordersForStats ?? null) ? $ordersForStats : ($orders ?? []);
+$orderCount = count($ordersForStats);
+$activeOrderCount = 0;
+$deliveredOrderCount = 0;
+$cancelledOrderCount = 0;
+
+foreach ($ordersForStats as $orderSummary) {
+    $status = strtolower((string) ($orderSummary['status'] ?? ''));
+    if (in_array($status, ['pending', 'processing', 'shipped'], true)) {
+        $activeOrderCount++;
+    }
+    if ($status === 'delivered') {
+        $deliveredOrderCount++;
+    }
+    if ($status === 'cancelled') {
+        $cancelledOrderCount++;
+    }
+}
+
+$visibleOrderCount = is_array($orders ?? null) ? count($orders) : 0;
 ?>
 
-<div class="container">
-    <div class="page-heading-row">
-        <h1 class="page-heading">My Orders</h1>
-        <?php if (!empty($orders)): ?>
-            <span class="page-heading-badge"><?= count($orders) ?> order<?= count($orders) > 1 ? 's' : '' ?></span>
+<div class="container orders-page">
+    <section class="orders-hero-panel">
+        <div class="orders-hero-copy">
+            <div class="page-heading-row orders-heading-row">
+                <h1 class="page-heading">My Orders</h1>
+                <?php if ($orderCount > 0): ?>
+                    <span class="page-heading-badge"><?= $orderCount ?> order<?= $orderCount > 1 ? 's' : '' ?></span>
+                <?php endif; ?>
+            </div>
+            <p class="orders-hero-subtitle">Track every purchase, review payment methods, and open any order to see its full item and delivery details.</p>
+        </div>
+
+        <?php if ($orderCount > 0): ?>
+            <div class="orders-hero-stats" aria-label="Order overview">
+                <div class="orders-stat-card">
+                    <strong><?= $orderCount ?></strong>
+                    <span>Total orders</span>
+                </div>
+                <div class="orders-stat-card">
+                    <strong><?= $activeOrderCount ?></strong>
+                    <span>Active</span>
+                </div>
+                <div class="orders-stat-card">
+                    <strong><?= $deliveredOrderCount ?></strong>
+                    <span>Delivered</span>
+                </div>
+                <div class="orders-stat-card">
+                    <strong><?= $cancelledOrderCount ?></strong>
+                    <span>Cancelled</span>
+                </div>
+            </div>
         <?php endif; ?>
-    </div>
+    </section>
+
+    <section class="orders-toolbar" aria-label="Order filters">
+        <form method="GET" action="<?= APP_URL ?>/index.php" class="orders-filter-form">
+            <input type="hidden" name="url" value="orders">
+            <label for="orderDate" class="orders-filter-label">Find by date</label>
+            <input type="date" id="orderDate" name="order_date" class="form-control orders-filter-input" value="<?= htmlspecialchars($selectedOrderDate ?? '') ?>">
+            <button type="submit" class="btn btn-accent btn-sm">Apply</button>
+            <?php if (!empty($hasOrderDateFilter)): ?>
+                <a href="<?= APP_URL ?>/index.php?url=orders" class="btn btn-outline btn-sm">Clear</a>
+            <?php endif; ?>
+        </form>
+
+        <div class="orders-toolbar-summary">
+            <?php if (!empty($hasOrderDateFilter)): ?>
+                <span>Showing <?= $orderCount ?> order<?= $orderCount !== 1 ? 's' : '' ?> for <?= date('M d, Y', strtotime($selectedOrderDate)) ?></span>
+            <?php else: ?>
+                <span>Showing <?= $visibleOrderCount ?> of <?= $orderCount ?> order<?= $orderCount !== 1 ? 's' : '' ?></span>
+            <?php endif; ?>
+        </div>
+    </section>
 
     <?php if (!empty($orders)): ?>
         <div class="orders-list">
-        <?php foreach ($orders as $idx => $order): ?>
-            <div class="order-card order-card--enhanced" style="animation-delay: <?= $idx * 0.05 ?>s">
+        <?php foreach ($orders as $order): ?>
+            <?php
+                $pmLabel = '';
+                $pmLogo  = '';
+                if (!empty($order['payment_method'])) {
+                    $pmRaw = strtolower((string) $order['payment_method']);
+                    if (str_contains($pmRaw, 'gcash')) {
+                        $pmLabel = 'GCash';
+                        $pmLogo  = APP_URL . '/assets/uploads/images/logo/gcashlogo.png';
+                    } elseif (str_contains($pmRaw, 'cod') || str_contains($pmRaw, 'cash')) {
+                        $pmLabel = 'COD';
+                        $pmLogo  = APP_URL . '/assets/uploads/images/logo/COD2.png';
+                    } elseif (str_contains($pmRaw, 'card') || str_contains($pmRaw, 'paymongo')) {
+                        $pmLabel = 'Card';
+                        $pmLogo  = APP_URL . '/assets/uploads/images/logo/creditcard.png';
+                    } elseif (str_contains($pmRaw, 'ewallet') || str_contains($pmRaw, 'e-wallet')) {
+                        $pmLabel = 'E-Wallet';
+                        $pmLogo  = APP_URL . '/assets/uploads/images/logo/gcashlogo.png';
+                    } else {
+                        $pmLabel = ucfirst((string) $order['payment_method']);
+                        $pmLogo  = APP_URL . '/assets/uploads/images/logo/creditcard.png';
+                    }
+                }
+            ?>
+            <div class="order-card order-card--enhanced">
                 <div class="order-card-status-stripe order-card-status-stripe--<?= htmlspecialchars($order['status']) ?>"></div>
                 <div class="order-card-content">
                     <div class="order-card-header">
                         <div class="order-card-main">
                             <div class="order-card-top-row">
                                 <h3 class="order-number"><?= htmlspecialchars($order['order_number']) ?></h3>
-                                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                                <div class="order-card-badges">
                                     <span class="badge badge-<?= htmlspecialchars($order['status']) ?>"><?= htmlspecialchars(ucfirst($order['status'])) ?></span>
                                     <?php
                                         $rr = $returnsByOrder[$order['id']] ?? null;
@@ -50,79 +140,90 @@ require_once INCLUDES_PATH . '/navbar.php';
                             <div class="order-card-meta">
                                 <span class="order-meta-item"><?= date('M d, Y', strtotime($order['created_at'])) ?></span>
                                 <span class="order-meta-item"><?= date('h:i A', strtotime($order['created_at'])) ?></span>
+                                <?php if (!empty($order['payment_method'])): ?>
+                                    <span class="order-meta-item">Method <?= htmlspecialchars(ucfirst((string) $order['payment_method'])) ?></span>
+                                <?php endif; ?>
                             </div>
                         </div>
                         <div class="order-card-amount">
-                            <span class="order-total-label">Total</span>
-                            <span class="order-total">₱<?= number_format($order['total_amount'], 2) ?></span>
+                            <div class="order-card-amount-box">
+                                <span class="order-total-label">Total</span>
+                                <span class="order-total">₱<?= number_format($order['total_amount'], 2) ?></span>
+                            </div>
                         </div>
                     </div>
                     <div class="order-card-actions">
-                        <?php
-                            $pmLabel = '';
-                            $pmLogo  = '';
-                            if (!empty($order['payment_method'])) {
-                                $pmRaw = strtolower($order['payment_method']);
-                                if (str_contains($pmRaw, 'gcash')) {
-                                    $pmLabel = 'GCash';
-                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/gcashlogo.png';
-                                } elseif (str_contains($pmRaw, 'cod') || str_contains($pmRaw, 'cash')) {
-                                    $pmLabel = 'COD';
-                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/COD2.png';
-                                } elseif (str_contains($pmRaw, 'card') || str_contains($pmRaw, 'paymongo')) {
-                                    $pmLabel = 'Card';
-                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/creditcard.png';
-                                } elseif (str_contains($pmRaw, 'ewallet') || str_contains($pmRaw, 'e-wallet')) {
-                                    $pmLabel = 'E-Wallet';
-                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/gcashlogo.png';
-                                } else {
-                                    $pmLabel = ucfirst($order['payment_method']);
-                                    $pmLogo  = APP_URL . '/assets/uploads/images/logo/creditcard.png';
-                                }
-                            }
-                        ?>
-                        <?php if ($pmLabel): ?>
-                        <span class="order-payment-badge">
-                            <img src="<?= $pmLogo ?>" alt="<?= $pmLabel ?>" class="payment-logo-icon"> <?= $pmLabel ?>
-                        </span>
-                        <?php endif; ?>
-                        <a href="<?= APP_URL ?>/index.php?url=orders/<?= $order['id'] ?>" class="btn btn-outline btn-sm">View Details</a>
-                        <?php if ($order['status'] === 'pending'): ?>
-                            <form action="<?= APP_URL ?>/index.php?url=orders/<?= $order['id'] ?>/cancel" method="POST" class="inline-form cancel-order-form">
-                                <?= csrf_field() ?>
-                                <button type="button" class="btn btn-danger btn-sm btn-cancel-trigger" data-order="<?= htmlspecialchars($order['order_number']) ?>">Cancel</button>
-                            </form>
-                        <?php elseif ($order['status'] === 'processing'): ?>
-                            <?php
-                                $cr = $cancelsByOrder[$order['id']] ?? null;
-                                $hasActiveCancel = $cr && in_array($cr['status'], ['pending', 'approved']);
-                            ?>
-                            <?php if ($hasActiveCancel): ?>
-                                <span class="badge badge-<?= $cr['status'] === 'approved' ? 'cancelled' : 'pending' ?>" style="font-size:11px;">
-                                    <?= $cr['status'] === 'pending' ? 'Cancel Pending' : 'Cancel Approved' ?>
-                                </span>
-                            <?php else: ?>
-                            <a href="<?= APP_URL ?>/index.php?url=orders/request-cancel/<?= $order['id'] ?>" class="btn btn-warning btn-sm">Request Cancellation</a>
+                        <div class="order-card-utility">
+                            <?php if ($pmLabel): ?>
+                            <span class="order-payment-badge">
+                                <img src="<?= $pmLogo ?>" alt="<?= $pmLabel ?>" class="payment-logo-icon"> <?= $pmLabel ?>
+                            </span>
                             <?php endif; ?>
-                        <?php elseif ($order['status'] === 'delivered'): ?>
-                            <?php
-                                // Only show "Request Return" if no active return request exists
-                                $hasActiveReturn = isset($rr) && $rr && $rr['status'] !== 'rejected';
-                            ?>
-                            <?php if (!$hasActiveReturn): ?>
-                            <a href="<?= APP_URL ?>/index.php?url=returns/request/<?= $order['id'] ?>" class="btn btn-outline btn-sm">Request Return</a>
+                        </div>
+
+                        <div class="order-card-buttons">
+                            <a href="<?= APP_URL ?>/index.php?url=orders/<?= $order['id'] ?>" class="btn btn-outline btn-sm order-card-btn">View Details</a>
+                            <?php if ($order['status'] === 'pending'): ?>
+                                <form action="<?= APP_URL ?>/index.php?url=orders/<?= $order['id'] ?>/cancel" method="POST" class="inline-form cancel-order-form">
+                                    <?= csrf_field() ?>
+                                    <button type="button" class="btn btn-danger btn-sm btn-cancel-trigger order-card-btn" data-order="<?= htmlspecialchars($order['order_number']) ?>">Cancel</button>
+                                </form>
+                            <?php elseif ($order['status'] === 'processing'): ?>
+                                <?php
+                                    $cr = $cancelsByOrder[$order['id']] ?? null;
+                                    $hasActiveCancel = $cr && in_array($cr['status'], ['pending', 'approved']);
+                                ?>
+                                <?php if ($hasActiveCancel): ?>
+                                    <span class="badge badge-<?= $cr['status'] === 'approved' ? 'cancelled' : 'pending' ?> order-card-inline-badge" style="font-size:11px;">
+                                        <?= $cr['status'] === 'pending' ? 'Cancel Pending' : 'Cancel Approved' ?>
+                                    </span>
+                                <?php else: ?>
+                                <a href="<?= APP_URL ?>/index.php?url=orders/<?= $order['id'] ?>" class="btn btn-warning btn-sm order-card-btn">Request Cancellation</a>
+                                <?php endif; ?>
+                            <?php elseif ($order['status'] === 'delivered'): ?>
+                                <?php
+                                    // Only show "Request Return" if no active return request exists
+                                    $hasActiveReturn = isset($rr) && $rr && $rr['status'] !== 'rejected';
+                                ?>
+                                <?php if (!$hasActiveReturn): ?>
+                                <a href="<?= APP_URL ?>/index.php?url=returns/request/<?= $order['id'] ?>" class="btn btn-outline btn-sm order-card-btn">Request Return</a>
+                                <?php endif; ?>
                             <?php endif; ?>
-                        <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </div>
         <?php endforeach; ?>
         </div>
+
+        <?php if (($totalPages ?? 1) > 1): ?>
+            <nav class="orders-pagination" aria-label="Orders pagination">
+                <?php if (($page ?? 1) > 1): ?>
+                    <a href="<?= APP_URL ?>/index.php?url=orders&page=<?= $page - 1 ?><?= !empty($selectedOrderDate) ? '&order_date=' . urlencode($selectedOrderDate) : '' ?>" class="btn btn-outline orders-pagination-btn">&laquo; Prev</a>
+                <?php else: ?>
+                    <span class="btn btn-outline orders-pagination-btn is-disabled" aria-disabled="true">&laquo; Prev</span>
+                <?php endif; ?>
+
+                <span class="orders-pagination-status">Page <?= $page ?> of <?= $totalPages ?></span>
+
+                <?php if (($page ?? 1) < $totalPages): ?>
+                    <a href="<?= APP_URL ?>/index.php?url=orders&page=<?= $page + 1 ?><?= !empty($selectedOrderDate) ? '&order_date=' . urlencode($selectedOrderDate) : '' ?>" class="btn btn-outline orders-pagination-btn">Next &raquo;</a>
+                <?php else: ?>
+                    <span class="btn btn-outline orders-pagination-btn is-disabled" aria-disabled="true">Next &raquo;</span>
+                <?php endif; ?>
+            </nav>
+        <?php endif; ?>
     <?php else: ?>
-        <div class="empty-state empty-state--orders">
-            <h3>No orders yet</h3>
-            <p>Once you place an order, it will appear here. Start shopping to see your orders!</p>
-            <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-accent btn-lg">Browse Products</a>
+        <div class="empty-state empty-state--orders orders-empty-state">
+            <?php if (!empty($hasOrderDateFilter)): ?>
+                <h3>No orders found for that date</h3>
+                <p>Try another date or clear the filter to see your full order history.</p>
+                <a href="<?= APP_URL ?>/index.php?url=orders" class="btn btn-accent btn-lg">Show All Orders</a>
+            <?php else: ?>
+                <h3>No orders yet</h3>
+                <p>Once you place an order, it will appear here. Start shopping to see your orders!</p>
+                <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-accent btn-lg">Browse Products</a>
+            <?php endif; ?>
         </div>
     <?php endif; ?>
 </div>
