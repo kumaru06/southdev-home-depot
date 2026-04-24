@@ -120,7 +120,10 @@ $staffProfileFields = [
                     <?php if ($isCustomer): ?>
                         <a href="<?= APP_URL ?>/index.php?url=admin/users/<?= $user['id'] ?>/toggle"
                            class="btn <?= $user['is_active'] ? 'btn-danger-outline' : 'btn-success-outline' ?>"
-                           onclick="return confirm('<?= $user['is_active'] ? 'Block' : 'Unblock' ?> this customer?');"
+                           data-confirm="<?= $user['is_active'] ? 'Block' : 'Unblock' ?> this customer?"
+                           data-confirm-title="<?= $user['is_active'] ? 'Block' : 'Unblock' ?> Customer"
+                           data-confirm-ok="<?= $user['is_active'] ? 'Block' : 'Unblock' ?>"
+                           data-confirm-variant="danger"
                            style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;">
                             <i data-lucide="<?= $user['is_active'] ? 'ban' : 'shield-check' ?>" style="width:15px;height:15px;"></i>
                             <?= $user['is_active'] ? 'Block User' : 'Unblock User' ?>
@@ -366,14 +369,21 @@ $staffProfileFields = [
                     <div class="vp-action-buttons">
                         <a href="<?= APP_URL ?>/index.php?url=admin/users/<?= $user['id'] ?>/toggle"
                            class="btn <?= $user['is_active'] ? 'btn-danger-outline' : 'btn-success-outline' ?>"
-                           onclick="return confirm('<?= $user['is_active'] ? 'Deactivate' : 'Activate' ?> this user?');"
+                           data-confirm="<?= $user['is_active'] ? 'Deactivate' : 'Activate' ?> this user?"
+                           data-confirm-title="<?= $user['is_active'] ? 'Deactivate' : 'Activate' ?> Account"
+                           data-confirm-ok="<?= $user['is_active'] ? 'Deactivate' : 'Activate' ?>"
+                           data-confirm-variant="danger"
                            style="display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:.82rem;">
                             <i data-lucide="<?= $user['is_active'] ? 'user-x' : 'user-check' ?>" style="width:15px;height:15px;"></i>
                             <?= $user['is_active'] ? 'Deactivate Account' : 'Activate Account' ?>
                         </a>
                         <form action="<?= APP_URL ?>/index.php?url=admin/users/<?= $user['id'] ?>/delete" method="POST" style="margin:0;">
                             <?= csrf_field() ?>
-                            <button type="submit" class="btn btn-danger-outline" onclick="return confirm('Permanently delete this user?');" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:.82rem;width:100%;">
+                            <button type="submit" class="btn btn-danger-outline"
+                                data-confirm="Permanently delete this user? This cannot be undone."
+                                data-confirm-title="Delete User"
+                                data-confirm-ok="Delete"
+                                data-confirm-variant="danger" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:.82rem;width:100%;">
                                 <i data-lucide="trash-2" style="width:15px;height:15px;"></i> Delete User
                             </button>
                         </form>

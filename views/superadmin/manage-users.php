@@ -202,7 +202,10 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                                         </a>
                                                         <a href="<?= APP_URL ?>/index.php?url=admin/users/<?= $user['id'] ?>/toggle"
                                                            class="action-menu-item <?= $user['is_active'] ? 'danger' : 'success' ?>"
-                                                           onclick="return confirm('<?= $user['is_active'] ? 'Block' : 'Unblock' ?> this customer?');">
+                                                           data-confirm="<?= $user['is_active'] ? 'Block' : 'Unblock' ?> this customer?"
+                                                           data-confirm-title="<?= $user['is_active'] ? 'Block' : 'Unblock' ?> Customer"
+                                                           data-confirm-ok="<?= $user['is_active'] ? 'Block' : 'Unblock' ?>"
+                                                           data-confirm-variant="danger">
                                                             <i data-lucide="<?= $user['is_active'] ? 'ban' : 'shield-check' ?>" style="width:14px;height:14px;"></i>
                                                             <?= $user['is_active'] ? 'Block' : 'Unblock' ?>
                                                         </a>
@@ -212,13 +215,20 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                                         </a>
                                                         <a href="<?= APP_URL ?>/index.php?url=admin/users/<?= $user['id'] ?>/toggle"
                                                            class="action-menu-item <?= $user['is_active'] ? 'danger' : 'success' ?>"
-                                                           onclick="return confirm('<?= $user['is_active'] ? 'Deactivate' : 'Activate' ?> this user?');">
+                                                           data-confirm="<?= $user['is_active'] ? 'Deactivate' : 'Activate' ?> this user?"
+                                                           data-confirm-title="<?= $user['is_active'] ? 'Deactivate' : 'Activate' ?> Account"
+                                                           data-confirm-ok="<?= $user['is_active'] ? 'Deactivate' : 'Activate' ?>"
+                                                           data-confirm-variant="danger">
                                                             <i data-lucide="<?= $user['is_active'] ? 'user-x' : 'user-check' ?>" style="width:14px;height:14px;"></i>
                                                             <?= $user['is_active'] ? 'Deactivate' : 'Activate' ?>
                                                         </a>
                                                         <form action="<?= APP_URL ?>/index.php?url=admin/users/<?= $user['id'] ?>/delete" method="POST" style="margin:0;">
                                                             <?= csrf_field() ?>
-                                                            <button type="submit" class="action-menu-item danger" onclick="return confirm('Permanently delete this user?');">
+                                                            <button type="submit" class="action-menu-item danger"
+                                                                data-confirm="Permanently delete this user? This cannot be undone."
+                                                                data-confirm-title="Delete User"
+                                                                data-confirm-ok="Delete"
+                                                                data-confirm-variant="danger">
                                                                 <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Delete
                                                             </button>
                                                         </form>

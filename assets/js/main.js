@@ -477,6 +477,37 @@
         /* ========== Animated Counters ========== */
         initAnimatedCounters();
 
+        /* ========== Global [data-confirm] handler ========== */
+        document.addEventListener('click', function (e) {
+            var el = e.target.closest('[data-confirm]');
+            if (!el) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            var message      = el.getAttribute('data-confirm') || 'Are you sure?';
+            var title        = el.getAttribute('data-confirm-title') || 'Confirm';
+            var confirmText  = el.getAttribute('data-confirm-ok') || 'OK';
+            var cancelText   = el.getAttribute('data-confirm-cancel') || 'Cancel';
+            var variant      = el.getAttribute('data-confirm-variant') || 'accent';
+
+            var proceed = function () {
+                if (el.tagName === 'A' && el.href) {
+                    window.location.href = el.href;
+                } else {
+                    var form = el.closest('form') || (el.form ? el.form : null);
+                    if (form) { form.submit(); }
+                }
+            };
+
+            if (typeof window.confirmDialog === 'function') {
+                window.confirmDialog({ title: title, message: message, confirmText: confirmText, cancelText: cancelText, confirmVariant: variant })
+                    .then(function (ok) { if (ok) proceed(); });
+            } else {
+                if (window.confirm(message)) proceed();
+            }
+        });
+
         /* ========== Modals ========== */
         initModals();
     });
