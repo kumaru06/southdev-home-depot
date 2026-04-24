@@ -386,86 +386,202 @@ $ctaImage = APP_URL . '/assets/uploads/images/roomgallery/livingroom/livingroom4
     margin-bottom: 0;
 }
 
+/* ── Tablet (≤ 991px) ── */
 @media (max-width: 991px) {
     .about-hero-grid,
     .about-section,
     .about-cta-inner,
-    .about-values-grid,
-    .about-stats {
+    .about-values-grid {
         grid-template-columns: 1fr;
     }
+    .about-stats {
+        grid-template-columns: repeat(2, 1fr);
+        margin: -1.5rem auto 0;
+        padding: 0 1.25rem;
+    }
     .about-highlight-card img {
-        height: 220px;
+        height: 200px;
     }
     .about-cta-inner {
+        flex-direction: column;
         align-items: flex-start;
+        gap: 1.25rem;
     }
-}
-
-@media (max-width: 640px) {
-    .about-media-thumbs {
-        grid-template-columns: 1fr 1fr;
+    .about-section {
+        padding: 2.5rem 1.25rem 1.5rem;
+        gap: 1.5rem;
     }
-    .about-media-thumbs img {
-        min-height: 120px;
+    .about-values {
+        padding: 1rem 1.25rem 3rem;
     }
-    .about-hero {
-        padding: 4rem 1rem 3.75rem;
-    }
-    .about-stats,
-    .about-section,
-    .about-values,
     .about-cta {
-        padding-left: 1rem;
-        padding-right: 1rem;
+        padding: 0 1.25rem 3rem;
     }
-    .about-stat,
-    .about-value-card,
-    .about-highlight-card,
-    .about-cta-inner {
-        border-radius: 18px;
+    .about-section-copy {
+        text-align: left;
     }
-    .about-section-media img {
-        min-height: 280px;
-    }
-    .about-badge {
-        position: static;
-        margin-top: 1rem;
+    .about-values-header {
+        text-align: left;
+        margin-bottom: 1rem;
     }
 }
 
-@media (max-width: 520px) {
+/* ── Mobile (≤ 640px) ── */
+@media (max-width: 640px) {
     .about-hero {
-        padding: 3.2rem .9rem 3.2rem;
+        padding: 4rem 1rem 3.5rem;
     }
-    .about-kicker {
-        font-size: .72rem;
-        letter-spacing: .06em;
+    .about-hero-grid {
+        gap: 1.25rem;
     }
     .about-hero-copy h1 {
-        font-size: clamp(1.95rem, 9vw, 2.45rem);
+        font-size: clamp(1.85rem, 8vw, 2.4rem);
     }
-    .about-hero-copy p,
-    .about-section-copy p,
-    .about-value-card p {
-        font-size: .94rem;
-        line-height: 1.68;
+    .about-hero-copy p {
+        font-size: .97rem;
+        line-height: 1.7;
+        margin-bottom: 1.25rem;
     }
     .about-hero-actions {
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
+        gap: .75rem;
     }
     .about-btn {
-        width: 100%;
+        justify-content: center;
+        padding: .8rem 1rem;
+        font-size: .92rem;
     }
-    .about-stat,
-    .about-value-card,
-    .about-highlight-card,
-    .about-cta-inner {
-        padding: 1.15rem;
+    .about-highlight-card {
+        padding: 1.1rem;
+        border-radius: 18px;
+    }
+    .about-highlight-card img {
+        height: 180px;
+        border-radius: 14px;
+    }
+    .about-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: .75rem;
+        padding: 0 1rem;
+        margin: -1rem auto 0;
+    }
+    .about-stat {
+        padding: 1.1rem 1rem;
+        border-radius: 16px;
+    }
+    .about-stat strong {
+        font-size: 1.5rem;
+    }
+    .about-stat span {
+        font-size: .85rem;
+    }
+    .about-section {
+        padding: 2rem 1rem 1.25rem;
+        gap: 1.25rem;
+    }
+    .about-section-media img {
+        border-radius: 16px;
+    }
+    .about-section-media .about-media-main img {
+        min-height: 220px;
+    }
+    .about-media-thumbs {
+        grid-template-columns: 1fr 1fr;
+        gap: .6rem;
+    }
+    .about-media-thumbs img {
+        min-height: 110px;
+        border-radius: 14px;
+    }
+    .about-badge {
+        position: static;
+        margin-top: .75rem;
+        border-radius: 14px;
+        padding: .75rem .9rem;
+        min-width: unset;
+    }
+    .about-badge strong {
+        font-size: 1rem;
+    }
+    .about-section-copy {
+        text-align: left;
+    }
+    .about-section-copy h2,
+    .about-values-header h2,
+    .about-cta-copy h2 {
+        font-size: clamp(1.5rem, 6vw, 2rem);
+    }
+    .about-section-copy p,
+    .about-values-header p,
+    .about-value-card p {
+        font-size: .93rem;
+        line-height: 1.7;
+    }
+    .about-checklist-item {
+        padding: .8rem .9rem;
+        border-radius: 13px;
+    }
+    .about-values {
+        padding: 1rem 1rem 2.5rem;
+    }
+    .about-values-grid {
+        gap: .75rem;
+    }
+    .about-value-card {
+        padding: 1.2rem;
+        border-radius: 18px;
+        text-align: left;
+    }
+    .about-value-card .icon {
+        margin-left: 0;
+        margin-right: 0;
+        width: 46px;
+        height: 46px;
+    }
+    .about-cta {
+        padding: 0 1rem 2.5rem;
     }
     .about-cta-inner {
-        gap: 1rem;
+        padding: 1.5rem 1.2rem;
+        border-radius: 20px;
+        gap: 1.1rem;
+    }
+    .about-cta-copy h2 {
+        font-size: clamp(1.35rem, 5.5vw, 1.8rem);
+        margin-bottom: .6rem;
+    }
+    .about-hero-actions .about-btn-secondary {
+        background: rgba(255,255,255,.13);
+    }
+}
+
+/* ── Small mobile (≤ 420px) ── */
+@media (max-width: 420px) {
+    .about-hero {
+        padding: 3rem .85rem 3rem;
+    }
+    .about-kicker {
+        font-size: .7rem;
+        letter-spacing: .05em;
+    }
+    .about-hero-copy h1 {
+        font-size: clamp(1.7rem, 9vw, 2.1rem);
+    }
+    .about-hero-actions {
+        grid-template-columns: 1fr;
+    }
+    .about-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+    .about-highlight-card img {
+        height: 160px;
+    }
+    .about-media-thumbs img {
+        min-height: 90px;
+    }
+    .about-section-media .about-media-main img {
+        min-height: 190px;
     }
 }
 </style>
@@ -513,8 +629,8 @@ $ctaImage = APP_URL . '/assets/uploads/images/roomgallery/livingroom/livingroom4
     </section>
 
     <section class="about-section">
-        <div class="about-section-media reveal-on-scroll reveal-left">
-            <div class="about-media-main">
+        <div class="about-section-media">
+            <div class="about-media-main reveal-on-scroll reveal-left">
                 <img src="<?= $heroImage ?>" alt="Interior tile and showroom display at <?= htmlspecialchars(APP_NAME) ?>">
                 <div class="about-badge">
                     <strong>Trusted local source</strong>
@@ -522,10 +638,10 @@ $ctaImage = APP_URL . '/assets/uploads/images/roomgallery/livingroom/livingroom4
                 </div>
             </div>
             <div class="about-media-thumbs">
-                <img class="reveal-on-scroll reveal-up stagger-1" src="<?= APP_URL ?>/assets/uploads/images/roomgallery/kitchen/kitchen.png" alt="Kitchen showroom display" loading="lazy">
-                <img class="reveal-on-scroll reveal-up stagger-2" src="<?= APP_URL ?>/assets/uploads/images/roomgallery/livingroom/livingroom.png" alt="Living room showcase" loading="lazy">
-                <img class="reveal-on-scroll reveal-up stagger-3" src="<?= APP_URL ?>/assets/uploads/images/roomgallery/bathroom/bathroom.png" alt="Bathroom design" loading="lazy">
-                <img class="reveal-on-scroll reveal-up stagger-4" src="<?= APP_URL ?>/assets/uploads/images/roomgallery/dining/dining.png" alt="Dining area showcase" loading="lazy">
+                <img class="reveal-up stagger-1" src="<?= APP_URL ?>/assets/uploads/images/roomgallery/kitchen/kitchen.png" alt="Kitchen showroom display" loading="lazy">
+                <img class="reveal-up stagger-2" src="<?= APP_URL ?>/assets/uploads/images/roomgallery/livingroom/livingroom.png" alt="Living room showcase" loading="lazy">
+                <img class="reveal-up stagger-3" src="<?= APP_URL ?>/assets/uploads/images/roomgallery/bathroom/bathroom.png" alt="Bathroom design" loading="lazy">
+                <img class="reveal-up stagger-4" src="<?= APP_URL ?>/assets/uploads/images/roomgallery/dining/dining.png" alt="Dining area showcase" loading="lazy">
             </div>
         </div>
 
@@ -601,5 +717,32 @@ $ctaImage = APP_URL . '/assets/uploads/images/roomgallery/livingroom/livingroom4
         </div>
     </section>
 </div>
+
+<script>
+(function () {
+    var imgs = document.querySelectorAll('.about-media-thumbs .reveal-up');
+    if (!imgs.length) return;
+
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        imgs.forEach(function (img) { img.classList.add('is-visible'); });
+        return;
+    }
+
+    if (!('IntersectionObserver' in window)) {
+        imgs.forEach(function (img) { img.classList.add('is-visible'); });
+        return;
+    }
+
+    var observer = new IntersectionObserver(function (entries, obs) {
+        entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add('is-visible');
+            obs.unobserve(entry.target);
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -5% 0px' });
+
+    imgs.forEach(function (img) { observer.observe(img); });
+})();
+</script>
 
 <?php require_once INCLUDES_PATH . '/footer.php'; ?>
