@@ -39,7 +39,7 @@ function Ensure-FtpDir($uri) {
         $r = [System.Net.FtpWebRequest]::Create($uri)
         $r.Method = [System.Net.WebRequestMethods+Ftp]::MakeDirectory
         $r.Credentials = New-Object System.Net.NetworkCredential($ftpUser, $ftpPass)
-        $r.UsePassive = $true
+        $r.UsePassive = $true; $r.EnableSsl = $false
         $r.GetResponse().Close()
         Write-Host "  [DIR+] $uri" -ForegroundColor Green
     } catch {}
@@ -59,7 +59,7 @@ function Upload-File($localPath, $remotePath) {
         $req = [System.Net.FtpWebRequest]::Create($uri)
         $req.Method = [System.Net.WebRequestMethods+Ftp]::UploadFile
         $req.Credentials = New-Object System.Net.NetworkCredential($ftpUser, $ftpPass)
-        $req.UseBinary = $true; $req.UsePassive = $true; $req.Timeout = 60000
+        $req.UseBinary = $true; $req.UsePassive = $true; $req.Timeout = 60000; $req.EnableSsl = $false
         $bytes = [System.IO.File]::ReadAllBytes($localPath)
         $req.ContentLength = $bytes.Length
         $s = $req.GetRequestStream(); $s.Write($bytes, 0, $bytes.Length); $s.Close()
