@@ -174,6 +174,14 @@
                 height: 4px;
             }
 
+            .collections-nav {
+                scrollbar-width: none;
+            }
+
+            .collections-nav::-webkit-scrollbar {
+                display: none;
+            }
+
             .collections-nav > *,
             .gallery-chip-row > *,
             .category-bar > * {

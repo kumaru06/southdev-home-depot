@@ -90,6 +90,10 @@ $locationLabel = $locationLabel !== '' ? $locationLabel : 'No delivery area save
                             <?= $addressReady ? 'Delivery address saved' : 'Set your delivery address' ?>
                         </span>
                     </div>
+                    <div class="profile-hero-actions" aria-label="Quick profile actions">
+                        <button type="button" class="profile-hero-action is-primary" data-profile-jump="personal-section">Edit profile</button>
+                        <button type="button" class="profile-hero-action" data-profile-jump="address-section">Update address</button>
+                    </div>
                 </div>
             </div>
 
@@ -128,6 +132,10 @@ $locationLabel = $locationLabel !== '' ? $locationLabel : 'No delivery area save
                         <strong><?= $addressReady ? 'Saved' : 'Pending' ?></strong>
                         <span>Address book</span>
                     </div>
+                </div>
+                <div class="profile-delivery-card">
+                    <span>Default delivery area</span>
+                    <strong><?= htmlspecialchars($locationLabel) ?></strong>
                 </div>
             </div>
         </div>
@@ -403,6 +411,17 @@ document.addEventListener('DOMContentLoaded', function(){
     tabs.forEach(function(tab){
         tab.addEventListener('click', function(){
             activateTab(this.dataset.target);
+        });
+    });
+
+    document.querySelectorAll('[data-profile-jump]').forEach(function(button){
+        button.addEventListener('click', function(){
+            var target = this.getAttribute('data-profile-jump');
+            activateTab(target);
+            var nav = document.querySelector('.profile-nav-shell');
+            if (nav) {
+                nav.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         });
     });
 

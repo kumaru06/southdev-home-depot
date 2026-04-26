@@ -172,13 +172,6 @@ $featuredCollections = [
     box-shadow: 0 16px 38px rgba(15,23,42,.06);
 }
 
-.collections-metric-card::before {
-    content: '';
-    position: absolute;
-    inset: auto 0 0 0;
-    height: 4px;
-    background: linear-gradient(90deg, #f97316, #fb923c);
-}
 
 .collections-metric-card strong {
     display: block;
@@ -851,6 +844,15 @@ $featuredCollections = [
         bottom: 1.3rem;
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .collection-overlay-micro {
+        left: 50%;
+        transform: translateX(-50%);
+        justify-content: center;
+        text-align: center;
+        width: max-content;
+        max-width: calc(100% - 2rem);
     }
 }
 

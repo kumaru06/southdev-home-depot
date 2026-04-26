@@ -127,11 +127,18 @@ if (!file_exists($display2Full)) {
             <?php // Render the products section for any route that begins with 'products' (includes search and subpaths) ?>
             <?php if ((isset($_GET['url']) && strpos($_GET['url'], 'products') === 0) || (isset($currentUrl) && strpos($currentUrl, 'products') === 0)): ?>
             <!-- Section heading -->
-            <div class="section-heading reveal-on-scroll reveal-left" data-reveal-delay="0">
-                <span class="section-badge">OUR PRODUCTS</span>
-                <h2 class="section-title">Everything You Need in <span class="accent-text">One Place</span></h2>
-                <p class="section-subtitle">Browse our complete range of premium building materials, fixtures, and finishes.</p>
-            </div>
+            <section class="products-catalog-header reveal-on-scroll reveal-left" data-reveal-delay="0">
+                <div class="section-heading">
+                    <span class="section-badge">OUR PRODUCTS</span>
+                    <h2 class="section-title">Everything You Need in <span class="accent-text">One Place</span></h2>
+                    <p class="section-subtitle">Browse our complete range of premium building materials, fixtures, and finishes.</p>
+                </div>
+                <div class="products-header-meta" aria-label="Catalog summary">
+                    <span><?= isset($products) ? count($products) : 0 ?> products shown</span>
+                    <span><?= isset($categories) ? count($categories) : 0 ?> categories</span>
+                    <span>Premium picks</span>
+                </div>
+            </section>
 
             <div class="category-bar storefront-chips reveal-on-scroll reveal-right" data-reveal-delay="120">
                 <a href="<?= APP_URL ?>/index.php?url=products" class="<?= !isset($_GET['category']) ? 'active' : '' ?>">
