@@ -435,11 +435,7 @@ $pageTitle = 'Payment';
                                             exp_year:    expYear,
                                             cvc:         cvc
                                         },
-                                        billing: {
-                                            name:  name,
-                                            email: email || undefined,
-                                            phone: ''
-                                        }
+                                        ...(email ? { billing: { name, email } } : {})
                                     }
                                 }
                             })
