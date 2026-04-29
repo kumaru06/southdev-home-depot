@@ -3219,11 +3219,11 @@ body:not(.admin-layout) .form-control {
     }
 
     .profile-page .profile-hero-content {
-        padding: 0 16px 20px;
-        margin-top: -52px;
+        padding: 18px 16px 20px;
+        margin-top: -44px;
         border-bottom-left-radius: 20px;
         border-bottom-right-radius: 20px;
-        overflow-x: hidden;
+        overflow: visible;
     }
 
     .profile-hero-main {
@@ -3236,6 +3236,11 @@ body:not(.admin-layout) .form-control {
     .profile-page .profile-hero-avatar .profile-photo--lg {
         width: 96px;
         height: 96px;
+    }
+
+    .profile-page .profile-hero-avatar {
+        padding: 8px;
+        margin-top: -16px;
     }
 
     .profile-page .profile-hero-meta,
