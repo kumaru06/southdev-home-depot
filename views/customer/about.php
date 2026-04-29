@@ -214,7 +214,9 @@ $ctaImage = APP_URL . '/assets/uploads/images/roomgallery/livingroom/livingroom4
     gap: .75rem;
 }
 .about-media-thumbs img {
-    min-height: 160px;
+    height: 160px;
+    max-height: 160px;
+    object-fit: cover;
     transition: transform .3s ease, box-shadow .3s ease;
 }
 .about-media-thumbs img:hover {
@@ -485,13 +487,16 @@ $ctaImage = APP_URL . '/assets/uploads/images/roomgallery/livingroom/livingroom4
     }
     .about-section-media .about-media-main img {
         min-height: 220px;
+        object-fit: cover;
     }
     .about-media-thumbs {
         grid-template-columns: 1fr 1fr;
         gap: .6rem;
     }
     .about-media-thumbs img {
-        min-height: 110px;
+        height: 130px;
+        max-height: 130px;
+        object-fit: cover;
         border-radius: 14px;
     }
     .about-badge {
@@ -578,10 +583,13 @@ $ctaImage = APP_URL . '/assets/uploads/images/roomgallery/livingroom/livingroom4
         height: 160px;
     }
     .about-media-thumbs img {
-        min-height: 90px;
+        height: 90px;
+        max-height: 90px;
+        object-fit: cover;
     }
     .about-section-media .about-media-main img {
         min-height: 190px;
+        object-fit: cover;
     }
 }
 </style>

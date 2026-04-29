@@ -3219,26 +3219,34 @@ body:not(.admin-layout) .form-control {
     }
 
     .profile-page .profile-hero-content {
-        padding: 0 16px 18px;
-        margin-top: -60px;
+        padding: 0 16px 20px;
+        margin-top: -52px;
         border-bottom-left-radius: 20px;
         border-bottom-right-radius: 20px;
+        overflow-x: hidden;
     }
 
     .profile-hero-main {
         flex-direction: column;
         align-items: center;
         text-align: center;
+        gap: 16px;
     }
 
     .profile-page .profile-hero-avatar .profile-photo--lg {
-        width: 100px;
-        height: 100px;
+        width: 96px;
+        height: 96px;
     }
 
     .profile-page .profile-hero-meta,
-    .profile-hero-badges {
+    .profile-hero-badges,
+    .profile-hero-actions {
         justify-content: center;
+    }
+
+    .profile-hero-kicker {
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .profile-ring-row {
