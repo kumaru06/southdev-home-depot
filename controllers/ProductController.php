@@ -14,6 +14,8 @@ require_once __DIR__ . '/../models/StockMovement.php';
 require_once __DIR__ . '/../models/Review.php';
 
 class ProductController {
+    private const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
     private $productModel;
     private $categoryModel;
     private $logModel;
@@ -116,6 +118,11 @@ class ProductController {
         ];
 
         if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
+            if ((int)($_FILES['image']['size'] ?? 0) > self::MAX_IMAGE_BYTES) {
+                flash('error', 'Image is too large. Maximum allowed size is 5 MB.');
+                header('Location: ' . APP_URL . '/index.php?url=admin/products');
+                exit;
+            }
             // Validate using actual file contents, not client-provided MIME type
             $imageInfo = @getimagesize($_FILES['image']['tmp_name']);
             $allowed = ['image/jpeg','image/png','image/webp','image/gif'];
@@ -133,7 +140,7 @@ class ProductController {
                 flash('error', 'Unsupported image format. Please upload a JPG, PNG, WEBP, or GIF.');
             }
         } elseif (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
-            flash('error', 'Image upload error (code ' . $_FILES['image']['error'] . '). Max size: 40 MB.');
+            flash('error', 'Image upload error (code ' . $_FILES['image']['error'] . '). Max size: 5 MB.');
         }
 
         if ($data['sku'] && $this->productModel->skuExists($data['sku'])) {
@@ -195,6 +202,13 @@ class ProductController {
         ];
 
         if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
+            if ((int)($_FILES['image']['size'] ?? 0) > self::MAX_IMAGE_BYTES) {
+                $msg = 'Image is too large. Maximum allowed size is 5 MB.';
+                if ($isAjax) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => $msg]); exit; }
+                flash('error', $msg);
+                header('Location: ' . APP_URL . '/index.php?url=admin/products/edit/' . $id);
+                exit;
+            }
             // Validate using actual file contents, not client-provided MIME type
             $imageInfo = @getimagesize($_FILES['image']['tmp_name']);
             $allowed  = ['image/jpeg','image/png','image/webp','image/gif'];

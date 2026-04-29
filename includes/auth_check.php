@@ -56,7 +56,9 @@ function requireCsrf() {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!verify_csrf()) {
             flash('error', 'Invalid security token. Please try again.');
-            $redirectUrl = $_SERVER['HTTP_REFERER'] ?? APP_URL;
+            $ref = $_SERVER['HTTP_REFERER'] ?? '';
+            $appBase = rtrim(APP_URL, '/');
+            $redirectUrl = ($ref && strpos($ref, $appBase) === 0) ? $ref : APP_URL;
             header('Location: ' . $redirectUrl);
             exit;
         }

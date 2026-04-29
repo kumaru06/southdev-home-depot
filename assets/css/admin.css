@@ -36,6 +36,31 @@
     gap: 14px;
     flex-shrink: 0;
 }
+.sidebar-collapse-btn {
+    margin-left: auto;
+    width: 30px;
+    height: 30px;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 8px;
+    background: rgba(255,255,255,.06);
+    color: rgba(255,255,255,.75);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+.sidebar-collapse-btn:hover {
+    background: rgba(249,115,22,.2);
+    border-color: rgba(249,115,22,.45);
+    color: #fff;
+}
+.sidebar-collapse-btn i,
+.sidebar-collapse-btn svg {
+    width: 16px;
+    height: 16px;
+}
 .sidebar .brand-icon {
     width: 36px; height: 36px;
     background: var(--accent);
@@ -63,6 +88,21 @@
     gap: 0;
     padding-left: 0;
     padding-right: 0;
+    position: relative;
+}
+.sidebar.collapsed .sidebar-collapse-btn {
+    position: absolute;
+    right: -14px;
+    top: 13px;
+    z-index: 2;
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(249,115,22,.3);
+}
+.sidebar.collapsed .sidebar-collapse-btn i,
+.sidebar.collapsed .sidebar-collapse-btn svg {
+    transform: rotate(180deg);
 }
 
 .sidebar .nav-section {
@@ -287,7 +327,7 @@
     z-index: 50;
     background: var(--white);
     border-bottom: 1px solid var(--border);
-    padding: 0 24px;
+    padding: 0 24px 0 12px;
     height: 56px;
     display: flex;
     align-items: center;
@@ -339,10 +379,10 @@
     position: relative;
 }
 
-/* Hide the floating/top hamburger toggle when not needed — keeps layout static */
+/* Top-bar sidebar toggle */
 .top-bar .sidebar-toggle-btn,
 .top-bar .sidebar-toggle {
-    display: none !important;
+    display: flex !important;
 }
 
 /* Reliable hamburger icon (works even if Lucide fails to load) */

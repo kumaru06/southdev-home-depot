@@ -31,6 +31,13 @@ class CartController {
         AuthMiddleware::handle();
         header('Content-Type: application/json');
 
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            return;
+        }
+        AuthMiddleware::csrf();
+
         $productId = intval($_POST['product_id'] ?? 0);
         $quantity  = max(1, intval($_POST['quantity'] ?? 1));
 
@@ -58,6 +65,13 @@ class CartController {
         AuthMiddleware::handle();
         header('Content-Type: application/json');
 
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            return;
+        }
+        AuthMiddleware::csrf();
+
         $cartId   = intval($_POST['cart_id'] ?? 0);
         $quantity = max(1, intval($_POST['quantity'] ?? 1));
 
@@ -80,6 +94,13 @@ class CartController {
     public function remove() {
         AuthMiddleware::handle();
         header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            return;
+        }
+        AuthMiddleware::csrf();
 
         $cartId = intval($_POST['cart_id'] ?? 0);
         $this->cartModel->removeItem($cartId, $_SESSION['user_id']);

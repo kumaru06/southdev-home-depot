@@ -88,7 +88,7 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
                         <th>Product</th>
                         <th>Price</th>
                         <th>Current Stock</th>
-                        <th title="Alert threshold — triggers Low Stock warning when stock falls to this level">Reorder At <span style="font-size:.7rem;color:var(--text-muted);font-weight:400;">(alert threshold)</span></th>
+                        <th title="Triggers Low Stock warning when stock falls to this level">Reorder Level</th>
                         <th>Status</th>
                         <?php if ($canManageStock): ?>
                         <th>Actions</th>

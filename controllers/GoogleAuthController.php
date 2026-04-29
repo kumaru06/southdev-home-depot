@@ -29,8 +29,12 @@ class GoogleAuthController
         $state = bin2hex(random_bytes(16));
         $_SESSION['google_oauth_state'] = $state;
 
-        // Remember where to return after login
-        $_SESSION['google_redirect_back'] = $_SERVER['HTTP_REFERER'] ?? APP_URL . '/index.php?url=products';
+        // Remember where to return after login, but only for same-origin URLs.
+        $referer = $_SERVER['HTTP_REFERER'] ?? '';
+        $appBase = rtrim(APP_URL, '/');
+        $_SESSION['google_redirect_back'] = ($referer && strpos($referer, $appBase) === 0)
+            ? $referer
+            : APP_URL . '/index.php?url=products';
 
         $params = http_build_query([
             'client_id'     => GOOGLE_CLIENT_ID,
@@ -190,6 +194,11 @@ class GoogleAuthController
 
         $back = $_SESSION['google_redirect_back'] ?? APP_URL . '/index.php?url=products';
         unset($_SESSION['google_redirect_back']);
+
+        $appBase = rtrim(APP_URL, '/');
+        if (!$back || strpos($back, $appBase) !== 0) {
+            $back = APP_URL . '/index.php?url=products';
+        }
 
         header('Location: ' . $back);
         exit;

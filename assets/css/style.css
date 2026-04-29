@@ -2627,6 +2627,7 @@ select.form-control { cursor: pointer; }
 .badge {
     display: inline-flex;
     align-items: center;
+    gap: 4px;
     padding: 4px 12px;
     border-radius: 50px;
     font-size: 11px;

@@ -39,7 +39,12 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                 <td><?= date('M d, Y', strtotime($req['created_at'])) ?></td>
                                 <td>
                                     <?php if (!empty($req['admin_notes']) && $req['status'] !== 'pending'): ?>
-                                        <span class="cr-reply-text" title="<?= htmlspecialchars($req['admin_notes']) ?>"><?= htmlspecialchars(substr($req['admin_notes'], 0, 50)) ?><?= strlen($req['admin_notes']) > 50 ? '…' : '' ?></span>
+                                        <button type="button" class="btn-view-reply"
+                                            data-reply="<?= htmlspecialchars($req['admin_notes'], ENT_QUOTES) ?>"
+                                            data-order="<?= htmlspecialchars($req['order_number'] ?? '', ENT_QUOTES) ?>"
+                                            data-status="<?= htmlspecialchars($req['status'], ENT_QUOTES) ?>">
+                                            <i data-lucide="eye" style="width:13px;height:13px;"></i> View
+                                        </button>
                                     <?php elseif ($req['status'] === 'pending'): ?>
                                         <span class="text-muted" style="font-size:.82rem;">—</span>
                                     <?php else: ?>
@@ -77,6 +82,30 @@ require_once INCLUDES_PATH . '/sidebar.php';
                     <?php endif; ?>
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- ===== View Reply Modal ===== -->
+<div id="crViewReplyModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:480px;padding:1.25rem;">
+        <div class="modal-header" style="margin-bottom:.75rem;">
+            <h3>Staff Reply</h3>
+            <button type="button" class="modal-close" onclick="document.getElementById('crViewReplyModal').classList.remove('active')">&times;</button>
+        </div>
+        <div class="cr-modal-info" style="margin-bottom:.75rem;">
+            <div class="cr-info-row">
+                <span class="cr-info-label">Order</span>
+                <span class="cr-info-value" id="vrOrder"></span>
+            </div>
+            <div class="cr-info-row">
+                <span class="cr-info-label">Decision</span>
+                <span class="cr-info-value" id="vrStatus"></span>
+            </div>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:1rem 1.25rem;font-size:.92rem;line-height:1.6;color:var(--charcoal);white-space:pre-wrap;" id="vrReplyText"></div>
+        <div class="form-actions" style="margin-top:1.25rem;">
+            <button type="button" class="btn btn-outline" onclick="document.getElementById('crViewReplyModal').classList.remove('active')">Close</button>
         </div>
     </div>
 </div>
@@ -171,18 +200,24 @@ require_once INCLUDES_PATH . '/sidebar.php';
     font-weight: 600;
     color: var(--charcoal);
 }
-.cr-reply-text {
-    font-size: .82rem;
-    color: var(--charcoal);
-    background: #f0fdf4;
-    padding: 4px 8px;
+.btn-view-reply {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--primary, #2563eb);
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
     border-radius: 6px;
-    border: 1px solid #bbf7d0;
-    display: inline-block;
-    max-width: 180px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+.btn-view-reply:hover {
+    background: var(--primary, #2563eb);
+    color: #fff;
+    border-color: var(--primary, #2563eb);
 }
 </style>
 
@@ -241,6 +276,24 @@ require_once INCLUDES_PATH . '/sidebar.php';
 
         if (e.target === modal) {
             closeCrModal();
+        }
+
+        // View reply button
+        var vBtn = e.target.closest('.btn-view-reply');
+        if (vBtn) {
+            var vrModal = document.getElementById('crViewReplyModal');
+            document.getElementById('vrOrder').textContent   = vBtn.getAttribute('data-order') || '—';
+            document.getElementById('vrReplyText').textContent = vBtn.getAttribute('data-reply') || '';
+            var st = vBtn.getAttribute('data-status');
+            var stEl = document.getElementById('vrStatus');
+            stEl.textContent = st.charAt(0).toUpperCase() + st.slice(1);
+            stEl.style.color = st === 'approved' ? 'var(--success, #16a34a)' : 'var(--danger, #dc2626)';
+            vrModal.classList.add('active');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        if (e.target === document.getElementById('crViewReplyModal')) {
+            document.getElementById('crViewReplyModal').classList.remove('active');
         }
     });
 })();

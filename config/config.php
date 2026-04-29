@@ -29,6 +29,23 @@ date_default_timezone_set(env('TIMEZONE', 'Asia/Manila'));
 $is_local = in_array($_SERVER['SERVER_NAME'] ?? '', ['localhost', '127.0.0.1'])
     || strpos($_SERVER['DOCUMENT_ROOT'] ?? '', 'xampp') !== false;
 
+// Basic browser-side security headers. Keep CSP conservative to avoid breaking inline styles/scripts.
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+    header('X-Permitted-Cross-Domain-Policies: none');
+    if (!$is_local) {
+        header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+    }
+}
+
+// Harden PHP sessions before starting the session.
+ini_set('session.use_strict_mode', '1');
+ini_set('session.use_only_cookies', '1');
+ini_set('session.cookie_httponly', '1');
+
 // Harden session cookies before starting the session
 session_set_cookie_params([
     'lifetime' => 0,           // session cookie (expires when browser closes)

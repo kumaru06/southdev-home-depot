@@ -306,9 +306,9 @@
             e.preventDefault();
 
             var go = function () {
-                try {
-                    localStorage.setItem('__pendingToast', JSON.stringify({ message: 'You have been logged out.', type: 'success' }));
-                } catch (err) {}
+                // Logout already creates a server-side flash toast after redirect.
+                // Do not also queue a localStorage toast, otherwise it appears twice.
+                try { localStorage.removeItem('__pendingToast'); } catch (err) {}
                 window.location.href = href;
             };
 
@@ -732,6 +732,10 @@
                     localStorage.removeItem('__pendingToast');
                     var t = JSON.parse(pending);
                     if (t && t.message && typeof window.showNotification === 'function') {
+                        var duplicateFlash = Array.from(document.querySelectorAll('.toast-message')).some(function (el) {
+                            return (el.textContent || '').trim() === String(t.message).trim();
+                        });
+                        if (duplicateFlash) return;
                         setTimeout(function () {
                             window.showNotification(t.message, t.type || 'success');
                         }, 300);

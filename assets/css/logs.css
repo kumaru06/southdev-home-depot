@@ -341,9 +341,9 @@
 }
 
 .page-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
+    background: var(--accent) !important;
+    border-color: var(--accent) !important;
+    color: #fff !important;
     box-shadow: 0 2px 8px rgba(230,81,0,.3);
     cursor: default;
     pointer-events: none;
