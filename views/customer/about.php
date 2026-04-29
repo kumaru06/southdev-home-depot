@@ -18,7 +18,7 @@ try {
 }
 
 $heroImage = APP_URL . '/assets/uploads/images/roomgallery/commercial/commercial4.png';
-$storyImage = APP_URL . '/assets/uploads/images/roomgallery/outside/outside3.png';
+$storyImage = APP_URL . '/assets/uploads/images/image.png';
 $ctaImage = APP_URL . '/assets/uploads/images/roomgallery/livingroom/livingroom4.png';
 ?>
 
