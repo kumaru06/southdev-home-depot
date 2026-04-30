@@ -41,6 +41,49 @@ if ($orderId) {
         }
     }
 }
+
+// ── Send payment-failed email to the user ────────────────────────────────
+if ($order && !empty($_SESSION['email']) && filter_var($_SESSION['email'], FILTER_VALIDATE_EMAIL)) {
+    try {
+        require_once __DIR__ . '/../includes/Mailer.php';
+        require_once __DIR__ . '/../models/Payment.php';
+
+        $failEmail = trim($_SESSION['email']);
+        $customerName = htmlspecialchars(($order['first_name'] ?? '') . ' ' . ($order['last_name'] ?? ''));
+        $payment = (new Payment($pdo))->getByOrderId($orderId);
+
+        $methodMap = ['cod' => 'Cash on Delivery', 'gcash' => 'GCash', 'card' => 'Credit/Debit Card', 'bank' => 'Bank Transfer', 'qrph' => 'QRPh (Scan to Pay)'];
+        $paymentMethodDisplay = $payment ? ($methodMap[$payment['payment_method']] ?? ucfirst($payment['payment_method'])) : 'N/A';
+
+        $failReasonText = match($reason) {
+            'card_declined'     => 'Card declined',
+            'cancelled'         => 'Cancelled by user',
+            'verification_error'=> 'Payment verification failed',
+            'qrph_failed'       => 'QR payment failed or expired',
+            default             => 'Payment unsuccessful',
+        };
+
+        $retryUrl = APP_URL . '/index.php?url=orders/' . $orderId;
+        $orderUrl = $retryUrl;
+
+        $templatePath = __DIR__ . '/../templates/email/payment-failed.html';
+        $html = file_get_contents($templatePath);
+        $html = str_replace('{{app_name}}',       APP_NAME,                                                    $html);
+        $html = str_replace('{{customer_name}}',  $customerName,                                               $html);
+        $html = str_replace('{{order_number}}',   htmlspecialchars($order['order_number']),                    $html);
+        $html = str_replace('{{order_date}}',     date('F j, Y g:i A', strtotime($order['created_at'])),      $html);
+        $html = str_replace('{{payment_method}}', $paymentMethodDisplay,                                       $html);
+        $html = str_replace('{{total_amount}}',   number_format($order['total_amount'], 2),                    $html);
+        $html = str_replace('{{fail_reason}}',    htmlspecialchars($failReasonText),                           $html);
+        $html = str_replace('{{retry_url}}',      $retryUrl,                                                   $html);
+        $html = str_replace('{{receipt_email}}',  htmlspecialchars($failEmail),                                $html);
+
+        $mailer = new Mailer();
+        $mailer->send($failEmail, $customerName, 'Payment Failed - Order #' . $order['order_number'] . ' | ' . APP_NAME, $html);
+    } catch (Exception $e) {
+        error_log("Failed email notification error for order {$orderId}: " . $e->getMessage());
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

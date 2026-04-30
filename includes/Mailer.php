@@ -76,10 +76,12 @@ class Mailer {
     }
 
     /**
-     * File-based fallback mailer for local development when PHPMailer isn't installed.
-     * Writes an HTML and text file to storage/mails and returns true.
+     * Fallback mailer using PHP's native mail() function.
+     * Used on shared hosts (e.g. InfinityFree) where SMTP is blocked and PHPMailer is unavailable.
+     * Also writes a file copy to storage/mails for debugging.
      */
     private function fallbackSend($toEmail, $toName, $subject, $htmlBody, $textBody = '') {
+        // Write debug copy locally
         $dir = ROOT_PATH . '/storage/mails';
         if (!is_dir($dir)) {
             @mkdir($dir, 0755, true);
@@ -88,15 +90,19 @@ class Mailer {
         $safeTo = preg_replace('/[^a-z0-9@._-]/i', '_', $toEmail);
         $id = bin2hex(random_bytes(6));
         $base = $dir . "/{$time}_{$safeTo}_{$id}";
-        $meta = [
-            'to' => $toEmail,
-            'name' => $toName,
-            'subject' => $subject,
-            'time' => date('c')
-        ];
-        file_put_contents($base . '.json', json_encode($meta, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-        file_put_contents($base . '.html', $htmlBody);
-        file_put_contents($base . '.txt', $textBody ?: strip_tags($htmlBody));
-        return true;
+        $meta = ['to' => $toEmail, 'name' => $toName, 'subject' => $subject, 'time' => date('c')];
+        @file_put_contents($base . '.json', json_encode($meta, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        @file_put_contents($base . '.html', $htmlBody);
+
+        // Send via PHP mail() — works on InfinityFree even without SMTP
+        $fromEmail = defined('MAIL_FROM_EMAIL') ? MAIL_FROM_EMAIL : 'noreply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+        $fromName  = defined('MAIL_FROM_NAME')  ? MAIL_FROM_NAME  : 'Southdev Home Depot';
+        $headers   = "MIME-Version: 1.0\r\n";
+        $headers  .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $headers  .= "From: =?UTF-8?B?" . base64_encode($fromName) . "?= <{$fromEmail}>\r\n";
+        $headers  .= "Reply-To: {$fromEmail}\r\n";
+        $headers  .= "X-Mailer: SouthDev Home Depot Mailer\r\n";
+        $to = $toName ? "=?UTF-8?B?" . base64_encode($toName) . "?= <{$toEmail}>" : $toEmail;
+        return mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $htmlBody, $headers);
     }
 }

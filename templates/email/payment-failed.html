@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Receipt</title>
+    <title>Payment Failed</title>
 </head>
 <body style="margin:0;padding:0;background:#F4F4F4;font-family:Arial,Helvetica,sans-serif;color:#1C1C1C;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F4F4F4;padding:24px 0;">
@@ -14,16 +14,16 @@
                     <tr>
                         <td style="background:linear-gradient(135deg,#F97316,#EA580C);color:#FFFFFF;padding:28px 28px 24px;">
                             <h1 style="margin:0;font-size:22px;font-weight:800;letter-spacing:.3px;">{{app_name}}</h1>
-                            <p style="margin:6px 0 0 0;font-size:13px;opacity:.85;">Order Receipt</p>
+                            <p style="margin:6px 0 0 0;font-size:13px;opacity:.85;">Payment Notification</p>
                         </td>
                     </tr>
 
-                    <!-- Thank you -->
+                    <!-- Message -->
                     <tr>
                         <td style="padding:28px 28px 0;">
-                            <h2 style="margin:0 0 8px 0;font-size:20px;color:#16A34A;">&#10003; Payment Successful</h2>
+                            <h2 style="margin:0 0 8px 0;font-size:20px;color:#DC2626;">&#10007; Payment Failed</h2>
                             <p style="margin:0 0 4px 0;color:#4A4A4A;font-size:14px;">Hi {{customer_name}},</p>
-                            <p style="margin:0 0 20px 0;color:#4A4A4A;font-size:14px;">Thank you for your order! Here's your receipt.</p>
+                            <p style="margin:0 0 20px 0;color:#4A4A4A;font-size:14px;">Unfortunately, your payment could not be completed. No charges were made to your account.</p>
                         </td>
                     </tr>
 
@@ -47,12 +47,12 @@
                                                 <td align="right" style="color:#1C1C1C;font-weight:600;font-size:13px;padding:4px 0;">{{payment_method}}</td>
                                             </tr>
                                             <tr>
-                                                <td style="color:#6B7280;font-size:13px;padding:4px 0;">Payment Date</td>
-                                                <td align="right" style="color:#1C1C1C;font-weight:600;font-size:13px;padding:4px 0;">{{payment_date}}</td>
+                                                <td style="color:#6B7280;font-size:13px;padding:4px 0;">Amount</td>
+                                                <td align="right" style="color:#DC2626;font-weight:700;font-size:13px;padding:4px 0;">&#8369;{{total_amount}}</td>
                                             </tr>
                                             <tr>
-                                                <td style="color:#6B7280;font-size:13px;padding:4px 0;">Reference ID</td>
-                                                <td align="right" style="color:#1C1C1C;font-weight:600;font-size:13px;padding:4px 0;word-break:break-all;">{{payment_id}}</td>
+                                                <td style="color:#6B7280;font-size:13px;padding:4px 0;">Reason</td>
+                                                <td align="right" style="color:#DC2626;font-weight:600;font-size:13px;padding:4px 0;">{{fail_reason}}</td>
                                             </tr>
                                         </table>
                                     </td>
@@ -61,36 +61,18 @@
                         </td>
                     </tr>
 
-                    <!-- Items -->
+                    <!-- What to do next -->
                     <tr>
-                        <td style="padding:0 28px;">
-                            <p style="margin:0 0 10px 0;font-size:14px;font-weight:700;color:#1C1C1C;">Items Ordered</p>
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-top:1px solid #E5E7EB;">
-                                {{order_items}}
-                            </table>
-                        </td>
-                    </tr>
-
-                    <!-- Total -->
-                    <tr>
-                        <td style="padding:16px 28px 0;">
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-top:2px solid #1C1C1C;">
-                                <tr>
-                                    <td style="padding:12px 0;font-size:16px;font-weight:800;color:#1C1C1C;">Total</td>
-                                    <td align="right" style="padding:12px 0;font-size:16px;font-weight:800;color:#F97316;">₱{{total_amount}}</td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
-                    <!-- Shipping -->
-                    <tr>
-                        <td style="padding:8px 28px 0;">
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F9FAFB;border-radius:8px;padding:14px 16px;">
+                        <td style="padding:0 28px 16px;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#FFF7ED;border-left:4px solid #F97316;border-radius:4px;padding:14px 16px;">
                                 <tr>
                                     <td>
-                                        <p style="margin:0 0 4px 0;font-size:13px;font-weight:700;color:#1C1C1C;">Shipping Address</p>
-                                        <p style="margin:0;font-size:13px;color:#4A4A4A;line-height:1.5;">{{shipping_address}}</p>
+                                        <p style="margin:0 0 6px 0;font-size:13px;font-weight:700;color:#92400E;">What can you do?</p>
+                                        <ul style="margin:0;padding-left:16px;font-size:13px;color:#4A4A4A;line-height:1.7;">
+                                            <li>Double-check your payment details and try again</li>
+                                            <li>Try a different payment method</li>
+                                            <li>Contact your bank if the issue persists</li>
+                                        </ul>
                                     </td>
                                 </tr>
                             </table>
@@ -99,11 +81,11 @@
 
                     <!-- CTA -->
                     <tr>
-                        <td style="padding:24px 28px;">
+                        <td style="padding:8px 28px 24px;">
                             <table role="presentation" cellspacing="0" cellpadding="0">
                                 <tr>
                                     <td style="border-radius:8px;background:#F97316;">
-                                        <a href="{{order_url}}" style="display:inline-block;padding:12px 28px;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:14px;">View Order</a>
+                                        <a href="{{retry_url}}" style="display:inline-block;padding:12px 28px;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:14px;">Try Again</a>
                                     </td>
                                 </tr>
                             </table>
@@ -114,7 +96,7 @@
                     <tr>
                         <td style="padding:0 28px 24px;">
                             <p style="margin:0;color:#9CA3AF;font-size:11px;line-height:1.5;">
-                                This receipt was sent to {{receipt_email}}. If you have any questions about your order, please contact us.
+                                This notification was sent to {{receipt_email}}. If you believe this is an error, please contact us.
                             </p>
                         </td>
                     </tr>

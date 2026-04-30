@@ -28,6 +28,7 @@ $clientKey     = $_GET['client_key'] ?? null;
 $checkoutSessionId = $_GET['session_id'] ?? null;
 
 // Capture receipt email from all sources (GET for COD, POST for bank, session for card/gcash)
+// Final fallback: use the logged-in user's own registered email so online payments always get a receipt
 $receiptEmail = '';
 if (!empty($_GET['receipt_email']) && filter_var($_GET['receipt_email'], FILTER_VALIDATE_EMAIL)) {
     $receiptEmail = trim($_GET['receipt_email']);
@@ -36,6 +37,9 @@ if (!empty($_GET['receipt_email']) && filter_var($_GET['receipt_email'], FILTER_
 } elseif (!empty($_SESSION['receipt_email'])) {
     $receiptEmail = trim($_SESSION['receipt_email']);
     unset($_SESSION['receipt_email']);
+} elseif (!empty($_SESSION['email']) && filter_var($_SESSION['email'], FILTER_VALIDATE_EMAIL)) {
+    // Online checkout (GCash/Card/QRPh) never collects email from our form — use account email
+    $receiptEmail = trim($_SESSION['email']);
 }
 
 // CSRF check for POST requests
@@ -196,11 +200,22 @@ if ($receiptEmail && $order) {
         $shippingAddress = htmlspecialchars($order['shipping_address'] ?? $order['address'] ?? 'N/A');
         $orderUrl = APP_URL . '/index.php?url=orders/' . $orderId;
 
+        // Build payment detail variables
+        $paymentId = 'N/A';
+        $paymentDate = date('F j, Y g:i A');
+        if ($payment) {
+            $paymentId   = $payment['source_id'] ?? $payment['transaction_id'] ?? 'N/A';
+            $updatedAt   = $payment['updated_at'] ?? $payment['created_at'] ?? null;
+            $paymentDate = $updatedAt ? date('F j, Y g:i A', strtotime($updatedAt)) : $paymentDate;
+        }
+
         $html = str_replace('{{app_name}}', APP_NAME, $html);
         $html = str_replace('{{customer_name}}', $customerName, $html);
         $html = str_replace('{{order_number}}', htmlspecialchars($order['order_number']), $html);
         $html = str_replace('{{order_date}}', date('F j, Y g:i A', strtotime($order['created_at'])), $html);
         $html = str_replace('{{payment_method}}', $paymentMethodDisplay, $html);
+        $html = str_replace('{{payment_id}}', htmlspecialchars($paymentId), $html);
+        $html = str_replace('{{payment_date}}', htmlspecialchars($paymentDate), $html);
         $html = str_replace('{{order_items}}', $itemsHtml, $html);
         $html = str_replace('{{total_amount}}', number_format($order['total_amount'], 2), $html);
         $html = str_replace('{{shipping_address}}', $shippingAddress, $html);
