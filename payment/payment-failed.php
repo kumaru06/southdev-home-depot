@@ -43,14 +43,26 @@ if ($orderId) {
 }
 
 // ── Send payment-failed email to the user ────────────────────────────────
-if ($order && !empty($_SESSION['email']) && filter_var($_SESSION['email'], FILTER_VALIDATE_EMAIL)) {
-    try {
-        require_once __DIR__ . '/../includes/Mailer.php';
-        require_once __DIR__ . '/../models/Payment.php';
-
+if ($order) {
+    // Get user email: session (new logins will have it) or DB fallback
+    $failEmail = '';
+    if (!empty($_SESSION['email']) && filter_var($_SESSION['email'], FILTER_VALIDATE_EMAIL)) {
         $failEmail = trim($_SESSION['email']);
-        $customerName = htmlspecialchars(($order['first_name'] ?? '') . ' ' . ($order['last_name'] ?? ''));
-        $payment = (new Payment($pdo))->getByOrderId($orderId);
+    } elseif (!empty($_SESSION['user_id'])) {
+        require_once __DIR__ . '/../models/User.php';
+        $userRow = (new User($pdo))->findById((int)$_SESSION['user_id']);
+        if ($userRow && filter_var($userRow['email'], FILTER_VALIDATE_EMAIL)) {
+            $failEmail = trim($userRow['email']);
+        }
+    }
+
+    if ($failEmail) {
+        try {
+            require_once __DIR__ . '/../includes/Mailer.php';
+            require_once __DIR__ . '/../models/Payment.php';
+
+            $customerName = htmlspecialchars(($order['first_name'] ?? '') . ' ' . ($order['last_name'] ?? ''));
+            $payment = (new Payment($pdo))->getByOrderId($orderId);
 
         $methodMap = ['cod' => 'Cash on Delivery', 'gcash' => 'GCash', 'card' => 'Credit/Debit Card', 'bank' => 'Bank Transfer', 'qrph' => 'QRPh (Scan to Pay)'];
         $paymentMethodDisplay = $payment ? ($methodMap[$payment['payment_method']] ?? ucfirst($payment['payment_method'])) : 'N/A';
@@ -80,10 +92,11 @@ if ($order && !empty($_SESSION['email']) && filter_var($_SESSION['email'], FILTE
 
         $mailer = new Mailer();
         $mailer->send($failEmail, $customerName, 'Payment Failed - Order #' . $order['order_number'] . ' | ' . APP_NAME, $html);
-    } catch (Exception $e) {
-        error_log("Failed email notification error for order {$orderId}: " . $e->getMessage());
-    }
-}
+        } catch (Exception $e) {
+            error_log("Failed email notification error for order {$orderId}: " . $e->getMessage());
+        }
+    } // end if ($failEmail)
+} // end if ($order)
 ?>
 <!DOCTYPE html>
 <html lang="en">

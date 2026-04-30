@@ -148,6 +148,7 @@ class AuthController {
 
             $_SESSION['user_id']    = $user['id'];
             $_SESSION['role_id']    = $user['role_id'];
+            $_SESSION['email']      = $user['email'];
             $_SESSION['first_name'] = $user['first_name'];
             $_SESSION['last_name']  = $user['last_name'];
             $_SESSION['user_name']  = $user['first_name'] . ' ' . $user['last_name'];
@@ -243,6 +244,7 @@ class AuthController {
 
             $_SESSION['user_id']    = $user['id'];
             $_SESSION['role_id']    = $user['role_id'];
+            $_SESSION['email']      = $user['email'];
             $_SESSION['first_name'] = $user['first_name'];
             $_SESSION['last_name']  = $user['last_name'];
             $_SESSION['user_name']  = $user['first_name'] . ' ' . $user['last_name'];

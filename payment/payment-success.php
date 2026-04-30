@@ -10,6 +10,7 @@ require_once __DIR__ . '/../models/Payment.php';
 require_once __DIR__ . '/../models/Order.php';
 require_once __DIR__ . '/../models/OrderItem.php';
 require_once __DIR__ . '/../models/PayMongoGateway.php';
+require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../includes/Mailer.php';
 
 // Auth check (session already started in config.php)
@@ -28,7 +29,7 @@ $clientKey     = $_GET['client_key'] ?? null;
 $checkoutSessionId = $_GET['session_id'] ?? null;
 
 // Capture receipt email from all sources (GET for COD, POST for bank, session for card/gcash)
-// Final fallback: use the logged-in user's own registered email so online payments always get a receipt
+// Final fallback: look up user email from DB so online payments always get a receipt
 $receiptEmail = '';
 if (!empty($_GET['receipt_email']) && filter_var($_GET['receipt_email'], FILTER_VALIDATE_EMAIL)) {
     $receiptEmail = trim($_GET['receipt_email']);
@@ -38,8 +39,13 @@ if (!empty($_GET['receipt_email']) && filter_var($_GET['receipt_email'], FILTER_
     $receiptEmail = trim($_SESSION['receipt_email']);
     unset($_SESSION['receipt_email']);
 } elseif (!empty($_SESSION['email']) && filter_var($_SESSION['email'], FILTER_VALIDATE_EMAIL)) {
-    // Online checkout (GCash/Card/QRPh) never collects email from our form — use account email
     $receiptEmail = trim($_SESSION['email']);
+} elseif (!empty($_SESSION['user_id'])) {
+    // Most reliable fallback: fetch directly from the users table
+    $userRow = (new User($pdo))->findById((int)$_SESSION['user_id']);
+    if ($userRow && filter_var($userRow['email'], FILTER_VALIDATE_EMAIL)) {
+        $receiptEmail = trim($userRow['email']);
+    }
 }
 
 // CSRF check for POST requests
