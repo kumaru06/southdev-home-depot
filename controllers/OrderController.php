@@ -13,6 +13,7 @@ require_once __DIR__ . '/../models/CancelRequest.php';
 require_once __DIR__ . '/../models/Payment.php';
 require_once __DIR__ . '/../models/ReturnRequest.php';
 require_once __DIR__ . '/../models/Notification.php';
+require_once __DIR__ . '/../includes/Mailer.php';
 
 class OrderController {
     private $orderModel;
@@ -450,6 +451,67 @@ class OrderController {
                     APP_URL . '/index.php?url=orders/' . $id
                 );
             } catch (Throwable $e) { /* silent */ }
+
+            // Send status update email (only for meaningful statuses)
+            $emailStatuses = [ORDER_PROCESSING, ORDER_SHIPPED, ORDER_DELIVERED, ORDER_CANCELLED];
+            if (in_array($status, $emailStatuses) && !empty($order['email'])) {
+                try {
+                    $statusMeta = [
+                        ORDER_PROCESSING => [
+                            'label'   => 'Processing',
+                            'color'   => '#3B82F6',
+                            'icon'    => '⚙️',
+                            'message' => 'Great news! Your order is now being processed. Our team is preparing your items for shipment.',
+                            'next'    => 'We will notify you again once your order has been shipped. You can track your order anytime by clicking the button below.',
+                        ],
+                        ORDER_SHIPPED => [
+                            'label'   => 'Shipped',
+                            'color'   => '#8B5CF6',
+                            'icon'    => '🚚',
+                            'message' => 'Your order is on its way! It has been handed over to our delivery partner.',
+                            'next'    => 'Expect your delivery within the estimated timeframe. Please make sure someone is available to receive the package.',
+                        ],
+                        ORDER_DELIVERED => [
+                            'label'   => 'Delivered',
+                            'color'   => '#16A34A',
+                            'icon'    => '✅',
+                            'message' => 'Your order has been delivered! We hope you love your purchase.',
+                            'next'    => 'Enjoying your items? Leave a review on our website to help other customers. Thank you for shopping with us!',
+                        ],
+                        ORDER_CANCELLED => [
+                            'label'   => 'Cancelled',
+                            'color'   => '#DC2626',
+                            'icon'    => '✖',
+                            'message' => 'Your order has been cancelled. If you did not request this cancellation, please contact us.',
+                            'next'    => 'Any payment made will be refunded according to our refund policy. Feel free to place a new order anytime.',
+                        ],
+                    ];
+
+                    $meta = $statusMeta[$status];
+                    $customerName = trim(($order['first_name'] ?? '') . ' ' . ($order['last_name'] ?? ''));
+                    $orderUrl = APP_URL . '/index.php?url=orders/' . $id;
+
+                    $templatePath = ROOT_PATH . '/templates/email/order-status.html';
+                    $html = file_get_contents($templatePath);
+                    $html = str_replace('{{app_name}}',       APP_NAME,                                                       $html);
+                    $html = str_replace('{{customer_name}}',  htmlspecialchars($customerName),                                $html);
+                    $html = str_replace('{{order_number}}',   htmlspecialchars($order['order_number']),                       $html);
+                    $html = str_replace('{{order_date}}',     date('F j, Y', strtotime($order['created_at'])),                $html);
+                    $html = str_replace('{{total_amount}}',   number_format($order['total_amount'], 2),                       $html);
+                    $html = str_replace('{{status_label}}',   $meta['label'],                                                 $html);
+                    $html = str_replace('{{status_color}}',   $meta['color'],                                                 $html);
+                    $html = str_replace('{{status_icon}}',    $meta['icon'],                                                  $html);
+                    $html = str_replace('{{status_message}}', $meta['message'],                                               $html);
+                    $html = str_replace('{{next_step}}',      $meta['next'],                                                  $html);
+                    $html = str_replace('{{order_url}}',      $orderUrl,                                                      $html);
+                    $html = str_replace('{{receipt_email}}',  htmlspecialchars($order['email']),                              $html);
+
+                    $subject = $meta['icon'] . ' Order ' . $meta['label'] . ' - #' . $order['order_number'] . ' | ' . APP_NAME;
+                    (new Mailer())->send($order['email'], $customerName, $subject, $html);
+                } catch (Throwable $e) {
+                    error_log('Order status email failed for order ' . $id . ': ' . $e->getMessage());
+                }
+            }
         }
 
         flash('success', 'Order status updated.');
