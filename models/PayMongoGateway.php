@@ -253,8 +253,8 @@ class PayMongoGateway {
                 'User-Agent: SouthDev-Home-Depot/1.0'
             ],
             CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_CONNECTTIMEOUT => 10
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_CONNECTTIMEOUT => 6
         ];
 
         if ($method !== 'GET' && $payload) {

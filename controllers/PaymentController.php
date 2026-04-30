@@ -295,6 +295,94 @@ class PaymentController {
     }
 
     /**
+     * Generic PayMongo Checkout Session creator (gcash, card, qrph).
+     * Routes all three methods through the PayMongo-hosted checkout UI.
+     */
+    public function createPaymongoCheckout() {
+        AuthMiddleware::handle();
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            exit;
+        }
+        if (!verify_csrf()) {
+            http_response_code(419);
+            echo json_encode(['success' => false, 'error' => 'Invalid security token']);
+            exit;
+        }
+
+        try {
+            $input   = json_decode(file_get_contents('php://input'), true);
+            $orderId = intval($input['order_id'] ?? 0);
+            $method  = $input['method'] ?? 'gcash';
+
+            $allowed = ['gcash', 'card', 'qrph'];
+            if (!in_array($method, $allowed)) {
+                throw new Exception('Unsupported payment method: ' . $method);
+            }
+
+            $order = $this->orderModel->findById($orderId);
+            if (!$order || $order['user_id'] != $_SESSION['user_id']) {
+                throw new Exception('Invalid or unauthorized order');
+            }
+
+            $existing = $this->paymentModel->getByOrderId($orderId);
+            if ($existing && $existing['status'] === PAYMENT_COMPLETED) {
+                throw new Exception('This order has already been paid');
+            }
+
+            $successUrl = APP_URL . '/payment/payment-success.php?order_id=' . $orderId . '&session_id={CHECKOUT_SESSION_ID}';
+            $cancelUrl  = APP_URL . '/payment/payment-failed.php?order_id=' . $orderId;
+
+            $lineItems = [[
+                'name'     => 'Order #' . $order['order_number'],
+                'quantity' => 1,
+                'amount'   => intval($order['total_amount'] * 100),
+                'currency' => 'PHP',
+            ]];
+
+            $session = $this->payMongoGateway->createCheckoutSession(
+                $order['total_amount'],
+                $lineItems,
+                [$method],
+                $successUrl,
+                $cancelUrl,
+                'Order #' . $order['order_number']
+            );
+
+            $sessionId   = $session['data']['id'];
+            $checkoutUrl = $session['data']['attributes']['checkout_url'];
+
+            if ($existing) {
+                $this->paymentModel->updateSourceId($existing['id'], $sessionId);
+            } else {
+                $this->paymentModel->createWithSource([
+                    'order_id'       => $orderId,
+                    'payment_method' => $method,
+                    'amount'         => $order['total_amount'],
+                    'status'         => PAYMENT_PENDING,
+                    'source_id'      => $sessionId
+                ]);
+            }
+
+            $this->logModel->create(
+                LOG_PAYMENT,
+                strtoupper($method) . ' checkout session created for Order #' . $order['order_number'] .
+                ' (₱' . number_format($order['total_amount'], 2) . ')'
+            );
+
+            echo json_encode(['success' => true, 'checkout_url' => $checkoutUrl, 'session_id' => $sessionId]);
+        } catch (Exception $e) {
+            http_response_code(400);
+            $this->logModel->create(LOG_PAYMENT, 'Checkout session error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    /**
      * Handle PayMongo webhook for payment updates
      */
     public function handlePayMongoWebhook() {

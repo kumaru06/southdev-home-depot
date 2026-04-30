@@ -122,71 +122,50 @@ $pageTitle = 'Payment';
 
         <?php elseif ($method === 'gcash'): ?>
             <?php if (defined('PAYMONGO_ENABLED') && PAYMONGO_ENABLED): ?>
-                <!-- PayMongo GCash Integration -->
-                <div id="gcash-form-section">
-                    <div class="form-group" style="margin-bottom:1.25rem;">
-                        <label class="form-label">Email (optional, for receipt)</label>
-                        <input type="email" id="gcash-email" class="form-control" placeholder="your@email.com" value="<?= htmlspecialchars($_SESSION['email'] ?? '') ?>">
-                    </div>
-                    <div class="btn-group">
-                        <button onclick="startGcash()" class="btn btn-accent">Continue to GCash</button>
-                        <a href="<?= APP_URL ?>/payment/payment-failed.php?order_id=<?= $orderId ?>" class="btn btn-outline">Cancel</a>
-                    </div>
-                </div>
-                <div id="gcash-loading" class="pay-loading" style="display:none;">
+                <div id="gcash-init" class="pay-loading">
                     <div class="pay-spinner"></div>
-                    <p>Preparing payment...</p>
-                    <p style="font-size:.78rem;margin-top:.25rem;">Redirecting to GCash via PayMongo</p>
+                    <p>Preparing GCash payment…</p>
+                    <p style="font-size:.78rem;margin-top:.25rem;">Redirecting to PayMongo checkout</p>
                 </div>
                 <div id="gcash-error" style="display:none; text-align:center;">
-                    <p style="color:var(--danger); font-weight:700; margin-bottom:.75rem;">Payment initialization failed</p>
-                    <p id="gcash-error-msg" style="color:var(--steel); font-size:.875rem; margin-bottom:1.25rem;"></p>
+                    <p style="color:var(--danger);font-weight:700;margin-bottom:.75rem;">Could not start GCash payment</p>
+                    <p id="gcash-error-msg" style="color:var(--steel);font-size:.875rem;margin-bottom:1.25rem;"></p>
                     <div class="btn-group">
-                        <button onclick="initGcashPayment()" class="btn btn-accent">Try Again</button>
+                        <button onclick="initCheckout('gcash')" class="btn btn-accent">Try Again</button>
                         <a href="<?= APP_URL ?>/payment/payment-failed.php?order_id=<?= $orderId ?>" class="btn btn-outline">Cancel</a>
                     </div>
                 </div>
-
                 <script>
-                    var CSRF_TOKEN = '<?= addslashes(csrf_token()) ?>';
-
-                    function startGcash() {
-                        document.getElementById('gcash-form-section').style.display = 'none';
-                        initGcashPayment();
-                    }
-
-                    function initGcashPayment() {
-                        document.getElementById('gcash-loading').style.display = 'block';
-                        document.getElementById('gcash-error').style.display = 'none';
-
-                        var gcashEmail = document.getElementById('gcash-email').value.trim();
-                        fetch('<?= APP_URL ?>/index.php?url=payment/create-source', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
-                            body: JSON.stringify({
-                                order_id: <?= $orderId ?>,
-                                method: 'gcash',
-                                receipt_email: gcashEmail || undefined
-                            })
-                        })
-                        .then(r => r.json())
-                        .then(data => {
-                            if (data.success && data.checkout_url) {
-                                window.location.href = data.checkout_url;
-                            } else {
-                                document.getElementById('gcash-loading').style.display = 'none';
-                                document.getElementById('gcash-error').style.display = 'block';
-                                document.getElementById('gcash-error-msg').textContent = data.error || 'Failed to initialize payment. Please try again.';
-                            }
-                        })
-                        .catch(err => {
-                            document.getElementById('gcash-loading').style.display = 'none';
-                            document.getElementById('gcash-error').style.display = 'block';
-                            document.getElementById('gcash-error-msg').textContent = 'Network error: ' + err.message;
-                        });
-                    }
-
-                    // GCash payment now starts on button click, not auto-load
+                var CSRF_TOKEN = '<?= addslashes(csrf_token()) ?>';
+                function initCheckout(method) {
+                    document.getElementById(method + '-init') && (document.getElementById(method + '-init').style.display = 'block');
+                    document.getElementById(method + '-error').style.display = 'none';
+                    var controller = new AbortController();
+                    var timer = setTimeout(function() { controller.abort(); }, 12000);
+                    fetch('<?= APP_URL ?>/index.php?url=payment/create-checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
+                        body: JSON.stringify({ order_id: <?= $orderId ?>, method: method }),
+                        signal: controller.signal
+                    })
+                    .then(r => { clearTimeout(timer); return r.json(); })
+                    .then(data => {
+                        if (data.success && data.checkout_url) {
+                            window.location.href = data.checkout_url;
+                        } else {
+                            document.getElementById(method + '-init') && (document.getElementById(method + '-init').style.display = 'none');
+                            document.getElementById(method + '-error-msg').textContent = data.error || 'Failed to start payment.';
+                            document.getElementById(method + '-error').style.display = 'block';
+                        }
+                    })
+                    .catch(err => {
+                        clearTimeout(timer);
+                        document.getElementById(method + '-init') && (document.getElementById(method + '-init').style.display = 'none');
+                        document.getElementById(method + '-error-msg').textContent = err.name === 'AbortError' ? 'Connection timed out. Please try again.' : 'Network error: ' + err.message;
+                        document.getElementById(method + '-error').style.display = 'block';
+                    });
+                }
+                document.addEventListener('DOMContentLoaded', function() { initCheckout('gcash'); });
                 </script>
             <?php else: ?>
                 <p style="color:var(--danger); text-align:center; padding:1.5rem 0; font-size:.9rem;">GCash payments require PayMongo to be enabled. Please contact the administrator.</p>
@@ -197,8 +176,54 @@ $pageTitle = 'Payment';
 
         <?php elseif ($method === 'card'): ?>
             <?php if (defined('PAYMONGO_ENABLED') && PAYMONGO_ENABLED): ?>
-                <!-- PayMongo Credit / Debit Card Integration -->
-                <?php if (strpos(PAYMONGO_SECRET_KEY, 'xxxxxxxxxxxx') !== false): ?>
+                <!-- PayMongo Card: hosted checkout session -->
+                <div id="card-init" class="pay-loading">
+                    <div class="pay-spinner"></div>
+                    <p>Preparing secure card payment…</p>
+                    <p style="font-size:.78rem;margin-top:.25rem;">Redirecting to PayMongo checkout</p>
+                </div>
+                <div id="card-error" style="display:none; text-align:center;">
+                    <p style="color:var(--danger);font-weight:700;margin-bottom:.75rem;">Could not start card payment</p>
+                    <p id="card-error-msg" style="color:var(--steel);font-size:.875rem;margin-bottom:1.25rem;"></p>
+                    <div class="btn-group">
+                        <button onclick="initCheckout('card')" class="btn btn-accent">Try Again</button>
+                        <a href="<?= APP_URL ?>/payment/payment-failed.php?order_id=<?= $orderId ?>" class="btn btn-outline">Cancel</a>
+                    </div>
+                </div>
+                <script>
+                var CSRF_TOKEN = typeof CSRF_TOKEN !== 'undefined' ? CSRF_TOKEN : '<?= addslashes(csrf_token()) ?>';
+                if (typeof initCheckout === 'undefined') {
+                    function initCheckout(method) {
+                        var initEl = document.getElementById(method + '-init');
+                        var errEl  = document.getElementById(method + '-error');
+                        if (initEl) initEl.style.display = 'block';
+                        if (errEl)  errEl.style.display  = 'none';
+                        fetch('<?= APP_URL ?>/index.php?url=payment/create-checkout', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
+                            body: JSON.stringify({ order_id: <?= $orderId ?>, method: method })
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success && data.checkout_url) {
+                                window.location.href = data.checkout_url;
+                            } else {
+                                if (initEl) initEl.style.display = 'none';
+                                document.getElementById(method + '-error-msg').textContent = data.error || 'Failed to start payment.';
+                                if (errEl) errEl.style.display = 'block';
+                            }
+                        })
+                        .catch(err => {
+                            if (initEl) initEl.style.display = 'none';
+                            document.getElementById(method + '-error-msg').textContent = 'Network error: ' + err.message;
+                            if (errEl) errEl.style.display = 'block';
+                        });
+                    }
+                }
+                document.addEventListener('DOMContentLoaded', function() { initCheckout('card'); });
+                </script>
+                <?php if (false): // old inline card form kept for reference but not rendered
+                if (strpos(PAYMONGO_SECRET_KEY, 'xxxxxxxxxxxx') !== false): ?>
                 <div class="pay-test-banner">
                     <strong>Test Mode</strong> — No real charge will be made.
                 </div>
@@ -475,12 +500,9 @@ $pageTitle = 'Payment';
                     }
                 }
 
-                function showCardError(msg) {
-                    const el = document.getElementById('card-error');
-                    el.textContent = msg;
-                    el.style.display = 'block';
-                }
+                function showCardError(msg) { /* unused */ }
                 </script>
+                <?php endif; // end if(false) for old card form ?>
             <?php else: ?>
                 <p style="color:var(--danger); text-align:center; padding:1.5rem 0; font-size:.9rem;">Card payments require PayMongo to be enabled. Please contact the administrator.</p>
                 <div class="btn-group">
@@ -510,13 +532,15 @@ $pageTitle = 'Payment';
                 function initQrph() {
                     document.getElementById('qrph-init').style.display = 'block';
                     document.getElementById('qrph-error').style.display = 'none';
-
+                    var controller = new AbortController();
+                    var timer = setTimeout(function() { controller.abort(); }, 12000);
                     fetch('<?= APP_URL ?>/index.php?url=payment/create-qrph', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
-                        body: JSON.stringify({ order_id: <?= $orderId ?> })
+                        body: JSON.stringify({ order_id: <?= $orderId ?> }),
+                        signal: controller.signal
                     })
-                    .then(r => r.json())
+                    .then(r => { clearTimeout(timer); return r.json(); })
                     .then(data => {
                         if (!data.success || !data.checkout_url) {
                             document.getElementById('qrph-init').style.display = 'none';
@@ -527,8 +551,9 @@ $pageTitle = 'Payment';
                         window.location.href = data.checkout_url;
                     })
                     .catch(err => {
+                        clearTimeout(timer);
                         document.getElementById('qrph-init').style.display = 'none';
-                        document.getElementById('qrph-error-msg').textContent = 'Network error: ' + err.message;
+                        document.getElementById('qrph-error-msg').textContent = err.name === 'AbortError' ? 'Connection timed out. Please try again.' : 'Network error: ' + err.message;
                         document.getElementById('qrph-error').style.display = 'block';
                     });
                 }
