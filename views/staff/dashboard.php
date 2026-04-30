@@ -211,7 +211,7 @@ $reviewsUrl  = $isInventory ? '#' : APP_URL . '/index.php?url=staff/reviews';
                                 $dmgClass = match($dmg['status']) {
                                     'received'    => 'badge-pending',
                                     'inspected'   => 'badge-processing',
-                                    'written_off' => 'badge-cancelled',
+
                                     default       => 'badge-pending'
                                 };
                                 // Show only the short unique suffix of the order number, full on hover

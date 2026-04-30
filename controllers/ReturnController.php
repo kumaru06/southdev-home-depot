@@ -50,6 +50,7 @@ class ReturnController {
             exit;
         }
 
+        $orderItems = $this->orderItemModel->getByOrderId($orderId);
         $pageTitle = 'Request Return';
         $extraCss  = ['customer.css'];
         require_once VIEWS_PATH . '/customer/request-return.php';
@@ -61,9 +62,10 @@ class ReturnController {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
 
         $data = [
-            'order_id' => intval($_POST['order_id']),
-            'user_id'  => $_SESSION['user_id'],
-            'reason'   => trim($_POST['reason'])
+            'order_id'       => intval($_POST['order_id']),
+            'user_id'        => $_SESSION['user_id'],
+            'reason'         => trim($_POST['reason']),
+            'selected_items' => array_map('intval', $_POST['return_items'] ?? [])
         ];
 
         // Validate: only delivered orders can have return requests
@@ -78,6 +80,16 @@ class ReturnController {
         if ($this->returnModel->hasExistingRequest($data['order_id'])) {
             flash('warning', 'A return request already exists for this order.');
             header('Location: ' . APP_URL . '/index.php?url=orders/' . $data['order_id']);
+            exit;
+        }
+
+        $orderItems = $this->orderItemModel->getByOrderId($data['order_id']);
+        $validItemIds = array_map('intval', array_column($orderItems, 'id'));
+        $data['selected_items'] = array_values(array_intersect($data['selected_items'], $validItemIds));
+
+        if (empty($data['selected_items'])) {
+            flash('error', 'Please select the product you want to return.');
+            header('Location: ' . APP_URL . '/index.php?url=returns/request/' . $data['order_id']);
             exit;
         }
 
@@ -109,10 +121,38 @@ class ReturnController {
         AuthMiddleware::adminOrStaff();
         $status    = $_GET['status'] ?? null;
         $returns   = $this->returnModel->getAll($status);
+        foreach ($returns as &$return) {
+            $return['selected_items_summary'] = $this->returnModel->getSelectedItemsSummary($return);
+        }
+        unset($return);
         $pageTitle = 'Manage Returns';
         $isAdmin   = true;
         $extraCss  = ['admin.css'];
+        $returnBaseUrl = (($_SESSION['role_id'] ?? null) == ROLE_SUPER_ADMIN) ? 'admin/returns' : 'staff/returns';
         require_once VIEWS_PATH . '/staff/manage-returns.php';
+    }
+
+    public function details($id) {
+        AuthMiddleware::adminOrStaff();
+
+        $return = $this->returnModel->findById($id);
+        if (!$return) {
+            flash('error', 'Return request not found.');
+            $roleId = $_SESSION['role_id'] ?? ROLE_STAFF;
+            $baseUrl = ($roleId == ROLE_SUPER_ADMIN) ? 'admin/returns' : 'staff/returns';
+            header('Location: ' . APP_URL . '/index.php?url=' . $baseUrl);
+            exit;
+        }
+
+        $order = $this->orderModel->findById($return['order_id']);
+        $orderItems = $this->orderItemModel->getByOrderId($return['order_id']);
+        $selectedItemIds = $this->returnModel->getSelectedItemIds($return);
+
+        $pageTitle = 'Return #' . $return['id'];
+        $isAdmin   = true;
+        $extraCss  = ['admin.css'];
+        $returnBaseUrl = (($_SESSION['role_id'] ?? null) == ROLE_SUPER_ADMIN) ? 'admin/returns' : 'staff/returns';
+        require_once VIEWS_PATH . '/staff/return-details.php';
     }
 
     public function updateStatus($id) {
@@ -164,6 +204,13 @@ class ReturnController {
         if ($status === 'approved' && $return) {
             $isDamaged = $this->isDamageReason($return['reason']);
             $orderItems = $this->orderItemModel->getByOrderId($return['order_id']);
+            $selectedItemIds = $this->returnModel->getSelectedItemIds($return);
+
+            if (!empty($selectedItemIds)) {
+                $orderItems = array_values(array_filter($orderItems, function ($item) use ($selectedItemIds) {
+                    return in_array((int) $item['id'], $selectedItemIds, true);
+                }));
+            }
 
             // Check once before the loop so every item in the order is processed
             $alreadyRecordedDamage = $isDamaged && $this->damagedModel->existsForReturn($id);

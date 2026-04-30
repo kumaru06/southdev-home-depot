@@ -488,6 +488,60 @@ $pageTitle = 'Payment';
                 </div>
             <?php endif; ?>
 
+        <?php elseif ($method === 'qrph'): ?>
+            <?php if (defined('PAYMONGO_ENABLED') && PAYMONGO_ENABLED): ?>
+                <!-- QRPh: redirect to PayMongo-hosted checkout with dynamic QR -->
+                <div id="qrph-init" class="pay-loading">
+                    <div class="pay-spinner"></div>
+                    <p>Preparing QRPh payment…</p>
+                    <p style="font-size:.78rem;margin-top:.25rem;">Generating your QR code</p>
+                </div>
+                <div id="qrph-error" style="display:none; text-align:center;">
+                    <p style="color:var(--danger);font-weight:700;margin-bottom:.75rem;">Could not generate QR code</p>
+                    <p id="qrph-error-msg" style="color:var(--steel);font-size:.875rem;margin-bottom:1.25rem;"></p>
+                    <div class="btn-group">
+                        <button onclick="initQrph()" class="btn btn-accent">Try Again</button>
+                        <a href="<?= APP_URL ?>/payment/payment-failed.php?order_id=<?= $orderId ?>" class="btn btn-outline">Cancel</a>
+                    </div>
+                </div>
+                <script>
+                var CSRF_TOKEN = '<?= addslashes(csrf_token()) ?>';
+
+                function initQrph() {
+                    document.getElementById('qrph-init').style.display = 'block';
+                    document.getElementById('qrph-error').style.display = 'none';
+
+                    fetch('<?= APP_URL ?>/index.php?url=payment/create-qrph', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
+                        body: JSON.stringify({ order_id: <?= $orderId ?> })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!data.success || !data.checkout_url) {
+                            document.getElementById('qrph-init').style.display = 'none';
+                            document.getElementById('qrph-error-msg').textContent = data.error || 'Failed to create QRPh payment.';
+                            document.getElementById('qrph-error').style.display = 'block';
+                            return;
+                        }
+                        window.location.href = data.checkout_url;
+                    })
+                    .catch(err => {
+                        document.getElementById('qrph-init').style.display = 'none';
+                        document.getElementById('qrph-error-msg').textContent = 'Network error: ' + err.message;
+                        document.getElementById('qrph-error').style.display = 'block';
+                    });
+                }
+
+                document.addEventListener('DOMContentLoaded', initQrph);
+                </script>
+            <?php else: ?>
+                <p style="color:var(--danger); text-align:center; padding:1.5rem 0; font-size:.9rem;">QRPh payments require PayMongo to be enabled. Please contact the administrator.</p>
+                <div class="btn-group">
+                    <a href="<?= APP_URL ?>/payment/payment-failed.php?order_id=<?= $orderId ?>" class="btn btn-outline">Go Back</a>
+                </div>
+            <?php endif; ?>
+
         <?php elseif ($method === 'bank'): ?>
             <div class="pay-info-box">
                 <p><strong>Bank:</strong> BDO</p>

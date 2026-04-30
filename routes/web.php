@@ -304,6 +304,8 @@ switch ($urlParts[0]) {
         $sub = $urlParts[1] ?? '';
         if ($sub === 'create-source') {
             $controller->createPayMongoSource();
+        } elseif ($sub === 'create-qrph') {
+            $controller->createQrphCheckout();
         } elseif ($sub === 'create-intent') {
             $controller->createCardPaymentIntent();
         } elseif ($sub === 'attach-card') {
@@ -458,6 +460,8 @@ switch ($urlParts[0]) {
                     $controller = new ReturnController($pdo);
                     if (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'update') {
                         $controller->updateStatus($urlParts[2]);
+                    } elseif (isset($urlParts[2]) && is_numeric($urlParts[2])) {
+                        $controller->details($urlParts[2]);
                     } else {
                         $controller->manage();
                     }
@@ -616,6 +620,8 @@ switch ($urlParts[0]) {
                     $controller = new ReturnController($pdo);
                     if (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'update') {
                         $controller->updateStatus($urlParts[2]);
+                    } elseif (isset($urlParts[2]) && is_numeric($urlParts[2])) {
+                        $controller->details($urlParts[2]);
                     } else {
                         $controller->manage();
                     }

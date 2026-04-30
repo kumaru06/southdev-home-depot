@@ -202,7 +202,7 @@ class OrderController {
             } catch (Throwable $e) { /* silent */ }
 
             // Redirect to payment gateway for online payment methods
-            if (in_array($paymentMethod, ['gcash', 'card'])) {
+            if (in_array($paymentMethod, ['gcash', 'card', 'qrph'])) {
                 header('Location: ' . APP_URL . '/payment/payment-gateway.php?order_id=' . $orderId . '&method=' . $paymentMethod);
             } else {
                 flash('success', 'Order placed successfully!');

@@ -577,7 +577,7 @@ class ReportController {
         fputcsv($out, ['Date Reported', 'Order #', 'Category', 'SKU', 'Product Name', 'Qty', 'Unit Price (PHP)', 'Estimated Loss (PHP)', 'Return Reason', 'Damage Description', 'Status', 'Admin Notes', 'Reported By', 'Last Updated']);
 
         $totalQty = 0; $totalLoss = 0;
-        $statusCounts = ['received' => 0, 'inspected' => 0, 'written_off' => 0];
+        $statusCounts = ['received' => 0, 'inspected' => 0];
         foreach ($rows as $r) {
             $loss = floatval($r['estimated_loss']);
             $qty  = intval($r['quantity']);
@@ -612,7 +612,7 @@ class ReportController {
         fputcsv($out, ['STATUS BREAKDOWN']);
         fputcsv($out, ['Received:', $statusCounts['received']]);
         fputcsv($out, ['Inspected:', $statusCounts['inspected']]);
-        fputcsv($out, ['Written Off:', $statusCounts['written_off']]);
+
 
         fclose($out);
         exit;

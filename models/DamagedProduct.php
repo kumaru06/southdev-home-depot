@@ -21,7 +21,7 @@ class DamagedProduct {
                 `return_request_id` INT NOT NULL,
                 `quantity` INT NOT NULL DEFAULT 1,
                 `reason` TEXT NOT NULL,
-                `status` ENUM('received','inspected','written_off') NOT NULL DEFAULT 'received',
+                `status` ENUM('received','inspected') NOT NULL DEFAULT 'received',
                 `admin_notes` TEXT NULL,
                 `reported_by` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -37,7 +37,7 @@ class DamagedProduct {
 
         // Migrate old 'pending' status to 'received' if table existed before
         try {
-            $this->pdo->exec("ALTER TABLE `damaged_products` MODIFY COLUMN `status` ENUM('received','inspected','written_off') NOT NULL DEFAULT 'received'");
+            $this->pdo->exec("ALTER TABLE `damaged_products` MODIFY COLUMN `status` ENUM('received','inspected') NOT NULL DEFAULT 'received'");
             $this->pdo->exec("UPDATE `damaged_products` SET `status` = 'received' WHERE `status` = '' OR `status` IS NULL");
         } catch (\Throwable $e) {
             // ignore if already migrated
@@ -137,7 +137,7 @@ class DamagedProduct {
              GROUP BY dp.status"
         );
         $rows = $stmt->fetchAll();
-        $summary = ['total' => 0, 'received' => 0, 'inspected' => 0, 'written_off' => 0, 'total_qty' => 0];
+        $summary = ['total' => 0, 'received' => 0, 'inspected' => 0, 'total_qty' => 0];
         foreach ($rows as $r) {
             $summary[$r['status']] = (int) $r['cnt'];
             $summary['total'] += (int) $r['cnt'];

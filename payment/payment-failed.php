@@ -18,12 +18,27 @@ $reason = $_GET['reason'] ?? 'cancelled';
 $order = null;
 if ($orderId) {
     require_once __DIR__ . '/../models/Order.php';
-    $orderModel = new Order($pdo);
+    require_once __DIR__ . '/../models/Payment.php';
+    $orderModel   = new Order($pdo);
+    $paymentModel = new Payment($pdo);
     $order = $orderModel->findById($orderId);
 
     if ($order && (int) $order['user_id'] !== (int) ($_SESSION['user_id'] ?? 0)) {
         header('Location: ' . APP_URL . '/index.php?url=orders');
         exit;
+    }
+
+    // Mark payment as failed and cancel the order if it hasn't been completed yet
+    if ($order) {
+        $payment = $paymentModel->getByOrderId($orderId);
+        if ($payment && $payment['status'] !== PAYMENT_COMPLETED) {
+            $paymentModel->updateStatus($payment['id'], PAYMENT_FAILED);
+        }
+        // Cancel the order only if it's still pending (not already cancelled/completed)
+        if (in_array($order['status'], ['pending', 'payment_pending'])) {
+            $orderModel->cancelOrder($orderId, null, 'Payment was cancelled or failed by the customer');
+            $order = $orderModel->findById($orderId); // refresh
+        }
     }
 }
 ?>

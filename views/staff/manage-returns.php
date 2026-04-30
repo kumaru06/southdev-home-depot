@@ -34,6 +34,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
                         <th>ID</th>
                         <th>Order</th>
                         <th>Customer</th>
+                        <th>Product(s)</th>
                         <th>Reason</th>
                         <th>Status</th>
                         <th>Date</th>
@@ -43,10 +44,12 @@ require_once INCLUDES_PATH . '/sidebar.php';
                 <tbody>
                     <?php if (!empty($returns)): ?>
                         <?php foreach ($returns as $return): ?>
-                            <tr>
-                                <td>#<?= $return['id'] ?></td>
+                            <?php $detailsUrl = APP_URL . '/index.php?url=' . ($returnBaseUrl ?? 'staff/returns') . '/' . (int) $return['id']; ?>
+                            <tr class="js-return-row" data-href="<?= htmlspecialchars($detailsUrl) ?>">
+                                <td><a href="<?= htmlspecialchars($detailsUrl) ?>" class="return-id-link" onclick="event.stopPropagation(); window.location.href=this.href; return false;">#<?= $return['id'] ?></a></td>
                                 <td><strong><?= htmlspecialchars($return['order_number']) ?></strong></td>
                                 <td><?= htmlspecialchars($return['first_name'] . ' ' . $return['last_name']) ?></td>
+                                <td title="<?= htmlspecialchars($return['selected_items_summary'] ?? '') ?>"><?= htmlspecialchars(substr($return['selected_items_summary'] ?? 'All order items', 0, 42)) ?><?= strlen($return['selected_items_summary'] ?? '') > 42 ? '…' : '' ?></td>
                                 <td title="<?= htmlspecialchars($return['reason']) ?>"><?= htmlspecialchars(substr($return['reason'], 0, 50)) ?><?= strlen($return['reason']) > 50 ? '…' : '' ?></td>
                                 <td>
                                     <?php
@@ -64,27 +67,21 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                 <td><?= date('M d, Y', strtotime($return['created_at'])) ?></td>
                                 <td>
                                     <?php if ($rstatus === 'pending'): ?>
-                                        <form action="<?= APP_URL ?>/index.php?url=staff/returns/<?= $return['id'] ?>/update" method="POST" class="inline-form">
-                                            <?= csrf_field() ?>
-                                            <input type="text" name="admin_notes" placeholder="Notes…" class="form-control form-control-sm" style="width: 120px;">
-                                            <div class="action-btn-group">
-                                                <button type="submit" name="status" value="approved" class="action-btn approve js-return-approve" title="Approve"><i data-lucide="check"></i></button>
-                                                <button type="submit" name="status" value="rejected" class="action-btn reject js-return-reject" title="Reject"><i data-lucide="x"></i></button>
-                                            </div>
-                                        </form>
+                                        <a href="<?= htmlspecialchars($detailsUrl) ?>" class="btn btn-sm btn-outline" style="margin-bottom:6px;" onclick="event.stopPropagation();">View Details</a>
                                     <?php elseif ($rstatus === 'approved'): ?>
-                                        <form action="<?= APP_URL ?>/index.php?url=staff/returns/<?= $return['id'] ?>/update" method="POST" class="inline-form">
+                                        <a href="<?= htmlspecialchars($detailsUrl) ?>" class="btn btn-sm btn-outline" style="margin-bottom:6px;" onclick="event.stopPropagation();">View Details</a>
+                                        <form action="<?= APP_URL ?>/index.php?url=<?= $returnBaseUrl ?? 'staff/returns' ?>/<?= $return['id'] ?>/update" method="POST" class="inline-form">
                                             <?= csrf_field() ?>
                                             <button type="submit" name="status" value="completed" class="btn btn-sm btn-accent js-return-refund" title="Mark as Refunded"><i data-lucide="badge-check" style="width:14px;height:14px"></i> Mark Refunded</button>
                                         </form>
                                     <?php else: ?>
-                                        <span class="text-muted"><?= ucfirst($rstatus) ?></span>
+                                        <a href="<?= htmlspecialchars($detailsUrl) ?>" class="btn btn-sm btn-outline" onclick="event.stopPropagation();">View Details</a>
                                     <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr><td colspan="7" class="text-center">No return requests found.</td></tr>
+                        <tr><td colspan="8" class="text-center">No return requests found.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
@@ -94,6 +91,14 @@ require_once INCLUDES_PATH . '/sidebar.php';
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.js-return-row').forEach(function (row) {
+        row.addEventListener('click', function (e) {
+            if (e.target.closest('a, button, input, select, textarea, form')) return;
+            var href = row.getAttribute('data-href');
+            if (href) window.location.href = href;
+        });
+    });
+
     // Helper: submit form with a named button value (since form.submit() skips button values)
     function submitFormWithStatus(form, statusValue) {
         var hidden = form.querySelector('input[type="hidden"][name="status"]');

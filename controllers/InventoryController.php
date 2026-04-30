@@ -216,7 +216,7 @@ class InventoryController {
     }
 
     /**
-     * Update damaged product status (inspected, written_off, repaired)
+     * Update damaged product status (received, inspected)
      */
     public function updateDamagedStatus($id) {
         AuthMiddleware::adminOrStaffOrInventory();
@@ -226,7 +226,7 @@ class InventoryController {
         $status     = $_POST['status'] ?? '';
         $adminNotes = trim($_POST['admin_notes'] ?? '');
 
-        $validStatuses = ['received', 'inspected', 'written_off'];
+        $validStatuses = ['received', 'inspected'];
         if (!in_array($status, $validStatuses)) {
             flash('error', 'Invalid status.');
             header('Location: ' . $this->inventoryUrl() . '/damaged');

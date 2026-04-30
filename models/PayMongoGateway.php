@@ -73,12 +73,81 @@ class PayMongoGateway {
 
     /**
      * Get payment details
-     * 
+     *
      * @param string $paymentId Payment ID from checkout
      * @return array Payment details with status
      */
     public function getPayment($paymentId) {
         return $this->makeRequest('GET', "/payments/{$paymentId}", null);
+    }
+
+    /**
+     * Get source details
+     *
+     * @param string $sourceId  src_xxx
+     * @return array Source data with status and attributes
+     */
+    public function getSource($sourceId) {
+        return $this->makeRequest('GET', "/sources/{$sourceId}", null);
+    }
+
+    /**
+     * Generate a static QRPh code (Scan to Pay)
+     * Endpoint: POST /v1/qrph/generate
+     *
+     * @return array Response containing qr_image (base64 PNG) and qr_string
+     */
+    public function generateQrph() {
+        $payload = [
+            'data' => [
+                'attributes' => [
+                    'kind' => 'instore'
+                ]
+            ]
+        ];
+        return $this->makeRequest('POST', '/qrph/generate', $payload);
+    }
+
+    /**
+     * Create a Checkout Session (supports qrph, gcash, card, grab_pay, etc.)
+     * PayMongo hosts the checkout page with a per-transaction QR code.
+     *
+     * @param float  $amount       Order amount in PHP
+     * @param array  $lineItems    [ ['name'=>..., 'quantity'=>..., 'amount'=>..., 'currency'=>'PHP'] ]
+     * @param array  $methodTypes  e.g. ['qrph'], ['gcash'], ['card','qrph']
+     * @param string $successUrl   Redirect after successful payment
+     * @param string $cancelUrl    Redirect if customer cancels
+     * @param string $description  Short description
+     * @return array Checkout session data (checkout_url, id, etc.)
+     */
+    public function createCheckoutSession($amount, $lineItems, $methodTypes, $successUrl, $cancelUrl, $description = '') {
+        $payload = [
+            'data' => [
+                'attributes' => [
+                    'send_email_receipt'  => false,
+                    'show_description'    => true,
+                    'show_line_items'     => true,
+                    'payment_method_types' => $methodTypes,
+                    'line_items'          => $lineItems,
+                    'amount'              => intval($amount * 100),
+                    'currency'            => 'PHP',
+                    'description'         => $description,
+                    'success_url'         => $successUrl,
+                    'cancel_url'          => $cancelUrl,
+                ]
+            ]
+        ];
+        return $this->makeRequest('POST', '/checkout_sessions', $payload);
+    }
+
+    /**
+     * Retrieve a Checkout Session by ID
+     *
+     * @param string $sessionId  cs_xxx
+     * @return array Checkout session data with payment_intent, status, etc.
+     */
+    public function getCheckoutSession($sessionId) {
+        return $this->makeRequest('GET', "/checkout_sessions/{$sessionId}", null);
     }
 
     // ─── CARD PAYMENT (Payment Intent flow) ───────────────────────────────────

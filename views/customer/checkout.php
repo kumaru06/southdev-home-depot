@@ -179,6 +179,19 @@ require_once INCLUDES_PATH . '/navbar.php';
                                     </span>
                                 </div>
                             </label>
+                            <label class="co-pay-opt">
+                                <input type="radio" name="payment_method" value="qrph">
+                                <div class="co-pay-inner">
+                                    <span class="co-pay-radio"></span>
+                                    <span class="co-pay-icon" style="background:#fff;border:1.5px solid #e5e7eb;border-radius:8px;display:flex;align-items:center;justify-content:center;width:40px;height:40px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1C1C1C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="5" y="5" width="3" height="3" fill="#1C1C1C"/><rect x="16" y="5" width="3" height="3" fill="#1C1C1C"/><rect x="5" y="16" width="3" height="3" fill="#1C1C1C"/><path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 20h3"/></svg>
+                                    </span>
+                                    <span class="co-pay-text">
+                                        <strong>QRPh — Scan to Pay</strong>
+                                        <small>Any PH bank or e-wallet (InstaPay / PESONet)</small>
+                                    </span>
+                                </div>
+                            </label>
                         </div>
                     </div>
                 </div>

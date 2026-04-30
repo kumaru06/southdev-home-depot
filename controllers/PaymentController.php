@@ -143,10 +143,11 @@ class PaymentController {
                         'status'         => PAYMENT_PENDING
                     ]);
                 }
-                $this->logModel->create(LOG_PAYMENT, "[TEST MODE] GCash simulated for Order #{$order['order_number']}");
+                $this->logModel->create(LOG_PAYMENT, "[TEST MODE] {$method} simulated for Order #{$order['order_number']}");
+                $testSuccessUrl = APP_URL . '/payment/payment-success.php?order_id=' . $orderId . '&test_mode=1';
                 echo json_encode([
                     'success'      => true,
-                    'checkout_url' => APP_URL . '/payment/payment-success.php?order_id=' . $orderId . '&test_mode=1',
+                    'checkout_url' => $testSuccessUrl,
                     'source_id'    => $fakeSourceId,
                     'test_mode'    => true
                 ]);
@@ -166,21 +167,19 @@ class PaymentController {
                 $failureUrl
             );
 
-            $sourceId = $source['data']['id'];
-            $checkoutUrl = $source['data']['attributes']['redirect']['checkout_url'];
+            $sourceId  = $source['data']['id'];
+            $attrs     = $source['data']['attributes'];
 
             // Store payment record with source ID
             if ($existingPayment) {
-                // Update existing payment
                 $this->paymentModel->updateSourceId($existingPayment['id'], $sourceId);
             } else {
-                // Create new payment record
                 $paymentData = [
-                    'order_id' => $orderId,
+                    'order_id'       => $orderId,
                     'payment_method' => $method,
-                    'amount' => $order['total_amount'],
-                    'status' => PAYMENT_PENDING,
-                    'source_id' => $sourceId
+                    'amount'         => $order['total_amount'],
+                    'status'         => PAYMENT_PENDING,
+                    'source_id'      => $sourceId
                 ];
                 $this->paymentModel->createWithSource($paymentData);
             }
@@ -190,10 +189,11 @@ class PaymentController {
                 "PayMongo {$method} source created for Order #{$order['order_number']} (₱" . number_format($order['total_amount'], 2) . ")"
             );
 
+            $checkoutUrl = $attrs['redirect']['checkout_url'];
             echo json_encode([
-                'success' => true,
+                'success'      => true,
                 'checkout_url' => $checkoutUrl,
-                'source_id' => $sourceId
+                'source_id'    => $sourceId
             ]);
         } catch (Exception $e) {
             http_response_code(400);
@@ -202,6 +202,94 @@ class PaymentController {
                 'success' => false,
                 'error' => $e->getMessage()
             ]);
+        }
+        exit;
+    }
+
+    /**
+     * Create a PayMongo Checkout Session for QRPh.
+     * PayMongo hosts the page and shows a per-transaction dynamic QR with
+     * the exact order amount encoded — actual payment processing.
+     */
+    public function createQrphCheckout() {
+        AuthMiddleware::handle();
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            exit;
+        }
+
+        if (!verify_csrf()) {
+            http_response_code(419);
+            echo json_encode(['success' => false, 'error' => 'Invalid security token']);
+            exit;
+        }
+
+        try {
+            $input   = json_decode(file_get_contents('php://input'), true);
+            $orderId = intval($input['order_id'] ?? 0);
+
+            $order = $this->orderModel->findById($orderId);
+            if (!$order || $order['user_id'] != $_SESSION['user_id']) {
+                throw new Exception('Invalid or unauthorized order');
+            }
+
+            $existing = $this->paymentModel->getByOrderId($orderId);
+            if ($existing && $existing['status'] === PAYMENT_COMPLETED) {
+                throw new Exception('This order has already been paid');
+            }
+
+            $successUrl = APP_URL . '/payment/payment-success.php?order_id=' . $orderId . '&session_id={CHECKOUT_SESSION_ID}';
+            $cancelUrl  = APP_URL . '/payment/payment-failed.php?order_id=' . $orderId;
+
+            $lineItems = [[
+                'name'     => 'Order #' . $order['order_number'],
+                'quantity' => 1,
+                'amount'   => intval($order['total_amount'] * 100),
+                'currency' => 'PHP',
+            ]];
+
+            $session = $this->payMongoGateway->createCheckoutSession(
+                $order['total_amount'],
+                $lineItems,
+                ['qrph'],
+                $successUrl,
+                $cancelUrl,
+                'Order #' . $order['order_number']
+            );
+
+            $sessionId   = $session['data']['id'];
+            $checkoutUrl = $session['data']['attributes']['checkout_url'];
+
+            // Create / update pending payment record, storing session ID
+            if ($existing) {
+                $this->paymentModel->updateSourceId($existing['id'], $sessionId);
+            } else {
+                $this->paymentModel->createWithSource([
+                    'order_id'       => $orderId,
+                    'payment_method' => 'qrph',
+                    'amount'         => $order['total_amount'],
+                    'status'         => PAYMENT_PENDING,
+                    'source_id'      => $sessionId
+                ]);
+            }
+
+            $this->logModel->create(
+                LOG_PAYMENT,
+                "QRPh checkout session created for Order #{$order['order_number']} (₱" . number_format($order['total_amount'], 2) . ")"
+            );
+
+            echo json_encode([
+                'success'      => true,
+                'checkout_url' => $checkoutUrl,
+                'session_id'   => $sessionId
+            ]);
+        } catch (Exception $e) {
+            http_response_code(400);
+            $this->logModel->create(LOG_PAYMENT, 'QRPh checkout error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
         exit;
     }
@@ -346,6 +434,7 @@ class PaymentController {
             $this->failPaymentOrder($payment, $paymentIntentId, 'Card payment failed (webhook)');
         }
     }
+
     /**
      * Step 1: Create PayMongo Payment Intent for card payment (called via AJAX)
      * Returns payment_intent_id and client_key to the frontend.

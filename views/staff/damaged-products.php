@@ -44,13 +44,6 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
                 </div>
                 <div class="stat-icon" style="background:#DBEAFE;color:#1E40AF;"><i data-lucide="package-check"></i></div>
             </div>
-            <div class="stat-card">
-                <div class="stat-info">
-                    <span class="stat-label">Written Off</span>
-                    <span class="stat-value"><?= $summary['written_off'] ?? 0 ?></span>
-                </div>
-                <div class="stat-icon" style="background:var(--danger-bg);color:var(--danger);"><i data-lucide="trash-2"></i></div>
-            </div>
         </div>
 
         <!-- Filter Bar -->
@@ -59,7 +52,7 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
                 <input type="hidden" name="url" value="<?= htmlspecialchars($_GET['url'] ?? '') ?>">
                 <select name="status" class="form-control">
                     <option value="">All Statuses</option>
-                    <?php foreach (['received', 'inspected', 'written_off'] as $s): ?>
+                    <?php foreach (['received', 'inspected'] as $s): ?>
                         <option value="<?= $s ?>" <?= (isset($_GET['status']) && $_GET['status'] == $s) ? 'selected' : '' ?>>
                             <?= ucfirst(str_replace('_', ' ', $s)) ?>
                         </option>
@@ -89,10 +82,9 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
                         <?php foreach ($damaged as $item): ?>
                             <?php
                                 $statusClass = match($item['status']) {
-                                    'received'    => 'badge-pending',
-                                    'inspected'   => 'badge-processing',
-                                    'written_off' => 'badge-cancelled',
-                                    default       => 'badge-pending'
+                                    'received'  => 'badge-pending',
+                                    'inspected' => 'badge-processing',
+                                    default     => 'badge-pending'
                                 };
                             ?>
                             <tr>

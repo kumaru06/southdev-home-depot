@@ -268,7 +268,7 @@ function _dash_action_label(string $raw): string {
                                 $dmgClass = match($dmg['status']) {
                                     'received'    => 'badge-pending',
                                     'inspected'   => 'badge-processing',
-                                    'written_off' => 'badge-cancelled',
+
                                     default       => 'badge-pending'
                                 };
                                 $orderNum   = $dmg['order_number'];

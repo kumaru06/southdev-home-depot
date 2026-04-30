@@ -11,6 +11,7 @@ if ($order['status'] === 'delivered' && isset($_SESSION['user_id'])) {
     $reviewedItemIds = $reviewModel->getReviewedOrderItemIds($_SESSION['user_id'], $order['id']);
 }
 
+$returnedItemIds = [];
 $steps      = ['pending', 'processing', 'shipped', 'delivered'];
 $stepIcons  = ['clock', 'settings', 'truck', 'check-circle'];
 $currentIdx = array_search($order['status'], $steps);
@@ -115,6 +116,14 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
         };
     ?>
     <div class="refund-banner <?= $rrClass ?>">
+        <?php
+            $returnedItemIds = [];
+            if (!empty($returnRequest['selected_items'])) {
+                $decoded = json_decode($returnRequest['selected_items'], true);
+                if (is_array($decoded)) $returnedItemIds = array_map('intval', $decoded);
+            }
+            $returnedItems = array_filter($orderItems, fn($it) => in_array((int)$it['id'], $returnedItemIds));
+        ?>
         <div class="refund-banner-icon"></div>
         <div class="refund-banner-content">
             <h4><?= $rrTitle ?></h4>
@@ -123,6 +132,24 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
                 <span>Requested <?= date('M d, Y', strtotime($returnRequest['created_at'])) ?></span>
                 <span><?= htmlspecialchars($returnRequest['reason']) ?></span>
             </div>
+            <?php if (!empty($returnedItems)): ?>
+            <div class="refund-returned-items">
+                <span class="refund-returned-label">Returned item<?= count($returnedItems) !== 1 ? 's' : '' ?>:</span>
+                <div class="refund-returned-list">
+                    <?php foreach ($returnedItems as $ri): ?>
+                    <div class="refund-returned-chip">
+                        <?php if (!empty($ri['image'])): ?>
+                        <img src="<?= APP_URL ?>/assets/uploads/<?= htmlspecialchars($ri['image']) ?>" alt="">
+                        <?php else: ?>
+                        <div class="refund-returned-chip-placeholder"></div>
+                        <?php endif; ?>
+                        <span><?= htmlspecialchars($ri['product_name']) ?></span>
+                        <span class="refund-returned-chip-qty">×<?= $ri['quantity'] ?></span>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
             <?php if (!empty($returnRequest['admin_notes'])): ?>
             <div class="refund-banner-notes">
                 <span><strong>Staff note:</strong> <?= htmlspecialchars($returnRequest['admin_notes']) ?></span>
@@ -337,6 +364,9 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
                 </div>
                 <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
                     <span class="od-item-subtotal">₱<?= number_format($item['subtotal'], 2) ?></span>
+                    <?php if (!empty($returnedItemIds) && in_array((int)$item['id'], $returnedItemIds)): ?>
+                        <span class="badge od-item-returned-badge">Returned</span>
+                    <?php endif; ?>
                     <?php if ($order['status'] === 'delivered'): ?>
                         <?php if (in_array($item['id'], $reviewedItemIds)): ?>
                             <span class="badge badge-success" style="font-size:11px;">Reviewed</span>

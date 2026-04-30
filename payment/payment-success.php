@@ -22,8 +22,10 @@ $orderId       = intval($_GET['order_id'] ?? $_POST['order_id'] ?? 0);
 $transactionId = $_POST['transaction_id'] ?? null;
 
 // PayMongo card / 3DS return parameters
-$intentId  = $_GET['intent_id']  ?? null;
-$clientKey = $_GET['client_key'] ?? null;
+$intentId      = $_GET['intent_id']  ?? null;
+$clientKey     = $_GET['client_key'] ?? null;
+// PayMongo Checkout Session return (QRPh & future checkout-session methods)
+$checkoutSessionId = $_GET['session_id'] ?? null;
 
 // Capture receipt email from all sources (GET for COD, POST for bank, session for card/gcash)
 $receiptEmail = '';
@@ -93,6 +95,34 @@ if ($orderId) {
             header('Location: ' . APP_URL . '/payment/payment-failed.php?order_id=' . $orderId . '&reason=verification_error');
             exit;
         }
+    } elseif ($checkoutSessionId && defined('PAYMONGO_ENABLED') && PAYMONGO_ENABLED) {
+        // Checkout Session return (QRPh) — verify the session payment status
+        try {
+            $gateway     = new PayMongoGateway();
+            $sessionData = $gateway->getCheckoutSession($checkoutSessionId);
+            $sessionAttrs = $sessionData['data']['attributes'] ?? [];
+            $sessionStatus = $sessionAttrs['payment_intent']['attributes']['status']
+                             ?? $sessionAttrs['status']
+                             ?? '';
+
+            if ($sessionStatus === 'succeeded' || $sessionStatus === 'paid' || $sessionStatus === 'completed') {
+                if ($payment && $payment['status'] !== PAYMENT_COMPLETED) {
+                    $paymentModel->updateStatus($payment['id'], PAYMENT_COMPLETED, $checkoutSessionId);
+                }
+            } elseif (in_array($sessionStatus, ['expired', 'cancelled', 'failed'])) {
+                if ($payment) {
+                    $paymentModel->updateStatus($payment['id'], PAYMENT_FAILED);
+                }
+                header('Location: ' . APP_URL . '/payment/payment-failed.php?order_id=' . $orderId . '&reason=qrph_failed');
+                exit;
+            }
+            // else still processing — show page as pending
+        } catch (Exception $e) {
+            // Non-fatal: fall through to success page as pending
+        }
+    } elseif ($paymentMethod === 'qrph') {
+        // QRPh without session_id (shouldn't happen with new flow, just in case)
+        // Leave as pending
     } elseif ($paymentMethod === PAYMENT_METHOD_COD) {
         // COD is confirmed immediately by the store workflow.
         if ($payment && $payment['status'] !== PAYMENT_COMPLETED) {
@@ -124,7 +154,7 @@ if ($receiptEmail && $order) {
         $payment = (new Payment($pdo))->getByOrderId($orderId);
         $paymentMethodDisplay = 'N/A';
         if ($payment) {
-            $methodMap = ['cod' => 'Cash on Delivery', 'gcash' => 'GCash', 'card' => 'Credit/Debit Card', 'bank' => 'Bank Transfer'];
+            $methodMap = ['cod' => 'Cash on Delivery', 'gcash' => 'GCash', 'card' => 'Credit/Debit Card', 'bank' => 'Bank Transfer', 'qrph' => 'QRPh (Scan to Pay)'];
             $paymentMethodDisplay = $methodMap[$payment['payment_method']] ?? ucfirst($payment['payment_method']);
         }
 

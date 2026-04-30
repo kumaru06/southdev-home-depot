@@ -8,6 +8,18 @@ class ReturnRequest {
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
+        $this->ensureSelectedItemsColumn();
+    }
+
+    private function ensureSelectedItemsColumn() {
+        try {
+            $stmt = $this->pdo->query("SHOW COLUMNS FROM return_requests LIKE 'selected_items'");
+            if (!$stmt->fetch()) {
+                $this->pdo->exec("ALTER TABLE return_requests ADD COLUMN selected_items TEXT NULL AFTER reason");
+            }
+        } catch (Throwable $e) {
+            // Keep existing return flow working if schema check fails.
+        }
     }
 
     public function findById($id) {
@@ -36,8 +48,53 @@ class ReturnRequest {
     }
 
     public function create($data) {
-        $stmt = $this->pdo->prepare("INSERT INTO return_requests (order_id, user_id, reason) VALUES (?, ?, ?)");
-        return $stmt->execute([$data['order_id'], $data['user_id'], $data['reason']]);
+        $selectedItems = $data['selected_items'] ?? null;
+        if (is_array($selectedItems)) {
+            $selectedItems = json_encode(array_values($selectedItems));
+        }
+
+        $stmt = $this->pdo->prepare("INSERT INTO return_requests (order_id, user_id, reason, selected_items) VALUES (?, ?, ?, ?)");
+        return $stmt->execute([$data['order_id'], $data['user_id'], $data['reason'], $selectedItems]);
+    }
+
+    public function getSelectedItemIds($returnRequest) {
+        if (empty($returnRequest['selected_items'])) {
+            return [];
+        }
+
+        $decoded = json_decode($returnRequest['selected_items'], true);
+        if (!is_array($decoded)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('intval', $decoded)));
+    }
+
+    public function getSelectedItemsSummary($returnRequest) {
+        $itemIds = $this->getSelectedItemIds($returnRequest);
+        if (empty($itemIds)) {
+            return 'All order items';
+        }
+
+        $placeholders = implode(',', array_fill(0, count($itemIds), '?'));
+        $params = array_merge([(int) $returnRequest['order_id']], $itemIds);
+        $stmt = $this->pdo->prepare(
+            "SELECT p.name, oi.quantity
+             FROM order_items oi
+             JOIN products p ON oi.product_id = p.id
+             WHERE oi.order_id = ? AND oi.id IN ($placeholders)
+             ORDER BY oi.id ASC"
+        );
+        $stmt->execute($params);
+
+        $items = $stmt->fetchAll();
+        if (!$items) {
+            return 'Selected items unavailable';
+        }
+
+        return implode(', ', array_map(function ($item) {
+            return $item['name'] . ' (qty: ' . (int) $item['quantity'] . ')';
+        }, $items));
     }
 
     public function updateStatus($id, $status, $adminNotes = null) {
