@@ -12,6 +12,8 @@ require_once __DIR__ . '/../models/StockMovement.php';
 require_once __DIR__ . '/../models/Payment.php';
 require_once __DIR__ . '/../models/Log.php';
 require_once __DIR__ . '/../models/Notification.php';
+require_once __DIR__ . '/../includes/Mailer.php';
+require_once __DIR__ . '/../models/User.php';
 
 class ReturnController {
     private $returnModel;
@@ -195,6 +197,68 @@ class ReturnController {
                             $notifTypes[$status],
                             APP_URL . '/index.php?url=orders/' . $return['order_id']
                         );
+                    }
+
+                    // Send return status email
+                    $emailStatuses = ['approved', 'rejected', 'completed'];
+                    if (in_array($status, $emailStatuses)) {
+                        $userModel = new User($this->pdo);
+                        $user = $userModel->findById($return['user_id']);
+                        $customerEmail = $user['email'] ?? '';
+
+                        if ($customerEmail) {
+                            $statusMeta = [
+                                'approved' => [
+                                    'label'   => 'Return Approved',
+                                    'color'   => '#16A34A',
+                                    'icon'    => '&#10003;',
+                                    'message' => 'Good news! Your return request for order #' . $order['order_number'] . ' has been approved by our team.',
+                                    'next'    => 'Please prepare the item(s) for return. Our team will reach out with further instructions on how to send the items back.',
+                                ],
+                                'rejected' => [
+                                    'label'   => 'Return Rejected',
+                                    'color'   => '#DC2626',
+                                    'icon'    => '&#10007;',
+                                    'message' => 'Unfortunately, your return request for order #' . $order['order_number'] . ' could not be approved.',
+                                    'next'    => $adminNotes ? 'Reason: ' . htmlspecialchars($adminNotes) . ' If you think this is a mistake, please contact us.' : 'If you believe this is a mistake or need further assistance, please contact our support team.',
+                                ],
+                                'completed' => [
+                                    'label'   => 'Return Completed',
+                                    'color'   => '#3B82F6',
+                                    'icon'    => '&#9679;',
+                                    'message' => 'Your return for order #' . $order['order_number'] . ' has been completed. A refund is now being processed.',
+                                    'next'    => 'Your refund will be credited back to your original payment method within 3-7 business days depending on your bank or payment provider.',
+                                ],
+                            ];
+
+                            $meta = $statusMeta[$status];
+                            $customerName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
+                            $orderUrl = APP_URL . '/index.php?url=orders/' . $return['order_id'];
+
+                            // Admin notes row (only shown if notes exist)
+                            $adminNotesRow = '';
+                            if ($adminNotes) {
+                                $adminNotesRow = '<tr><td style="color:#6B7280;font-size:13px;padding:4px 0;">Staff Notes</td><td align="right" style="color:#1C1C1C;font-weight:600;font-size:13px;padding:4px 0;">' . htmlspecialchars($adminNotes) . '</td></tr>';
+                            }
+
+                            $templatePath = ROOT_PATH . '/templates/email/return-status.html';
+                            $html = file_get_contents($templatePath);
+                            $html = str_replace('STATUS_BG_COLOR',   $meta['color'],                                      $html);
+                            $html = str_replace('STATUS_ICON',        $meta['icon'],                                       $html);
+                            $html = str_replace('{{app_name}}',       APP_NAME,                                            $html);
+                            $html = str_replace('{{customer_name}}',  htmlspecialchars($customerName),                     $html);
+                            $html = str_replace('{{order_number}}',   htmlspecialchars($order['order_number']),            $html);
+                            $html = str_replace('{{return_reason}}',  htmlspecialchars($return['reason'] ?? 'N/A'),        $html);
+                            $html = str_replace('{{status_label}}',   $meta['label'],                                      $html);
+                            $html = str_replace('{{status_message}}', $meta['message'],                                    $html);
+                            $html = str_replace('{{next_step}}',      $meta['next'],                                       $html);
+                            $html = str_replace('{{admin_notes_row}}', $adminNotesRow,                                     $html);
+                            $html = str_replace('{{order_url}}',      $orderUrl,                                           $html);
+                            $html = str_replace('{{receipt_email}}',  htmlspecialchars($customerEmail),                    $html);
+
+                            $subject = $meta['icon'] . ' Return ' . $meta['label'] . ' - Order #' . $order['order_number'] . ' | ' . APP_NAME;
+                            (new Mailer())->send($customerEmail, $customerName, $subject, $html);
+                        }
                     }
                 }
             } catch (Throwable $e) { /* silent */ }

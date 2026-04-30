@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Return Request Update</title>
+</head>
+<body style="margin:0;padding:0;background:#F4F4F4;font-family:Arial,Helvetica,sans-serif;color:#1C1C1C;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F4F4F4;padding:24px 0;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background:#FFFFFF;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.08);overflow:hidden;">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background:linear-gradient(135deg,#F97316,#EA580C);color:#FFFFFF;padding:28px 28px 24px;">
+                            <h1 style="margin:0;font-size:22px;font-weight:800;letter-spacing:.3px;">{{app_name}}</h1>
+                            <p style="margin:6px 0 0 0;font-size:13px;opacity:.85;">Return Request Update</p>
+                        </td>
+                    </tr>
+
+                    <!-- Status Badge -->
+                    <tr>
+                        <td style="padding:28px 28px 0;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" style="margin-bottom:12px;">
+                                <tr>
+                                    <td style="background:STATUS_BG_COLOR;border-radius:20px;padding:6px 18px;">
+                                        <span style="color:#FFFFFF;font-size:13px;font-weight:700;letter-spacing:.4px;">STATUS_ICON {{status_label}}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="margin:0 0 4px 0;color:#4A4A4A;font-size:14px;">Hi {{customer_name}},</p>
+                            <p style="margin:0 0 20px 0;color:#4A4A4A;font-size:14px;">{{status_message}}</p>
+                        </td>
+                    </tr>
+
+                    <!-- Return Details -->
+                    <tr>
+                        <td style="padding:0 28px;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F9FAFB;border-radius:8px;padding:16px;margin-bottom:16px;">
+                                <tr>
+                                    <td style="padding:6px 16px;">
+                                        <table width="100%" cellspacing="0" cellpadding="0">
+                                            <tr>
+                                                <td style="color:#6B7280;font-size:13px;padding:4px 0;">Order Number</td>
+                                                <td align="right" style="color:#1C1C1C;font-weight:700;font-size:13px;padding:4px 0;">{{order_number}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color:#6B7280;font-size:13px;padding:4px 0;">Return Reason</td>
+                                                <td align="right" style="color:#1C1C1C;font-weight:600;font-size:13px;padding:4px 0;">{{return_reason}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color:#6B7280;font-size:13px;padding:4px 0;">Return Status</td>
+                                                <td align="right" style="color:STATUS_BG_COLOR;font-weight:700;font-size:13px;padding:4px 0;">{{status_label}}</td>
+                                            </tr>
+                                            {{admin_notes_row}}
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- What's Next -->
+                    <tr>
+                        <td style="padding:0 28px 16px;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#FFF7ED;border-left:4px solid #F97316;border-radius:4px;padding:14px 16px;">
+                                <tr>
+                                    <td>
+                                        <p style="margin:0 0 4px 0;font-size:13px;font-weight:700;color:#92400E;">What's next?</p>
+                                        <p style="margin:0;font-size:13px;color:#4A4A4A;line-height:1.6;">{{next_step}}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- CTA -->
+                    <tr>
+                        <td style="padding:8px 28px 24px;">
+                            <table role="presentation" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td style="border-radius:8px;background:#F97316;">
+                                        <a href="{{order_url}}" style="display:inline-block;padding:12px 28px;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:14px;">View Order</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding:0 28px 24px;">
+                            <p style="margin:0;color:#9CA3AF;font-size:11px;line-height:1.5;">
+                                This notification was sent to {{receipt_email}}. If you have questions about your return, please contact us.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+
+                <p style="margin:16px 0 0 0;color:#9E9E9E;font-size:12px;">{{app_name}} &bull; Davao City, Philippines</p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
