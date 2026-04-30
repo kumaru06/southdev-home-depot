@@ -32,9 +32,10 @@ switch ($urlParts[0]) {
         require_once __DIR__ . '/../models/Cart.php';
         $cart = new Cart($pdo);
 
-        if ($urlParts[1] === 'count') {
+        if (($urlParts[1] ?? '') === 'count') {
             jsonResponse(['count' => $cart->getCartCount($_SESSION['user_id'])]);
         }
+        jsonResponse(['error' => 'Endpoint not found'], 404);
         break;
 
     case 'orders':
@@ -50,6 +51,7 @@ switch ($urlParts[0]) {
                 jsonResponse(['error' => 'Order not found'], 404);
             }
         }
+        jsonResponse(['error' => 'Endpoint not found'], 404);
         break;
 
     default:

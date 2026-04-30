@@ -4,6 +4,40 @@ $extraJs = ['charts.js'];
 require_once INCLUDES_PATH . '/header.php';
 require_once INCLUDES_PATH . '/sidebar.php';
 $activeTab = $_GET['tab'] ?? 'sales';
+
+// Date filter vars passed from controller
+$filterPreset   = $preset   ?? 'all';
+$filterDateFrom = $dateFrom ?? '';
+$filterDateTo   = $dateTo   ?? '';
+
+// Build query string helper for tab/filter links
+function reportTabUrl($tab, $preset, $dateFrom, $dateTo, $url = 'staff/reports') {
+    $params = ['url' => $url, 'tab' => $tab, 'preset' => $preset];
+    if ($preset === 'custom') {
+        if ($dateFrom) $params['date_from'] = $dateFrom;
+        if ($dateTo)   $params['date_to']   = $dateTo;
+    }
+    return 'index.php?' . http_build_query($params);
+}
+$baseUrl   = $_GET['url'] ?? 'staff/reports';
+
+// Human-readable date range label
+function filterLabel($preset, $dateFrom, $dateTo) {
+    $fmt = fn($d) => date('M j, Y', strtotime($d));
+    switch ($preset) {
+        case 'today':      return 'Today — ' . $fmt(date('Y-m-d'));
+        case 'week':       return 'This Week: ' . $fmt(date('Y-m-d', strtotime('monday this week'))) . ' – ' . $fmt(date('Y-m-d'));
+        case 'month':      return 'This Month: ' . $fmt(date('Y-m-01')) . ' – ' . $fmt(date('Y-m-d'));
+        case 'last_month': return 'Last Month: ' . $fmt(date('Y-m-01', strtotime('first day of last month'))) . ' – ' . $fmt(date('Y-m-t', strtotime('last day of last month')));
+        case 'year':       return 'This Year: ' . $fmt(date('Y-01-01')) . ' – ' . $fmt(date('Y-m-d'));
+        case 'all':        return 'All Time';
+        case 'custom':
+            if ($dateFrom && $dateTo) return $fmt($dateFrom) . ' – ' . $fmt($dateTo);
+            if ($dateFrom) return 'From ' . $fmt($dateFrom);
+            if ($dateTo)   return 'Until ' . $fmt($dateTo);
+        default: return 'All Time';
+    }
+}
 ?>
 
 <div class="main-content">
@@ -17,15 +51,61 @@ $activeTab = $_GET['tab'] ?? 'sales';
     <div class="page-content">
         <!-- Report Tabs -->
         <div class="report-tabs" style="display:flex;gap:0;margin-bottom:1.5rem;border-bottom:2px solid var(--border);">
-            <a href="?url=<?= $_GET['url'] ?? 'staff/reports' ?>&tab=sales" class="report-tab <?= $activeTab === 'sales' ? 'active' : '' ?>">
+            <a href="<?= reportTabUrl('sales', $filterPreset, $filterDateFrom, $filterDateTo, $baseUrl) ?>" class="report-tab <?= $activeTab === 'sales' ? 'active' : '' ?>">
                 <i data-lucide="trending-up" style="width:16px;height:16px"></i> Sales Report
             </a>
-            <a href="?url=<?= $_GET['url'] ?? 'staff/reports' ?>&tab=inventory" class="report-tab <?= $activeTab === 'inventory' ? 'active' : '' ?>">
+            <a href="<?= reportTabUrl('inventory', $filterPreset, $filterDateFrom, $filterDateTo, $baseUrl) ?>" class="report-tab <?= $activeTab === 'inventory' ? 'active' : '' ?>">
                 <i data-lucide="warehouse" style="width:16px;height:16px"></i> Inventory Report
             </a>
-            <a href="?url=<?= $_GET['url'] ?? 'staff/reports' ?>&tab=returns" class="report-tab <?= $activeTab === 'returns' ? 'active' : '' ?>">
+            <a href="<?= reportTabUrl('returns', $filterPreset, $filterDateFrom, $filterDateTo, $baseUrl) ?>" class="report-tab <?= $activeTab === 'returns' ? 'active' : '' ?>">
                 <i data-lucide="rotate-ccw" style="width:16px;height:16px"></i> Returns Report
             </a>
+        </div>
+
+        <!-- ===== DATE RANGE FILTER BAR ===== -->
+        <div class="date-filter-bar" style="background:var(--card-bg,#fff);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;">
+            <span style="font-weight:600;font-size:.85rem;color:var(--text-muted,#6b7280);white-space:nowrap;">Filter by date:</span>
+            <?php
+            $presets = [
+                'today'      => 'Today',
+                'week'       => 'This Week',
+                'month'      => 'This Month',
+                'last_month' => 'Last Month',
+                'year'       => 'This Year',
+                'all'        => 'All Time',
+            ];
+            foreach ($presets as $key => $label):
+                $isActive = $filterPreset === $key;
+            ?>
+            <a href="<?= reportTabUrl($activeTab, $key, '', '', $baseUrl) ?>"
+               style="padding:.35rem .85rem;border-radius:6px;font-size:.82rem;font-weight:600;text-decoration:none;transition:all .15s;
+                      <?= $isActive ? 'background:var(--primary,#f97316);color:#fff;border:1px solid var(--primary,#f97316);' : 'background:transparent;color:var(--text-muted,#6b7280);border:1px solid var(--border);' ?>">
+                <?= $label ?>
+            </a>
+            <?php endforeach; ?>
+
+            <!-- Custom date range form -->
+            <form method="GET" action="index.php" style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-left:.5rem;">
+                <input type="hidden" name="url" value="<?= htmlspecialchars($baseUrl) ?>">
+                <input type="hidden" name="tab" value="<?= htmlspecialchars($activeTab) ?>">
+                <input type="hidden" name="preset" value="custom">
+                <label style="font-size:.82rem;color:var(--text-muted,#6b7280);font-weight:500;">From</label>
+                <input type="date" name="date_from" value="<?= htmlspecialchars($filterDateFrom) ?>"
+                       style="border:1px solid var(--border);border-radius:6px;padding:.3rem .55rem;font-size:.82rem;background:var(--input-bg,#f9fafb);color:var(--text,#111);">
+                <label style="font-size:.82rem;color:var(--text-muted,#6b7280);font-weight:500;">To</label>
+                <input type="date" name="date_to" value="<?= htmlspecialchars($filterDateTo) ?>"
+                       style="border:1px solid var(--border);border-radius:6px;padding:.3rem .55rem;font-size:.82rem;background:var(--input-bg,#f9fafb);color:var(--text,#111);">
+                <button type="submit"
+                        style="padding:.35rem .85rem;border-radius:6px;border:1px solid var(--primary,#f97316);background:<?= $filterPreset === 'custom' ? 'var(--primary,#f97316)' : 'transparent' ?>;color:<?= $filterPreset === 'custom' ? '#fff' : 'var(--primary,#f97316)' ?>;font-size:.82rem;font-weight:600;cursor:pointer;">
+                    Apply
+                </button>
+            </form>
+
+            <!-- Active label -->
+            <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted,#6b7280);white-space:nowrap;">
+                <i data-lucide="calendar-range" style="width:13px;height:13px;vertical-align:middle;"></i>
+                Showing: <strong><?= htmlspecialchars(filterLabel($filterPreset, $filterDateFrom, $filterDateTo)) ?></strong>
+            </span>
         </div>
 
         <!-- ===== SALES TAB ===== -->

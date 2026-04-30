@@ -43,41 +43,154 @@ class ReportController {
             return $this->handleExport($_GET['export']);
         }
 
-        // ===== SALES DATA =====
-        $totalSales  = $this->orderModel->getTotalSales();
-        $topProducts = $this->orderItemModel->getTopProducts(10);
+        // ===== DATE RANGE FILTER =====
+        $preset   = $_GET['preset'] ?? 'all';
+        $dateFrom = $_GET['date_from'] ?? '';
+        $dateTo   = $_GET['date_to']   ?? '';
 
-        // Monthly sales data
+        // Resolve preset to actual dates
+        switch ($preset) {
+            case 'today':
+                $dateFrom = date('Y-m-d');
+                $dateTo   = date('Y-m-d');
+                break;
+            case 'week':
+                $dateFrom = date('Y-m-d', strtotime('monday this week'));
+                $dateTo   = date('Y-m-d');
+                break;
+            case 'month':
+                $dateFrom = date('Y-m-01');
+                $dateTo   = date('Y-m-d');
+                break;
+            case 'last_month':
+                $dateFrom = date('Y-m-01', strtotime('first day of last month'));
+                $dateTo   = date('Y-m-t', strtotime('last day of last month'));
+                break;
+            case 'year':
+                $dateFrom = date('Y-01-01');
+                $dateTo   = date('Y-m-d');
+                break;
+            case 'custom':
+                // use whatever was passed in date_from / date_to (validated below)
+                break;
+            default: // 'all'
+                $dateFrom = '';
+                $dateTo   = '';
+        }
+
+        // Sanitise custom dates
+        if ($dateFrom && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) $dateFrom = '';
+        if ($dateTo   && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo))   $dateTo   = '';
+        // Swap if reversed
+        if ($dateFrom && $dateTo && $dateFrom > $dateTo) [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
+
+        // WHERE clause for queries that JOIN orders as alias `o`
+        $dateWhereOrders  = '';
+        $dateBindOrders   = [];
+        if ($dateFrom && $dateTo) {
+            $dateWhereOrders = " AND DATE(o.created_at) BETWEEN ? AND ?";
+            $dateBindOrders  = [$dateFrom, $dateTo];
+        } elseif ($dateFrom) {
+            $dateWhereOrders = " AND DATE(o.created_at) >= ?";
+            $dateBindOrders  = [$dateFrom];
+        } elseif ($dateTo) {
+            $dateWhereOrders = " AND DATE(o.created_at) <= ?";
+            $dateBindOrders  = [$dateTo];
+        }
+
+        // WHERE clause for direct queries on `orders` table (no alias)
+        $dateWhereOrdersRaw  = '';
+        $dateBindOrdersRaw   = [];
+        if ($dateFrom && $dateTo) {
+            $dateWhereOrdersRaw = " AND DATE(created_at) BETWEEN ? AND ?";
+            $dateBindOrdersRaw  = [$dateFrom, $dateTo];
+        } elseif ($dateFrom) {
+            $dateWhereOrdersRaw = " AND DATE(created_at) >= ?";
+            $dateBindOrdersRaw  = [$dateFrom];
+        } elseif ($dateTo) {
+            $dateWhereOrdersRaw = " AND DATE(created_at) <= ?";
+            $dateBindOrdersRaw  = [$dateTo];
+        }
+
+        // WHERE clause for return_requests (no alias — single-table queries)
+        $dateWhereReturns = '';
+        $dateBindReturns  = [];
+        if ($dateFrom && $dateTo) {
+            $dateWhereReturns = " AND DATE(created_at) BETWEEN ? AND ?";
+            $dateBindReturns  = [$dateFrom, $dateTo];
+        } elseif ($dateFrom) {
+            $dateWhereReturns = " AND DATE(created_at) >= ?";
+            $dateBindReturns  = [$dateFrom];
+        } elseif ($dateTo) {
+            $dateWhereReturns = " AND DATE(created_at) <= ?";
+            $dateBindReturns  = [$dateTo];
+        }
+
+        // WHERE clause for return_requests aliased as `rr` (JOIN queries)
+        $dateWhereReturnsRr = '';
+        if ($dateFrom && $dateTo) {
+            $dateWhereReturnsRr = " AND DATE(rr.created_at) BETWEEN ? AND ?";
+        } elseif ($dateFrom) {
+            $dateWhereReturnsRr = " AND DATE(rr.created_at) >= ?";
+        } elseif ($dateTo) {
+            $dateWhereReturnsRr = " AND DATE(rr.created_at) <= ?";
+        }
+
+        // ===== SALES DATA =====
+        // Total sales (filtered)
+        $totalSalesSql = "SELECT COALESCE(SUM(o.total_amount), 0) as total
+                          FROM orders o LEFT JOIN payments p ON p.order_id = o.id
+                          WHERE o.status != 'cancelled'
+                          AND (p.status IS NULL OR p.status != 'refunded')"
+                          . $dateWhereOrders;
+        $stmtTs = $this->pdo->prepare($totalSalesSql);
+        $stmtTs->execute($dateBindOrders);
+        $totalSales = floatval($stmtTs->fetchColumn());
+
+        // Top products (filtered)
+        $topProductsSql = "SELECT p.name, SUM(oi.quantity) as total_sold, SUM(oi.subtotal) as total_revenue
+                           FROM order_items oi
+                           JOIN orders o ON oi.order_id = o.id
+                           JOIN products p ON oi.product_id = p.id
+                           WHERE o.status != 'cancelled'"
+                           . $dateWhereOrders .
+                           " GROUP BY p.id ORDER BY total_sold DESC LIMIT 10";
+        $stmtTp = $this->pdo->prepare($topProductsSql);
+        $stmtTp->execute($dateBindOrders);
+        $topProducts = $stmtTp->fetchAll();
+
+        // Monthly sales chart data (always show last 12 months trend, ignore date filter for chart continuity)
         $stmt = $this->pdo->query("
             SELECT DATE_FORMAT(o.created_at, '%Y-%m') as month, SUM(o.total_amount) as total
-            FROM orders o
-            LEFT JOIN payments p ON p.order_id = o.id
+            FROM orders o LEFT JOIN payments p ON p.order_id = o.id
             WHERE o.status != 'cancelled'
             AND (p.status IS NULL OR p.status != 'refunded')
             GROUP BY month ORDER BY month DESC LIMIT 12
         ");
         $monthlySales = $stmt->fetchAll();
 
-        // Order status counts
-        $stmt = $this->pdo->query("SELECT status, COUNT(*) as count FROM orders GROUP BY status");
-        $orderStatusCounts = $stmt->fetchAll();
+        // Order status counts (filtered)
+        $statusSql = "SELECT status, COUNT(*) as count FROM orders WHERE 1=1" . $dateWhereOrdersRaw . " GROUP BY status";
+        $stmtSt = $this->pdo->prepare($statusSql);
+        $stmtSt->execute($dateBindOrdersRaw);
+        $orderStatusCounts = $stmtSt->fetchAll();
 
-        // Total customers
+        // Total customers (all-time – not date-filtered, customers don't belong to a period)
         $stmt = $this->pdo->query("SELECT COUNT(*) as count FROM users WHERE role_id = 1");
         $totalCustomers = $stmt->fetch()['count'] ?? 0;
 
-        // Total orders
-        $stmt = $this->pdo->query("SELECT COUNT(*) as count FROM orders");
-        $totalOrders = $stmt->fetch()['count'] ?? 0;
+        // Total orders (filtered)
+        $stmtTo = $this->pdo->prepare("SELECT COUNT(*) as count FROM orders WHERE 1=1" . $dateWhereOrdersRaw);
+        $stmtTo->execute($dateBindOrdersRaw);
+        $totalOrders = $stmtTo->fetch()['count'] ?? 0;
 
-        // ===== INVENTORY DATA =====
+        // ===== INVENTORY DATA (snapshot – not date-filtered) =====
         $allInventory = $this->inventoryModel->getAll();
         $lowStockItems = $this->inventoryModel->getLowStock();
         $totalInventoryValue = 0;
         $totalStockUnits = 0;
         $outOfStockCount = 0;
         foreach ($allInventory as $inv) {
-            // Prefer `cost` for accounting/valuation when available; fall back to selling `price` otherwise.
             $unitVal = 0.0;
             if (isset($inv['cost']) && $inv['cost'] !== null && $inv['cost'] !== '') {
                 $unitVal = floatval($inv['cost']);
@@ -91,30 +204,30 @@ class ReportController {
             }
         }
 
-        // Stock movement summary (last 30 days)
-        $dateFrom = date('Y-m-d', strtotime('-30 days'));
-        $dateTo = date('Y-m-d');
-        $stockSummary = $this->stockMovementModel->getSummary($dateFrom, $dateTo);
+        // Stock movement summary (use date filter if set, else last 30 days)
+        $smFrom = $dateFrom ?: date('Y-m-d', strtotime('-30 days'));
+        $smTo   = $dateTo   ?: date('Y-m-d');
+        $stockSummary = $this->stockMovementModel->getSummary($smFrom, $smTo);
 
-        // ===== RETURNS DATA =====
-        $stmt = $this->pdo->query("SELECT status, COUNT(*) as count FROM return_requests GROUP BY status");
-        $returnStatusCounts = $stmt->fetchAll();
-        $totalReturns = 0;
-        foreach ($returnStatusCounts as $r) {
-            $totalReturns += intval($r['count']);
-        }
+        // ===== RETURNS DATA (filtered) =====
+        $retStatusSql = "SELECT status, COUNT(*) as count FROM return_requests WHERE 1=1" . $dateWhereReturns . " GROUP BY status";
+        $stmtRs = $this->pdo->prepare($retStatusSql);
+        $stmtRs->execute($dateBindReturns);
+        $returnStatusCounts = $stmtRs->fetchAll();
+        $totalReturns = array_sum(array_column($returnStatusCounts, 'count'));
 
-        // Recent returns
-        $stmt = $this->pdo->query("
-            SELECT rr.*, o.order_number, u.first_name, u.last_name
-            FROM return_requests rr
-            JOIN orders o ON rr.order_id = o.id
-            JOIN users u ON rr.user_id = u.id
-            ORDER BY rr.created_at DESC LIMIT 10
-        ");
-        $recentReturns = $stmt->fetchAll();
+        // Recent returns (filtered)
+        $retRecentSql = "SELECT rr.*, o.order_number, u.first_name, u.last_name
+                         FROM return_requests rr
+                         JOIN orders o ON rr.order_id = o.id
+                         JOIN users u ON rr.user_id = u.id
+                         WHERE 1=1" . $dateWhereReturnsRr . "
+                         ORDER BY rr.created_at DESC LIMIT 10";
+        $stmtRr = $this->pdo->prepare($retRecentSql);
+        $stmtRr->execute($dateBindReturns);
+        $recentReturns = $stmtRr->fetchAll();
 
-        // Monthly returns trend
+        // Monthly returns trend (always last 12 months for chart)
         $stmt = $this->pdo->query("SELECT DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as count FROM return_requests GROUP BY month ORDER BY month DESC LIMIT 12");
         $monthlyReturns = $stmt->fetchAll();
 
