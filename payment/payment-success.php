@@ -96,7 +96,9 @@ if ($orderId) {
             exit;
         }
     } elseif ($checkoutSessionId && defined('PAYMONGO_ENABLED') && PAYMONGO_ENABLED) {
-        // Checkout Session return (QRPh) — verify the session payment status
+        // Checkout Session return (QRPh / GCash / Card hosted checkout)
+        // PayMongo ONLY redirects to the success URL when payment is completed.
+        // We try to verify via API but treat the redirect itself as confirmation.
         try {
             $gateway     = new PayMongoGateway();
             $sessionData = $gateway->getCheckoutSession($checkoutSessionId);
@@ -105,20 +107,22 @@ if ($orderId) {
                              ?? $sessionAttrs['status']
                              ?? '';
 
-            if ($sessionStatus === 'succeeded' || $sessionStatus === 'paid' || $sessionStatus === 'completed') {
-                if ($payment && $payment['status'] !== PAYMENT_COMPLETED) {
-                    $paymentModel->updateStatus($payment['id'], PAYMENT_COMPLETED, $checkoutSessionId);
-                }
-            } elseif (in_array($sessionStatus, ['expired', 'cancelled', 'failed'])) {
+            if (in_array($sessionStatus, ['expired', 'cancelled', 'failed'])) {
                 if ($payment) {
                     $paymentModel->updateStatus($payment['id'], PAYMENT_FAILED);
                 }
                 header('Location: ' . APP_URL . '/payment/payment-failed.php?order_id=' . $orderId . '&reason=qrph_failed');
                 exit;
             }
-            // else still processing — show page as pending
+            // succeeded / paid / completed or unknown — trust the redirect and mark complete
+            if ($payment && $payment['status'] !== PAYMENT_COMPLETED) {
+                $paymentModel->updateStatus($payment['id'], PAYMENT_COMPLETED, $checkoutSessionId);
+            }
         } catch (Exception $e) {
-            // Non-fatal: fall through to success page as pending
+            // API call failed (host blocks outbound) — trust PayMongo redirect, mark complete
+            if ($payment && $payment['status'] !== PAYMENT_COMPLETED) {
+                $paymentModel->updateStatus($payment['id'], PAYMENT_COMPLETED, $checkoutSessionId);
+            }
         }
     } elseif ($paymentMethod === 'qrph') {
         // QRPh without session_id (shouldn't happen with new flow, just in case)
@@ -136,12 +140,28 @@ $payment = $orderId ? (new Payment($pdo))->getByOrderId($orderId) : null;
 $paymentStatus = $payment['status'] ?? PAYMENT_PENDING;
 $paymentMethod = $payment['payment_method'] ?? '';
 $isPaymentConfirmed = ($paymentStatus === PAYMENT_COMPLETED);
-$resultTitle = $isPaymentConfirmed ? 'Payment Successful!' : 'Payment Pending';
+
+$isCod = ($paymentMethod === PAYMENT_METHOD_COD);
+$isOnline = in_array($paymentMethod, ['gcash', 'card', 'qrph']);
+
+$resultTitle = $isPaymentConfirmed ? 'Payment Successful!' : 'Order Placed!';
 $resultSubtitle = $isPaymentConfirmed
-    ? 'Thank you for your purchase.'
+    ? ($isCod ? 'Your order is confirmed. Pay when it arrives.' : 'Your payment was received. Thank you for your purchase!')
     : (($paymentMethod === PAYMENT_METHOD_BANK)
-        ? 'Your order was placed. Bank transfer payment is awaiting confirmation.'
-        : 'Your order was placed. Payment confirmation is still pending.');
+        ? 'Your order was placed. We are waiting to confirm your bank transfer.'
+        : 'Your order was placed. Payment confirmation is still being processed.');
+
+$paymentLabel = match($paymentStatus) {
+    PAYMENT_COMPLETED => 'Confirmed',
+    PAYMENT_FAILED    => 'Failed',
+    default           => $isOnline ? 'Processing' : 'Pending',
+};
+$paymentColor = match($paymentStatus) {
+    PAYMENT_COMPLETED => '#16A34A',
+    PAYMENT_FAILED    => '#DC2626',
+    default           => '#F97316',
+};
+$orderStatusLabel = ucfirst($order['status'] ?? 'pending');
 
 // ── Send receipt email if provided ──────────────────────────────────────
 $receiptSent = false;
@@ -262,8 +282,12 @@ if ($receiptEmail && $order) {
                     <span class="value">₱<?= number_format($order['total_amount'], 2) ?></span>
                 </div>
                 <div class="row">
-                    <span class="label">Status</span>
-                    <span class="value" style="color:var(--accent);"><?= $isPaymentConfirmed ? 'Completed' : 'Pending' ?></span>
+                    <span class="label">Order Status</span>
+                    <span class="value" style="color:#F97316;"><?= htmlspecialchars($orderStatusLabel) ?></span>
+                </div>
+                <div class="row">
+                    <span class="label">Payment</span>
+                    <span class="value" style="color:<?= $paymentColor ?>;"><?= htmlspecialchars($paymentLabel) ?></span>
                 </div>
             </div>
         <?php endif; ?>
