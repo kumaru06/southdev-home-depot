@@ -21,6 +21,13 @@ function reportTabUrl($tab, $preset, $dateFrom, $dateTo, $url = 'staff/reports')
 }
 $baseUrl   = $_GET['url'] ?? 'staff/reports';
 
+// Build date params string to append to export URLs
+$exportDateQuery = '';
+if ($filterDateFrom || $filterDateTo) {
+    if ($filterDateFrom) $exportDateQuery .= '&date_from=' . urlencode($filterDateFrom);
+    if ($filterDateTo)   $exportDateQuery .= '&date_to='   . urlencode($filterDateTo);
+}
+
 // Human-readable date range label
 function filterLabel($preset, $dateFrom, $dateTo) {
     $fmt = fn($d) => date('M j, Y', strtotime($d));
@@ -120,21 +127,21 @@ function filterLabel($preset, $dateFrom, $dateTo) {
                 <div class="export-group">
                     <h4><i data-lucide="trending-up" style="width:14px;height:14px;"></i> Sales Reports</h4>
                     <div class="export-buttons">
-                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($_GET['url'] ?? 'staff/reports') ?>&export=sales_rows" class="export-btn export-btn--sales">
+                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($baseUrl) ?>&export=sales_rows<?= $exportDateQuery ?>" class="export-btn export-btn--sales">
                             <i data-lucide="file-text" style="width:16px;height:16px;"></i>
                             <span>
                                 <strong>Detailed Sales</strong>
                                 <small>All transactions row by row</small>
                             </span>
                         </a>
-                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($_GET['url'] ?? 'staff/reports') ?>&export=sales_daily" class="export-btn export-btn--sales">
+                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($baseUrl) ?>&export=sales_daily<?= $exportDateQuery ?>" class="export-btn export-btn--sales">
                             <i data-lucide="calendar" style="width:16px;height:16px;"></i>
                             <span>
                                 <strong>Daily Sales</strong>
                                 <small>Aggregated per day</small>
                             </span>
                         </a>
-                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($_GET['url'] ?? 'staff/reports') ?>&export=sales_monthly" class="export-btn export-btn--sales">
+                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($baseUrl) ?>&export=sales_monthly<?= $exportDateQuery ?>" class="export-btn export-btn--sales">
                             <i data-lucide="bar-chart-3" style="width:16px;height:16px;"></i>
                             <span>
                                 <strong>Monthly Sales</strong>
@@ -146,28 +153,28 @@ function filterLabel($preset, $dateFrom, $dateTo) {
                 <div class="export-group">
                     <h4><i data-lucide="warehouse" style="width:14px;height:14px;"></i> Inventory Reports</h4>
                     <div class="export-buttons">
-                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($_GET['url'] ?? 'staff/reports') ?>&export=current_inventory" class="export-btn export-btn--inv">
+                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($baseUrl) ?>&export=current_inventory<?= $exportDateQuery ?>" class="export-btn export-btn--inv">
                             <i data-lucide="package" style="width:16px;height:16px;"></i>
                             <span>
                                 <strong>Current Inventory</strong>
                                 <small>Stock levels, values, status</small>
                             </span>
                         </a>
-                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($_GET['url'] ?? 'staff/reports') ?>&export=inventory_added" class="export-btn export-btn--inv">
+                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($baseUrl) ?>&export=inventory_added<?= $exportDateQuery ?>" class="export-btn export-btn--inv">
                             <i data-lucide="plus-circle" style="width:16px;height:16px;"></i>
                             <span>
                                 <strong>Inventory Added</strong>
                                 <small>All stock-in movements</small>
                             </span>
                         </a>
-                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($_GET['url'] ?? 'staff/reports') ?>&export=inventory_combined" class="export-btn export-btn--inv">
+                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($baseUrl) ?>&export=inventory_combined<?= $exportDateQuery ?>" class="export-btn export-btn--inv">
                             <i data-lucide="bar-chart-2" style="width:16px;height:16px;"></i>
                             <span>
                                 <strong>Inventory Combined</strong>
                                 <small>Added + Removed = Current Stock</small>
                             </span>
                         </a>
-                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($_GET['url'] ?? 'staff/reports') ?>&export=damaged_inventory" class="export-btn export-btn--dmg">
+                        <a href="<?= APP_URL ?>/index.php?url=<?= htmlspecialchars($baseUrl) ?>&export=damaged_inventory<?= $exportDateQuery ?>" class="export-btn export-btn--dmg">
                             <i data-lucide="alert-octagon" style="width:16px;height:16px;"></i>
                             <span>
                                 <strong>Damaged Inventory</strong>

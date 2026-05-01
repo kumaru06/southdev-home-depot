@@ -6,6 +6,7 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/constants.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../models/Notification.php';
 
 // Auth check (session already started in config.php)
 if (!isset($_SESSION['user_id'])) {
@@ -38,6 +39,17 @@ if ($orderId) {
         if (in_array($order['status'], ['pending', 'payment_pending'])) {
             $orderModel->cancelOrder($orderId, null, 'Payment was cancelled or failed by the customer');
             $order = $orderModel->findById($orderId); // refresh
+            // Notify customer: order cancelled due to failed payment
+            try {
+                $notif = new Notification($pdo);
+                $notif->create(
+                    (int)$_SESSION['user_id'],
+                    'Order Cancelled',
+                    "Your order #{$order['order_number']} was cancelled because the payment failed or was not completed.",
+                    'order_cancelled',
+                    APP_URL . '/index.php?url=orders/' . $orderId
+                );
+            } catch (Throwable $e) { /* silent */ }
         }
     }
 }

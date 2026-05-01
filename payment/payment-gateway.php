@@ -122,50 +122,160 @@ $pageTitle = 'Payment';
 
         <?php elseif ($method === 'gcash'): ?>
             <?php if (defined('PAYMONGO_ENABLED') && PAYMONGO_ENABLED): ?>
-                <div id="gcash-init" class="pay-loading">
+                <!-- GCash: user clicks button → opens popup (user gesture) → polls status here -->
+                <div id="gcash-btn-area" style="text-align:center;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/GCash_logo.svg/200px-GCash_logo.svg.png" alt="GCash" style="height:48px;margin-bottom:1rem;display:block;margin-left:auto;margin-right:auto;">
+                    <p style="font-size:.9rem;color:var(--steel);margin-bottom:1.25rem;">Click the button below to open the GCash payment window.</p>
+                    <button id="gcash-pay-btn" onclick="gcashOpenPopup()" class="btn btn-accent" style="min-width:200px;">Pay with GCash</button>
+                    <div style="margin-top:1rem;">
+                        <a href="<?= APP_URL ?>/payment/payment-failed.php?order_id=<?= $orderId ?>" class="btn btn-outline">Cancel</a>
+                    </div>
+                </div>
+                <div id="gcash-popup-waiting" style="display:none; text-align:center;">
                     <div class="pay-spinner"></div>
-                    <p>Preparing GCash payment…</p>
-                    <p style="font-size:.78rem;margin-top:.25rem;">Redirecting to PayMongo checkout</p>
+                    <p style="font-weight:600;margin-bottom:.5rem;">GCash payment window is open</p>
+                    <p style="font-size:.85rem;color:var(--steel);margin-bottom:.75rem;">Complete the payment in the popup. This page will update automatically.</p>
+                    <p style="font-size:.8rem;color:var(--steel);margin-bottom:1.25rem;">If you closed the PayMongo window or the payment failed, click <strong>Cancel</strong> below.</p>
+                    <button onclick="gcashCancelPayment()" class="btn btn-danger" style="font-size:.9rem;padding:.6rem 2rem;">✕ Cancel Payment</button>
+                </div>
+                <div id="gcash-checking" style="display:none; text-align:center;">
+                    <div class="pay-spinner"></div>
+                    <p>Verifying payment…</p>
                 </div>
                 <div id="gcash-error" style="display:none; text-align:center;">
-                    <p style="color:var(--danger);font-weight:700;margin-bottom:.75rem;">Could not start GCash payment</p>
+                    <p style="color:var(--danger);font-weight:700;margin-bottom:.75rem;">GCash payment not completed</p>
                     <p id="gcash-error-msg" style="color:var(--steel);font-size:.875rem;margin-bottom:1.25rem;"></p>
                     <div class="btn-group">
-                        <button onclick="initCheckout('gcash')" class="btn btn-accent">Try Again</button>
+                        <button onclick="gcashRetry()" class="btn btn-accent">Try Again</button>
                         <a href="<?= APP_URL ?>/payment/payment-failed.php?order_id=<?= $orderId ?>" class="btn btn-outline">Cancel</a>
                     </div>
                 </div>
                 <script>
                 var CSRF_TOKEN = '<?= addslashes(csrf_token()) ?>';
-                function initCheckout(method) {
-                    document.getElementById(method + '-init') && (document.getElementById(method + '-init').style.display = 'block');
-                    document.getElementById(method + '-error').style.display = 'none';
-                    var controller = new AbortController();
-                    var timer = setTimeout(function() { controller.abort(); }, 12000);
+                var ORDER_ID   = <?= $orderId ?>;
+                var POLL_URL   = '<?= APP_URL ?>/index.php?url=payment/poll-status&order_id=' + ORDER_ID;
+                var FAIL_URL   = '<?= APP_URL ?>/payment/payment-failed.php?order_id=' + ORDER_ID + '&reason=cancelled';
+                var gcashPopup = null;
+                var pollTimer  = null;
+
+                function gcashShow(id) {
+                    ['gcash-btn-area','gcash-popup-waiting','gcash-checking','gcash-error'].forEach(function(el) {
+                        document.getElementById(el).style.display = (el === id) ? 'block' : 'none';
+                    });
+                }
+
+                function gcashCancelPayment() {
+                    clearInterval(pollTimer);
+                    if (gcashPopup && !gcashPopup.closed) gcashPopup.close();
+                    window.location.href = FAIL_URL;
+                }
+
+                function gcashRetry() {
+                    gcashShow('gcash-btn-area');
+                }
+
+                function gcashFinalCheck() {
+                    clearInterval(pollTimer);
+                    gcashShow('gcash-checking');
+                    fetch(POLL_URL)
+                        .then(r => r.json())
+                        .then(function(data) {
+                            if (data.status === 'completed') {
+                                window.location.href = data.redirect;
+                            } else if (data.status === 'failed') {
+                                window.location.href = data.redirect;
+                            } else {
+                                // Popup closed but payment still pending — show error with retry
+                                document.getElementById('gcash-error-msg').textContent = 'Payment was not completed. You can try again or cancel your order.';
+                                gcashShow('gcash-error');
+                            }
+                        })
+                        .catch(function() {
+                            document.getElementById('gcash-error-msg').textContent = 'Could not verify payment status. Try again or cancel.';
+                            gcashShow('gcash-error');
+                        });
+                }
+
+                function gcashStartPolling() {
+                    gcashShow('gcash-popup-waiting');
+                    var elapsed = 0;
+                    var TIMEOUT = 120; // seconds before giving up
+                    pollTimer = setInterval(function() {
+                        elapsed += 3;
+
+                        // Popup was closed by user
+                        if (gcashPopup && gcashPopup.closed) {
+                            gcashFinalCheck();
+                            return;
+                        }
+
+                        // Timed out — stop waiting, show cancel
+                        if (elapsed >= TIMEOUT) {
+                            clearInterval(pollTimer);
+                            document.getElementById('gcash-error-msg').textContent =
+                                'No payment was received. You can try again or cancel your order.';
+                            gcashShow('gcash-error');
+                            return;
+                        }
+
+                        fetch(POLL_URL)
+                            .then(r => r.json())
+                            .then(function(data) {
+                                if (data.status === 'completed') {
+                                    clearInterval(pollTimer);
+                                    if (gcashPopup && !gcashPopup.closed) gcashPopup.close();
+                                    window.location.href = data.redirect;
+                                } else if (data.status === 'failed') {
+                                    clearInterval(pollTimer);
+                                    if (gcashPopup && !gcashPopup.closed) gcashPopup.close();
+                                    window.location.href = data.redirect;
+                                }
+                                // else pending — keep polling until timeout
+                            })
+                            .catch(function() { /* network hiccup, keep polling */ });
+                    }, 3000);
+                }
+
+                // Called directly from button click — user gesture allows window.open
+                function gcashOpenPopup() {
+                    document.getElementById('gcash-pay-btn').disabled = true;
+                    document.getElementById('gcash-pay-btn').textContent = 'Opening…';
+
+                    // Open blank popup NOW (user gesture context) before the async fetch
+                    var w = 540, h = 700;
+                    var left = Math.round((screen.width  - w) / 2);
+                    var top  = Math.round((screen.height - h) / 2);
+                    gcashPopup = window.open('about:blank', 'gcash_payment',
+                        'width=' + w + ',height=' + h + ',top=' + top + ',left=' + left +
+                        ',scrollbars=yes,resizable=yes');
+
                     fetch('<?= APP_URL ?>/index.php?url=payment/create-checkout', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
-                        body: JSON.stringify({ order_id: <?= $orderId ?>, method: method }),
-                        signal: controller.signal
+                        body: JSON.stringify({ order_id: ORDER_ID, method: 'gcash' })
                     })
-                    .then(r => { clearTimeout(timer); return r.json(); })
-                    .then(data => {
+                    .then(r => r.json())
+                    .then(function(data) {
                         if (data.success && data.checkout_url) {
-                            window.location.href = data.checkout_url;
+                            if (!gcashPopup || gcashPopup.closed) {
+                                // Popup was blocked — fallback to same tab
+                                window.location.href = data.checkout_url;
+                            } else {
+                                gcashPopup.location.href = data.checkout_url;
+                                gcashStartPolling();
+                            }
                         } else {
-                            document.getElementById(method + '-init') && (document.getElementById(method + '-init').style.display = 'none');
-                            document.getElementById(method + '-error-msg').textContent = data.error || 'Failed to start payment.';
-                            document.getElementById(method + '-error').style.display = 'block';
+                            if (gcashPopup && !gcashPopup.closed) gcashPopup.close();
+                            document.getElementById('gcash-error-msg').textContent = data.error || 'Failed to start GCash payment.';
+                            gcashShow('gcash-error');
                         }
                     })
-                    .catch(err => {
-                        clearTimeout(timer);
-                        document.getElementById(method + '-init') && (document.getElementById(method + '-init').style.display = 'none');
-                        document.getElementById(method + '-error-msg').textContent = err.name === 'AbortError' ? 'Connection timed out. Please try again.' : 'Network error: ' + err.message;
-                        document.getElementById(method + '-error').style.display = 'block';
+                    .catch(function(err) {
+                        if (gcashPopup && !gcashPopup.closed) gcashPopup.close();
+                        document.getElementById('gcash-error-msg').textContent = 'Network error: ' + err.message;
+                        gcashShow('gcash-error');
                     });
                 }
-                document.addEventListener('DOMContentLoaded', function() { initCheckout('gcash'); });
                 </script>
             <?php else: ?>
                 <p style="color:var(--danger); text-align:center; padding:1.5rem 0; font-size:.9rem;">GCash payments require PayMongo to be enabled. Please contact the administrator.</p>

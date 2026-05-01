@@ -11,7 +11,21 @@ require_once __DIR__ . '/../models/Order.php';
 require_once __DIR__ . '/../models/OrderItem.php';
 require_once __DIR__ . '/../models/PayMongoGateway.php';
 require_once __DIR__ . '/../models/User.php';
+require_once __DIR__ . '/../models/Notification.php';
 require_once __DIR__ . '/../includes/Mailer.php';
+
+function sendOrderPlacedNotification($pdo, $userId, $order) {
+    try {
+        $notif = new Notification($pdo);
+        $notif->create(
+            $userId,
+            'Order Placed',
+            "Your order #{$order['order_number']} has been placed successfully! Total: ₱" . number_format($order['total_amount'], 2),
+            'order_processing',
+            APP_URL . '/index.php?url=orders/' . $order['id']
+        );
+    } catch (Throwable $e) { /* silent */ }
+}
 
 // Auth check (session already started in config.php)
 if (!isset($_SESSION['user_id'])) {
@@ -76,6 +90,7 @@ if ($orderId) {
         // Test bypass – just mark complete
         if ($payment && $payment['status'] !== PAYMENT_COMPLETED) {
             $paymentModel->updateStatus($payment['id'], PAYMENT_COMPLETED, 'test_' . uniqid());
+            sendOrderPlacedNotification($pdo, $_SESSION['user_id'], $order);
         }
         // Order stays pending — staff will advance to processing
     } elseif ($intentId && $clientKey && defined('PAYMONGO_ENABLED') && PAYMONGO_ENABLED) {
@@ -88,6 +103,7 @@ if ($orderId) {
                 $payment = $paymentModel->getByOrderId($orderId);
                 if ($payment && $payment['status'] !== PAYMENT_COMPLETED) {
                     $paymentModel->updateStatus($payment['id'], PAYMENT_COMPLETED, $intentId);
+                    sendOrderPlacedNotification($pdo, $_SESSION['user_id'], $order);
                     // Order stays pending — staff will advance to processing
                 }
             } elseif ($intentStatus === 'awaiting_payment_method' || $intentStatus === 'payment_error') {
@@ -127,11 +143,13 @@ if ($orderId) {
             // succeeded / paid / completed or unknown — trust the redirect and mark complete
             if ($payment && $payment['status'] !== PAYMENT_COMPLETED) {
                 $paymentModel->updateStatus($payment['id'], PAYMENT_COMPLETED, $checkoutSessionId);
+                sendOrderPlacedNotification($pdo, $_SESSION['user_id'], $order);
             }
         } catch (Exception $e) {
             // API call failed (host blocks outbound) — trust PayMongo redirect, mark complete
             if ($payment && $payment['status'] !== PAYMENT_COMPLETED) {
                 $paymentModel->updateStatus($payment['id'], PAYMENT_COMPLETED, $checkoutSessionId);
+                sendOrderPlacedNotification($pdo, $_SESSION['user_id'], $order);
             }
         }
     } elseif ($paymentMethod === 'qrph') {

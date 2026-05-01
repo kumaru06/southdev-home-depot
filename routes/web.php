@@ -306,6 +306,8 @@ switch ($urlParts[0]) {
             $controller->createPayMongoSource();
         } elseif ($sub === 'create-checkout') {
             $controller->createPaymongoCheckout();
+        } elseif ($sub === 'poll-status') {
+            $controller->pollPaymentStatus();
         } elseif ($sub === 'create-qrph') {
             $controller->createQrphCheckout();
         } elseif ($sub === 'create-intent') {

@@ -4,6 +4,9 @@
  * Enhanced: Sales + Inventory + Returns reporting with tabbed view
  */
 
+use Dompdf\Dompdf;
+use Dompdf\Options;
+
 require_once __DIR__ . '/../models/Order.php';
 require_once __DIR__ . '/../models/OrderItem.php';
 require_once __DIR__ . '/../models/Product.php';
@@ -265,19 +268,97 @@ class ReportController {
     }
 
     /* ----------------------------------------------------------
-     *  HELPER: start a CSV download
+     *  HELPER: get export date range (defaults to today)
+     *  Returns [$from, $to, $label, $whereOrders, $bindOrders,
+     *           $whereRaw, $bindRaw, $whereRr, $whereSm, $bindSm]
      * ---------------------------------------------------------- */
-    private function startCsv($filename) {
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        echo "\xEF\xBB\xBF"; // UTF-8 BOM so Excel opens correctly
-        return fopen('php://output', 'w');
+    private function getExportDateRange(): array {
+        $today = date('Y-m-d');
+        $from  = $_GET['date_from'] ?? $today;
+        $to    = $_GET['date_to']   ?? $today;
+        // sanitise
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)) $from = $today;
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $to))   $to   = $today;
+        if ($from > $to) [$from, $to] = [$to, $from];
+
+        $label       = ($from === $to) ? date('M d, Y', strtotime($from))
+                                       : date('M d, Y', strtotime($from)) . ' – ' . date('M d, Y', strtotime($to));
+        // for queries with orders aliased as `o`
+        $whereOrders = " AND DATE(o.created_at) BETWEEN ? AND ?";
+        $bindOrders  = [$from, $to];
+        // for direct orders table queries (no alias)
+        $whereRaw    = " AND DATE(created_at) BETWEEN ? AND ?";
+        $bindRaw     = [$from, $to];
+        // for return_requests aliased as `rr`
+        $whereRr     = " AND DATE(rr.created_at) BETWEEN ? AND ?";
+        // for stock_movements aliased as `sm`
+        $whereSm     = " AND DATE(sm.created_at) BETWEEN ? AND ?";
+        $bindSm      = [$from, $to];
+
+        return [$from, $to, $label, $whereOrders, $bindOrders, $whereRaw, $bindRaw, $whereRr, $whereSm, $bindSm];
+    }
+
+    /* ----------------------------------------------------------
+     *  HELPER: render HTML as PDF and stream to browser
+     * ---------------------------------------------------------- */
+    private function renderPdf(string $filename, string $html): void {
+        $options = new Options();
+        $options->set('defaultFont', 'Helvetica');
+        $options->set('isRemoteEnabled', false);
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+        $dompdf->stream($filename, ['Attachment' => true]);
+        exit;
+    }
+
+    /* ----------------------------------------------------------
+     *  HELPER: shared PDF HTML wrapper
+     * ---------------------------------------------------------- */
+    private function pdfWrap(string $title, string $subtitle, string $body): string {
+        $generated = date('D, d M Y, h:i A');
+        return <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 10px; color: #222; margin: 0; padding: 0; }
+  .header { background: #1a3c5e; color: #fff; padding: 12px 16px; margin-bottom: 14px; }
+  .header h1 { margin: 0; font-size: 16px; letter-spacing: 1px; }
+  .header p  { margin: 2px 0 0; font-size: 9px; opacity: .85; }
+  table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  thead tr { background: #1a3c5e; color: #fff; }
+  thead th { padding: 6px 5px; text-align: left; font-size: 9px; }
+  tbody tr:nth-child(even) { background: #f4f7fb; }
+  tbody td { padding: 5px 6px; border-bottom: 1px solid #e0e0e0; font-size: 9px; }
+  .total-row td { font-weight: bold; background: #e8f0fe; }
+  .summary { margin-top: 14px; background: #f4f7fb; padding: 8px 12px; border-left: 4px solid #1a3c5e; }
+  .summary h3 { margin: 0 0 6px; font-size: 11px; color: #1a3c5e; }
+  .summary table { margin: 0; }
+  .summary td { padding: 2px 8px 2px 0; font-size: 9px; border: none; background: none; }
+  .summary td:first-child { font-weight: bold; width: 200px; }
+  .right { text-align: right; padding-right: 8px; }
+  thead th.right { text-align: right; padding-right: 8px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>SOUTHDEV HOME DEPOT</h1>
+  <p>{$subtitle} &nbsp;|&nbsp; Generated: {$generated}</p>
+</div>
+{$body}
+</body>
+</html>
+HTML;
     }
 
     /* ==========================================================
      *  1. SALES – Daily Aggregated
      * ========================================================== */
     private function exportSalesDaily() {
+        [, , $label, $whereOrders, $bindOrders] = $this->getExportDateRange();
         $sql = "SELECT DATE(o.created_at) as sale_date,
                        COUNT(DISTINCT o.id) as total_orders,
                        SUM(oi.quantity) as units_sold,
@@ -288,50 +369,56 @@ class ReportController {
                 JOIN orders o ON oi.order_id = o.id
                 LEFT JOIN payments pay ON pay.order_id = o.id
                 WHERE o.status != 'cancelled'
+                {$whereOrders}
                 GROUP BY sale_date
                 ORDER BY sale_date DESC";
-        $rows = $this->pdo->query($sql)->fetchAll();
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($bindOrders);
+        $rows = $stmt->fetchAll();
 
-        $out = $this->startCsv('SouthDev_Sales_Daily_' . date('Y-m-d') . '.csv');
-
-        fputcsv($out, ['SOUTHDEV HOME DEPOT']);
-        fputcsv($out, ['Sales Report - Daily Summary']);
-        fputcsv($out, ['Generated: ' . date('D, d M Y, h:i A')]);
-        fputcsv($out, []);
-
-        fputcsv($out, ['Date', 'Total Orders', 'Units Sold', 'Gross Revenue (PHP)', 'Refunds (PHP)', 'Net Revenue (PHP)']);
-
-        $grandOrders = 0; $grandUnits = 0; $grandGross = 0; $grandRefunds = 0; $grandNet = 0;
+        $grandOrders = 0; $grandUnits = 0; $grandGross = 0.0; $grandRefunds = 0.0; $grandNet = 0.0;
+        $tbody = '';
         foreach ($rows as $r) {
             $gross   = floatval($r['gross_revenue']);
             $refunds = floatval($r['refunded_amount']);
             $net     = floatval($r['net_revenue'] ?: ($gross - $refunds));
-            fputcsv($out, [
-                date('M d, Y', strtotime($r['sale_date'])),
-                intval($r['total_orders']),
-                intval($r['units_sold']),
-                number_format($gross, 2),
-                number_format($refunds, 2),
-                number_format($net, 2)
-            ]);
+            $tbody .= '<tr>'
+                . '<td>' . htmlspecialchars(date('M d, Y', strtotime($r['sale_date']))) . '</td>'
+                . '<td class="right">' . intval($r['total_orders']) . '</td>'
+                . '<td class="right">' . intval($r['units_sold']) . '</td>'
+                . '<td class="right">PHP ' . number_format($gross, 2) . '</td>'
+                . '<td class="right">PHP ' . number_format($refunds, 2) . '</td>'
+                . '<td class="right">PHP ' . number_format($net, 2) . '</td>'
+                . '</tr>';
             $grandOrders  += intval($r['total_orders']);
             $grandUnits   += intval($r['units_sold']);
             $grandGross   += $gross;
             $grandRefunds += $refunds;
             $grandNet     += $net;
         }
+        $tbody .= '<tr class="total-row">'
+            . '<td>TOTAL</td>'
+            . '<td class="right">' . $grandOrders . '</td>'
+            . '<td class="right">' . $grandUnits . '</td>'
+            . '<td class="right">PHP ' . number_format($grandGross, 2) . '</td>'
+            . '<td class="right">PHP ' . number_format($grandRefunds, 2) . '</td>'
+            . '<td class="right">PHP ' . number_format($grandNet, 2) . '</td>'
+            . '</tr>';
 
-        fputcsv($out, []);
-        fputcsv($out, ['TOTAL', $grandOrders, $grandUnits, number_format($grandGross, 2), number_format($grandRefunds, 2), number_format($grandNet, 2)]);
+        $body = '<table><thead><tr>'
+            . '<th>Date</th><th>Total Orders</th><th>Units Sold</th>'
+            . '<th>Gross Revenue (PHP)</th><th>Refunds (PHP)</th><th>Net Revenue (PHP)</th>'
+            . '</tr></thead><tbody>' . $tbody . '</tbody></table>';
 
-        fclose($out);
-        exit;
+        $html = $this->pdfWrap('Sales Report - Daily Summary', 'Sales Report — Daily Summary &nbsp;|&nbsp; ' . $label, $body);
+        $this->renderPdf('SouthDev_Sales_Daily_' . date('Y-m-d') . '.pdf', $html);
     }
 
     /* ==========================================================
      *  2. SALES – Monthly Aggregated
      * ========================================================== */
     private function exportSalesMonthly() {
+        [, , $label, $whereOrders, $bindOrders] = $this->getExportDateRange();
         $sql = "SELECT DATE_FORMAT(o.created_at, '%Y-%m') as sale_month,
                        COUNT(DISTINCT o.id) as total_orders,
                        SUM(oi.quantity) as units_sold,
@@ -342,50 +429,56 @@ class ReportController {
                 JOIN orders o ON oi.order_id = o.id
                 LEFT JOIN payments pay ON pay.order_id = o.id
                 WHERE o.status != 'cancelled'
+                {$whereOrders}
                 GROUP BY sale_month
                 ORDER BY sale_month DESC";
-        $rows = $this->pdo->query($sql)->fetchAll();
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($bindOrders);
+        $rows = $stmt->fetchAll();
 
-        $out = $this->startCsv('SouthDev_Sales_Monthly_' . date('Y-m-d') . '.csv');
-
-        fputcsv($out, ['SOUTHDEV HOME DEPOT']);
-        fputcsv($out, ['Sales Report - Monthly Summary']);
-        fputcsv($out, ['Generated: ' . date('D, d M Y, h:i A')]);
-        fputcsv($out, []);
-
-        fputcsv($out, ['Month', 'Total Orders', 'Units Sold', 'Gross Revenue (PHP)', 'Refunds (PHP)', 'Net Revenue (PHP)']);
-
-        $grandOrders = 0; $grandUnits = 0; $grandGross = 0; $grandRefunds = 0; $grandNet = 0;
+        $grandOrders = 0; $grandUnits = 0; $grandGross = 0.0; $grandRefunds = 0.0; $grandNet = 0.0;
+        $tbody = '';
         foreach ($rows as $r) {
             $gross   = floatval($r['gross_revenue']);
             $refunds = floatval($r['refunded_amount']);
             $net     = floatval($r['net_revenue'] ?: ($gross - $refunds));
-            fputcsv($out, [
-                date('F Y', strtotime($r['sale_month'] . '-01')),
-                intval($r['total_orders']),
-                intval($r['units_sold']),
-                number_format($gross, 2),
-                number_format($refunds, 2),
-                number_format($net, 2)
-            ]);
+            $tbody .= '<tr>'
+                . '<td>' . htmlspecialchars(date('F Y', strtotime($r['sale_month'] . '-01'))) . '</td>'
+                . '<td class="right">' . intval($r['total_orders']) . '</td>'
+                . '<td class="right">' . intval($r['units_sold']) . '</td>'
+                . '<td class="right">PHP ' . number_format($gross, 2) . '</td>'
+                . '<td class="right">PHP ' . number_format($refunds, 2) . '</td>'
+                . '<td class="right">PHP ' . number_format($net, 2) . '</td>'
+                . '</tr>';
             $grandOrders  += intval($r['total_orders']);
             $grandUnits   += intval($r['units_sold']);
             $grandGross   += $gross;
             $grandRefunds += $refunds;
             $grandNet     += $net;
         }
+        $tbody .= '<tr class="total-row">'
+            . '<td>TOTAL</td>'
+            . '<td class="right">' . $grandOrders . '</td>'
+            . '<td class="right">' . $grandUnits . '</td>'
+            . '<td class="right">PHP ' . number_format($grandGross, 2) . '</td>'
+            . '<td class="right">PHP ' . number_format($grandRefunds, 2) . '</td>'
+            . '<td class="right">PHP ' . number_format($grandNet, 2) . '</td>'
+            . '</tr>';
 
-        fputcsv($out, []);
-        fputcsv($out, ['TOTAL', $grandOrders, $grandUnits, number_format($grandGross, 2), number_format($grandRefunds, 2), number_format($grandNet, 2)]);
+        $body = '<table><thead><tr>'
+            . '<th>Month</th><th>Total Orders</th><th>Units Sold</th>'
+            . '<th>Gross Revenue (PHP)</th><th>Refunds (PHP)</th><th>Net Revenue (PHP)</th>'
+            . '</tr></thead><tbody>' . $tbody . '</tbody></table>';
 
-        fclose($out);
-        exit;
+        $html = $this->pdfWrap('Sales Report - Monthly Summary', 'Sales Report — Monthly Summary &nbsp;|&nbsp; ' . $label, $body);
+        $this->renderPdf('SouthDev_Sales_Monthly_' . date('Y-m-d') . '.pdf', $html);
     }
 
     /* ==========================================================
      *  3. SALES – Detailed Rows (every order item)
      * ========================================================== */
     private function exportSalesRows() {
+        [, , $label, $whereOrders, $bindOrders] = $this->getExportDateRange();
         $sql = "SELECT o.order_number, o.created_at, o.status as order_status,
                        u.first_name, u.last_name,
                        p.sku, p.name as product_name, c.name as category,
@@ -400,19 +493,14 @@ class ReportController {
                 JOIN users u ON o.user_id = u.id
                 LEFT JOIN payments pay ON pay.order_id = o.id
                 WHERE o.status != 'cancelled'
+                {$whereOrders}
                 ORDER BY o.created_at DESC";
-        $rows = $this->pdo->query($sql)->fetchAll();
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($bindOrders);
+        $rows = $stmt->fetchAll();
 
-        $out = $this->startCsv('SouthDev_Sales_Detailed_' . date('Y-m-d') . '.csv');
-
-        fputcsv($out, ['SOUTHDEV HOME DEPOT']);
-        fputcsv($out, ['Sales Report - Detailed Transactions']);
-        fputcsv($out, ['Generated: ' . date('D, d M Y, h:i A')]);
-        fputcsv($out, []);
-
-        fputcsv($out, ['Order #', 'Date', 'Customer', 'Category', 'SKU', 'Product', 'Qty', 'Unit Price (PHP)', 'Unit Cost (PHP)', 'Subtotal (PHP)', 'Profit (PHP)', 'Order Total (PHP)', 'Payment Method', 'Payment Status', 'Order Status']);
-
-        $grandSubtotal = 0; $grandProfit = 0; $grandCost = 0;
+        $grandSubtotal = 0.0; $grandProfit = 0.0; $grandCost = 0.0;
+        $tbody = '';
         foreach ($rows as $r) {
             $pm = strtolower($r['payment_method'] ?? '');
             if (str_contains($pm, 'gcash')) $pmLabel = 'GCash';
@@ -421,7 +509,6 @@ class ReportController {
             else $pmLabel = ucfirst($r['payment_method'] ?? 'N/A');
 
             $rawPayStatus = $r['payment_status'] ?? 'N/A';
-            // COD + pending + delivered = cash was collected on delivery but never updated in DB
             if ($rawPayStatus === 'pending' && str_contains($pm, 'cod') && $r['order_status'] === 'delivered') {
                 $payStatusLabel = 'Completed (COD)';
             } else {
@@ -434,35 +521,41 @@ class ReportController {
             $subtotal = floatval($r['subtotal']);
             $profit   = ($price - $cost) * $qty;
 
-            fputcsv($out, [
-                $r['order_number'],
-                date('M d, Y h:i A', strtotime($r['created_at'])),
-                trim($r['first_name'] . ' ' . $r['last_name']),
-                $r['category'],
-                $r['sku'] ?? '',
-                $r['product_name'],
-                $qty,
-                number_format($price, 2),
-                number_format($cost, 2),
-                number_format($subtotal, 2),
-                number_format($profit, 2),
-                number_format(floatval($r['total_amount']), 2),
-                $pmLabel,
-                $payStatusLabel,
-                ucfirst($r['order_status'])
-            ]);
+            $tbody .= '<tr>'
+                . '<td>' . htmlspecialchars($r['order_number']) . '</td>'
+                . '<td>' . date('M d, Y', strtotime($r['created_at'])) . '</td>'
+                . '<td>' . htmlspecialchars(trim($r['first_name'] . ' ' . $r['last_name'])) . '</td>'
+                . '<td>' . htmlspecialchars($r['category']) . '</td>'
+                . '<td>' . htmlspecialchars($r['sku'] ?? '') . '</td>'
+                . '<td>' . htmlspecialchars($r['product_name']) . '</td>'
+                . '<td class="right">' . $qty . '</td>'
+                . '<td class="right">PHP ' . number_format($price, 2) . '</td>'
+                . '<td class="right">PHP ' . number_format($cost, 2) . '</td>'
+                . '<td class="right">PHP ' . number_format($subtotal, 2) . '</td>'
+                . '<td class="right">PHP ' . number_format($profit, 2) . '</td>'
+                . '<td>' . htmlspecialchars($pmLabel) . '</td>'
+                . '<td>' . htmlspecialchars($payStatusLabel) . '</td>'
+                . '<td>' . htmlspecialchars(ucfirst($r['order_status'])) . '</td>'
+                . '</tr>';
             $grandSubtotal += $subtotal;
             $grandCost     += $cost * $qty;
             $grandProfit   += $profit;
         }
+        $tbody .= '<tr class="total-row">'
+            . '<td colspan="9" class="right">GRAND TOTAL</td>'
+            . '<td class="right">PHP ' . number_format($grandSubtotal, 2) . '</td>'
+            . '<td class="right">PHP ' . number_format($grandProfit, 2) . '</td>'
+            . '<td colspan="3"></td>'
+            . '</tr>';
 
-        fputcsv($out, []);
-        fputcsv($out, ['', '', '', '', '', '', '', '', 'GRAND TOTAL (Subtotal):', number_format($grandSubtotal, 2)]);
-        fputcsv($out, ['', '', '', '', '', '', '', '', 'Total COGS:', number_format($grandCost, 2)]);
-        fputcsv($out, ['', '', '', '', '', '', '', '', 'Total Gross Profit:', number_format($grandProfit, 2)]);
+        $body = '<table><thead><tr>'
+            . '<th>Order #</th><th>Date</th><th>Customer</th><th>Category</th><th>SKU</th>'
+            . '<th>Product</th><th>Qty</th><th>Unit Price</th><th>Unit Cost</th>'
+            . '<th>Subtotal</th><th>Profit</th><th>Payment</th><th>Pay Status</th><th>Order Status</th>'
+            . '</tr></thead><tbody>' . $tbody . '</tbody></table>';
 
-        fclose($out);
-        exit;
+        $html = $this->pdfWrap('Sales Report - Detailed', 'Sales Report — Detailed Transactions &nbsp;|&nbsp; ' . $label, $body);
+        $this->renderPdf('SouthDev_Sales_Detailed_' . date('Y-m-d') . '.pdf', $html);
     }
 
     /* ==========================================================
@@ -486,53 +579,53 @@ class ReportController {
                 ORDER BY c.name, p.name";
         $rows = $this->pdo->query($sql)->fetchAll();
 
-        $out = $this->startCsv('SouthDev_Current_Inventory_' . date('Y-m-d') . '.csv');
-
-        fputcsv($out, ['SOUTHDEV HOME DEPOT']);
-        fputcsv($out, ['Current Inventory Report']);
-        fputcsv($out, ['Generated: ' . date('D, d M Y, h:i A')]);
-        fputcsv($out, []);
-
-        fputcsv($out, ['Category', 'SKU', 'Product Name', 'Selling Price (PHP)', 'Unit Cost (PHP)', 'Current Stock', 'Reorder Level', 'Stock Status', 'Inventory Value (PHP)']);
-
-        $totalUnits = 0; $totalValue = 0; $outCount = 0; $lowCount = 0;
+        $totalUnits = 0; $totalValue = 0.0; $outCount = 0; $lowCount = 0;
+        $tbody = '';
         foreach ($rows as $r) {
             $cost = $r['unit_cost'] !== null ? floatval($r['unit_cost']) : floatval($r['selling_price']);
             $val  = floatval($r['inventory_value']);
             $qty  = intval($r['current_stock']);
-            fputcsv($out, [
-                $r['category'],
-                $r['sku'] ?? '',
-                $r['product_name'],
-                number_format(floatval($r['selling_price']), 2),
-                number_format($cost, 2),
-                $qty,
-                intval($r['reorder_level']),
-                $r['stock_status'],
-                number_format($val, 2)
-            ]);
+            $statusColor = $r['stock_status'] === 'Out of Stock' ? 'color:#c0392b;font-weight:bold'
+                         : ($r['stock_status'] === 'Low Stock' ? 'color:#e67e22;font-weight:bold' : 'color:#27ae60');
+            $tbody .= '<tr>'
+                . '<td>' . htmlspecialchars($r['category']) . '</td>'
+                . '<td>' . htmlspecialchars($r['sku'] ?? '') . '</td>'
+                . '<td>' . htmlspecialchars($r['product_name']) . '</td>'
+                . '<td class="right">PHP ' . number_format(floatval($r['selling_price']), 2) . '</td>'
+                . '<td class="right">PHP ' . number_format($cost, 2) . '</td>'
+                . '<td class="right">' . $qty . '</td>'
+                . '<td class="right">' . intval($r['reorder_level']) . '</td>'
+                . '<td style="' . $statusColor . '">' . $r['stock_status'] . '</td>'
+                . '<td class="right">PHP ' . number_format($val, 2) . '</td>'
+                . '</tr>';
             $totalUnits += $qty;
             $totalValue += $val;
             if ($qty <= 0) $outCount++;
             elseif ($r['stock_status'] === 'Low Stock') $lowCount++;
         }
 
-        fputcsv($out, []);
-        fputcsv($out, ['SUMMARY']);
-        fputcsv($out, ['Total Products:', count($rows)]);
-        fputcsv($out, ['Total Stock Units:', number_format($totalUnits)]);
-        fputcsv($out, ['Total Inventory Value:', 'PHP ' . number_format($totalValue, 2)]);
-        fputcsv($out, ['Low Stock Items:', $lowCount]);
-        fputcsv($out, ['Out of Stock Items:', $outCount]);
+        $summary = '<div class="summary"><h3>Summary</h3><table>'
+            . '<tr><td>Total Products:</td><td>' . count($rows) . '</td></tr>'
+            . '<tr><td>Total Stock Units:</td><td>' . number_format($totalUnits) . '</td></tr>'
+            . '<tr><td>Total Inventory Value:</td><td>PHP ' . number_format($totalValue, 2) . '</td></tr>'
+            . '<tr><td>Low Stock Items:</td><td>' . $lowCount . '</td></tr>'
+            . '<tr><td>Out of Stock Items:</td><td>' . $outCount . '</td></tr>'
+            . '</table></div>';
 
-        fclose($out);
-        exit;
+        $body = '<table><thead><tr>'
+            . '<th>Category</th><th>SKU</th><th>Product Name</th><th>Selling Price</th>'
+            . '<th>Unit Cost</th><th>Current Stock</th><th>Reorder Level</th><th>Status</th><th>Inventory Value</th>'
+            . '</tr></thead><tbody>' . $tbody . '</tbody></table>' . $summary;
+
+        $html = $this->pdfWrap('Current Inventory Report', 'Current Inventory Report', $body);
+        $this->renderPdf('SouthDev_Current_Inventory_' . date('Y-m-d') . '.pdf', $html);
     }
 
     /* ==========================================================
      *  5. INVENTORY ADDED – all stock-in movements (purchases)
      * ========================================================== */
     private function exportInventoryAdded() {
+        [, , $label, , , , , , $whereSm, $bindSm] = $this->getExportDateRange();
         $sql = "SELECT sm.created_at, sm.type,
                        p.sku, p.name as product_name, c.name as category,
                        sm.quantity, sm.notes,
@@ -542,47 +635,47 @@ class ReportController {
                 JOIN categories c ON p.category_id = c.id
                 LEFT JOIN users u ON sm.performed_by = u.id
                 WHERE sm.quantity > 0
+                {$whereSm}
                 ORDER BY sm.created_at DESC";
-        $rows = $this->pdo->query($sql)->fetchAll();
-
-        $out = $this->startCsv('SouthDev_Inventory_Added_' . date('Y-m-d') . '.csv');
-
-        fputcsv($out, ['SOUTHDEV HOME DEPOT']);
-        fputcsv($out, ['Inventory Added Report - Stock-In Movements']);
-        fputcsv($out, ['Generated: ' . date('D, d M Y, h:i A')]);
-        fputcsv($out, []);
-
-        fputcsv($out, ['Date', 'Category', 'SKU', 'Product Name', 'Type', 'Quantity Added', 'Notes', 'Added By']);
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($bindSm);
+        $rows = $stmt->fetchAll();
 
         $totalAdded = 0;
+        $tbody = '';
         foreach ($rows as $r) {
-            fputcsv($out, [
-                date('M d, Y h:i A', strtotime($r['created_at'])),
-                $r['category'],
-                $r['sku'] ?? '',
-                $r['product_name'],
-                ucfirst($r['type']),
-                '+' . intval($r['quantity']),
-                $r['notes'] ?? '',
-                $r['performed_by'] ?? 'System'
-            ]);
-            $totalAdded += intval($r['quantity']);
+            $qty = intval($r['quantity']);
+            $tbody .= '<tr>'
+                . '<td>' . date('M d, Y h:i A', strtotime($r['created_at'])) . '</td>'
+                . '<td>' . htmlspecialchars($r['category']) . '</td>'
+                . '<td>' . htmlspecialchars($r['sku'] ?? '') . '</td>'
+                . '<td>' . htmlspecialchars($r['product_name']) . '</td>'
+                . '<td>' . ucfirst($r['type']) . '</td>'
+                . '<td class="right" style="color:#27ae60;font-weight:bold">+' . $qty . '</td>'
+                . '<td>' . htmlspecialchars($r['notes'] ?? '') . '</td>'
+                . '<td>' . htmlspecialchars($r['performed_by'] ?? 'System') . '</td>'
+                . '</tr>';
+            $totalAdded += $qty;
         }
 
-        fputcsv($out, []);
-        fputcsv($out, ['SUMMARY']);
-        fputcsv($out, ['Total Stock-In Entries:', count($rows)]);
-        fputcsv($out, ['Total Units Added:', number_format($totalAdded)]);
+        $summary = '<div class="summary"><h3>Summary</h3><table>'
+            . '<tr><td>Total Stock-In Entries:</td><td>' . count($rows) . '</td></tr>'
+            . '<tr><td>Total Units Added:</td><td>' . number_format($totalAdded) . '</td></tr>'
+            . '</table></div>';
 
-        fclose($out);
-        exit;
+        $body = '<table><thead><tr>'
+            . '<th>Date</th><th>Category</th><th>SKU</th><th>Product Name</th>'
+            . '<th>Type</th><th>Qty Added</th><th>Notes</th><th>Added By</th>'
+            . '</tr></thead><tbody>' . $tbody . '</tbody></table>' . $summary;
+
+        $html = $this->pdfWrap('Inventory Added Report', 'Inventory Added Report — Stock-In Movements &nbsp;|&nbsp; ' . $label, $body);
+        $this->renderPdf('SouthDev_Inventory_Added_' . date('Y-m-d') . '.pdf', $html);
     }
 
     /* ==========================================================
      *  5b. INVENTORY COMBINED – current + added + removed per product
      * ========================================================== */
     private function exportInventoryCombined() {
-        // Per-product aggregation of stock movements
         $sql = "
             SELECT
                 c.name  AS category,
@@ -612,54 +705,52 @@ class ReportController {
         ";
         $rows = $this->pdo->query($sql)->fetchAll();
 
-        $out = $this->startCsv('SouthDev_Inventory_Combined_' . date('Y-m-d') . '.csv');
-
-        fputcsv($out, ['SOUTHDEV HOME DEPOT']);
-        fputcsv($out, ['Inventory Combined Report — Stock Added vs Removed vs Current']);
-        fputcsv($out, ['Generated: ' . date('D, d M Y, h:i A')]);
-        fputcsv($out, []);
-        fputcsv($out, ['Category', 'SKU', 'Product Name', 'Selling Price (PHP)', 'Opening Stock', 'Total Added', 'Total Removed', 'Current Total', 'Formula']);
-
         $grandOpening = 0; $grandAdded = 0; $grandRemoved = 0; $grandCurrent = 0;
+        $tbody = '';
         foreach ($rows as $r) {
             $added   = intval($r['total_added']);
             $removed = intval($r['total_removed']);
             $current = intval($r['current_stock']);
-            // Opening = what was there before any stock movements recorded
             $opening = $current - $added + $removed;
-            fputcsv($out, [
-                $r['category'],
-                $r['sku'] ?? '',
-                $r['product_name'],
-                number_format(floatval($r['selling_price']), 2),
-                $opening,
-                $added,
-                $removed,
-                $current,
-                $opening . ' + ' . $added . ' - ' . $removed . ' = ' . $current
-            ]);
+            $tbody .= '<tr>'
+                . '<td>' . htmlspecialchars($r['category']) . '</td>'
+                . '<td>' . htmlspecialchars($r['sku'] ?? '') . '</td>'
+                . '<td>' . htmlspecialchars($r['product_name']) . '</td>'
+                . '<td class="right">PHP ' . number_format(floatval($r['selling_price']), 2) . '</td>'
+                . '<td class="right">' . $opening . '</td>'
+                . '<td class="right" style="color:#27ae60">+' . $added . '</td>'
+                . '<td class="right" style="color:#c0392b">-' . $removed . '</td>'
+                . '<td class="right"><strong>' . $current . '</strong></td>'
+                . '<td style="font-size:8px;color:#666">' . $opening . '+' . $added . '-' . $removed . '=' . $current . '</td>'
+                . '</tr>';
             $grandOpening += $opening;
             $grandAdded   += $added;
             $grandRemoved += $removed;
             $grandCurrent += $current;
         }
+        $tbody .= '<tr class="total-row">'
+            . '<td colspan="4">TOTAL</td>'
+            . '<td class="right">' . $grandOpening . '</td>'
+            . '<td class="right">+' . $grandAdded . '</td>'
+            . '<td class="right">-' . $grandRemoved . '</td>'
+            . '<td class="right">' . $grandCurrent . '</td>'
+            . '<td></td></tr>';
 
-        fputcsv($out, []);
-        fputcsv($out, ['SUMMARY']);
-        fputcsv($out, ['Total Products:', count($rows)]);
-        fputcsv($out, ['Total Opening Stock:', number_format($grandOpening)]);
-        fputcsv($out, ['Total Units Added:', number_format($grandAdded)]);
-        fputcsv($out, ['Total Units Removed:', number_format($grandRemoved)]);
-        fputcsv($out, ['Total Current Stock:', number_format($grandCurrent)]);
+        $body = '<table><thead><tr>'
+            . '<th>Category</th><th>SKU</th><th>Product Name</th><th>Selling Price</th>'
+            . '<th>Opening</th><th>Added</th><th>Removed</th><th>Current</th><th>Formula</th>'
+            . '</tr></thead><tbody>' . $tbody . '</tbody></table>';
 
-        fclose($out);
-        exit;
+        $html = $this->pdfWrap('Inventory Combined Report', 'Inventory Combined — Added vs Removed vs Current', $body);
+        $this->renderPdf('SouthDev_Inventory_Combined_' . date('Y-m-d') . '.pdf', $html);
     }
 
     /* ==========================================================
      *  6. DAMAGED INVENTORY – all damaged product records
      * ========================================================== */
     private function exportDamagedInventory() {
+        [, , $label, , , , , , , $bindSm] = $this->getExportDateRange();
+        $from = $bindSm[0]; $to = $bindSm[1];
         $sql = "SELECT dp.created_at, dp.updated_at,
                        p.sku, p.name as product_name, c.name as category,
                        p.price as unit_price,
@@ -677,57 +768,54 @@ class ReportController {
                 JOIN orders o ON dp.order_id = o.id
                 JOIN return_requests rr ON dp.return_request_id = rr.id
                 LEFT JOIN users u ON dp.reported_by = u.id
+                WHERE DATE(dp.created_at) BETWEEN ? AND ?
                 ORDER BY dp.created_at DESC";
-        $rows = $this->pdo->query($sql)->fetchAll();
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$from, $to]);
+        $rows = $stmt->fetchAll();
 
-        $out = $this->startCsv('SouthDev_Damaged_Inventory_' . date('Y-m-d') . '.csv');
-
-        fputcsv($out, ['SOUTHDEV HOME DEPOT']);
-        fputcsv($out, ['Damaged Inventory Report']);
-        fputcsv($out, ['Generated: ' . date('D, d M Y, h:i A')]);
-        fputcsv($out, []);
-
-        fputcsv($out, ['Date Reported', 'Order #', 'Category', 'SKU', 'Product Name', 'Qty', 'Unit Price (PHP)', 'Estimated Loss (PHP)', 'Return Reason', 'Damage Description', 'Status', 'Admin Notes', 'Reported By', 'Last Updated']);
-
-        $totalQty = 0; $totalLoss = 0;
+        $totalQty = 0; $totalLoss = 0.0;
         $statusCounts = ['received' => 0, 'inspected' => 0];
+        $tbody = '';
         foreach ($rows as $r) {
             $loss = floatval($r['estimated_loss']);
             $qty  = intval($r['quantity']);
             $st   = $r['damage_status'];
-            fputcsv($out, [
-                date('M d, Y h:i A', strtotime($r['created_at'])),
-                $r['order_number'],
-                $r['category'],
-                $r['sku'] ?? '',
-                $r['product_name'],
-                $qty,
-                number_format(floatval($r['unit_price']), 2),
-                number_format($loss, 2),
-                $r['return_reason'] ?? '',
-                $r['damage_description'] ?? '',
-                ucfirst($st),
-                $r['admin_notes'] ?? '',
-                $r['reported_by'] ?? 'System',
-                date('M d, Y', strtotime($r['updated_at']))
-            ]);
+            $tbody .= '<tr>'
+                . '<td>' . date('M d, Y', strtotime($r['created_at'])) . '</td>'
+                . '<td>' . htmlspecialchars($r['order_number']) . '</td>'
+                . '<td>' . htmlspecialchars($r['category']) . '</td>'
+                . '<td>' . htmlspecialchars($r['sku'] ?? '') . '</td>'
+                . '<td>' . htmlspecialchars($r['product_name']) . '</td>'
+                . '<td class="right">' . $qty . '</td>'
+                . '<td class="right">PHP ' . number_format(floatval($r['unit_price']), 2) . '</td>'
+                . '<td class="right" style="color:#c0392b">PHP ' . number_format($loss, 2) . '</td>'
+                . '<td>' . htmlspecialchars($r['return_reason'] ?? '') . '</td>'
+                . '<td>' . htmlspecialchars($r['damage_description'] ?? '') . '</td>'
+                . '<td>' . htmlspecialchars(ucfirst($st)) . '</td>'
+                . '<td>' . htmlspecialchars($r['admin_notes'] ?? '') . '</td>'
+                . '<td>' . htmlspecialchars($r['reported_by'] ?? 'System') . '</td>'
+                . '</tr>';
             $totalQty  += $qty;
             $totalLoss += $loss;
             if (isset($statusCounts[$st])) $statusCounts[$st]++;
         }
 
-        fputcsv($out, []);
-        fputcsv($out, ['SUMMARY']);
-        fputcsv($out, ['Total Damaged Records:', count($rows)]);
-        fputcsv($out, ['Total Damaged Units:', $totalQty]);
-        fputcsv($out, ['Total Estimated Loss:', 'PHP ' . number_format($totalLoss, 2)]);
-        fputcsv($out, []);
-        fputcsv($out, ['STATUS BREAKDOWN']);
-        fputcsv($out, ['Received:', $statusCounts['received']]);
-        fputcsv($out, ['Inspected:', $statusCounts['inspected']]);
+        $summary = '<div class="summary"><h3>Summary</h3><table>'
+            . '<tr><td>Total Damaged Records:</td><td>' . count($rows) . '</td></tr>'
+            . '<tr><td>Total Damaged Units:</td><td>' . $totalQty . '</td></tr>'
+            . '<tr><td>Total Estimated Loss:</td><td>PHP ' . number_format($totalLoss, 2) . '</td></tr>'
+            . '<tr><td>Received:</td><td>' . $statusCounts['received'] . '</td></tr>'
+            . '<tr><td>Inspected:</td><td>' . $statusCounts['inspected'] . '</td></tr>'
+            . '</table></div>';
 
+        $body = '<table><thead><tr>'
+            . '<th>Date</th><th>Order #</th><th>Category</th><th>SKU</th><th>Product</th>'
+            . '<th>Qty</th><th>Unit Price</th><th>Est. Loss</th>'
+            . '<th>Return Reason</th><th>Damage Desc.</th><th>Status</th><th>Admin Notes</th><th>Reported By</th>'
+            . '</tr></thead><tbody>' . $tbody . '</tbody></table>' . $summary;
 
-        fclose($out);
-        exit;
+        $html = $this->pdfWrap('Damaged Inventory Report', 'Damaged Inventory Report &nbsp;|&nbsp; ' . $label, $body);
+        $this->renderPdf('SouthDev_Damaged_Inventory_' . date('Y-m-d') . '.pdf', $html);
     }
 }

@@ -189,18 +189,22 @@ class OrderController {
 
             $this->logModel->create(LOG_ORDER_CREATE, "Order #{$orderId} placed via {$paymentMethod}, total: ₱" . number_format($totalAmount, 2));
 
-            // Notify customer: order placed
-            try {
-                $orderData = $this->orderModel->findById($orderId);
-                $notifModel = new Notification($this->pdo);
-                $notifModel->create(
-                    $_SESSION['user_id'],
-                    'Order Placed',
-                    "Your order #{$orderData['order_number']} has been placed successfully! Total: ₱" . number_format($totalAmount, 2),
-                    'order_processing',
-                    APP_URL . '/index.php?url=orders/' . $orderId
-                );
-            } catch (Throwable $e) { /* silent */ }
+            // For COD/bank: notify immediately. For online payments (gcash/card/qrph):
+            // no notification here — payment-success.php sends 'Order Placed' on success,
+            // payment-failed.php sends 'Order Cancelled' on failure.
+            if (!in_array($paymentMethod, ['gcash', 'card', 'qrph'])) {
+                try {
+                    $orderData = $this->orderModel->findById($orderId);
+                    $notifModel = new Notification($this->pdo);
+                    $notifModel->create(
+                        $_SESSION['user_id'],
+                        'Order Placed',
+                        "Your order #{$orderData['order_number']} has been placed successfully! Total: ₱" . number_format($totalAmount, 2),
+                        'order_processing',
+                        APP_URL . '/index.php?url=orders/' . $orderId
+                    );
+                } catch (Throwable $e) { /* silent */ }
+            }
 
             // Redirect to payment gateway for online payment methods
             if (in_array($paymentMethod, ['gcash', 'card', 'qrph'])) {

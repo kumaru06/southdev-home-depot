@@ -383,6 +383,107 @@ class PaymentController {
     }
 
     /**
+     * Poll payment status — called by payment-gateway.php after user returns from PayMongo.
+     * Returns JSON: { status: 'completed'|'failed'|'pending', redirect: url }
+     */
+    public function pollPaymentStatus() {
+        AuthMiddleware::handle();
+        header('Content-Type: application/json');
+        $orderId = intval($_GET['order_id'] ?? 0);
+        if (!$orderId) { echo json_encode(['status' => 'error']); exit; }
+        $order = $this->orderModel->findById($orderId);
+        if (!$order || $order['user_id'] != $_SESSION['user_id']) {
+            echo json_encode(['status' => 'error']); exit;
+        }
+        $payment = $this->paymentModel->getByOrderId($orderId);
+        $status  = $payment['status'] ?? PAYMENT_PENDING;
+
+        // Order already cancelled
+        if ($order['status'] === 'cancelled') {
+            echo json_encode([
+                'status'   => 'failed',
+                'redirect' => APP_URL . '/payment/payment-failed.php?order_id=' . $orderId . '&reason=cancelled'
+            ]);
+            exit;
+        }
+
+        if ($status === PAYMENT_COMPLETED) {
+            $sourceId = $payment['source_id'] ?? null;
+            $qs = $sourceId ? '&session_id=' . urlencode($sourceId) : '';
+            echo json_encode([
+                'status'   => 'completed',
+                'redirect' => APP_URL . '/payment/payment-success.php?order_id=' . $orderId . $qs
+            ]);
+            exit;
+        }
+
+        if ($status === PAYMENT_FAILED) {
+            echo json_encode([
+                'status'   => 'failed',
+                'redirect' => APP_URL . '/payment/payment-failed.php?order_id=' . $orderId . '&reason=payment_failed'
+            ]);
+            exit;
+        }
+
+        // Still pending — ask PayMongo directly for the source/session status
+        if ($payment && !empty($payment['source_id']) && $this->payMongoGateway) {
+            $sourceId = $payment['source_id'];
+            try {
+                // GCash Source (src_xxx)
+                if (strpos($sourceId, 'src_') === 0) {
+                    $sourceData   = $this->payMongoGateway->getSource($sourceId);
+                    $sourceStatus = $sourceData['data']['attributes']['status'] ?? '';
+                    if (in_array($sourceStatus, ['expired', 'failed', 'cancelled'])) {
+                        $this->paymentModel->updateStatus($payment['id'], PAYMENT_FAILED);
+                        echo json_encode([
+                            'status'   => 'failed',
+                            'redirect' => APP_URL . '/payment/payment-failed.php?order_id=' . $orderId . '&reason=gcash_' . $sourceStatus
+                        ]);
+                        exit;
+                    }
+                    if ($sourceStatus === 'chargeable') {
+                        // Paid — mark complete
+                        $this->paymentModel->updateStatus($payment['id'], PAYMENT_COMPLETED, $sourceId);
+                        echo json_encode([
+                            'status'   => 'completed',
+                            'redirect' => APP_URL . '/payment/payment-success.php?order_id=' . $orderId
+                        ]);
+                        exit;
+                    }
+                }
+                // Checkout Session (cs_xxx)
+                elseif (strpos($sourceId, 'cs_') === 0) {
+                    $sessionData   = $this->payMongoGateway->getCheckoutSession($sourceId);
+                    $sessionStatus = $sessionData['data']['attributes']['payment_intent']['attributes']['status']
+                                     ?? $sessionData['data']['attributes']['status']
+                                     ?? '';
+                    if (in_array($sessionStatus, ['expired', 'cancelled', 'failed'])) {
+                        $this->paymentModel->updateStatus($payment['id'], PAYMENT_FAILED);
+                        echo json_encode([
+                            'status'   => 'failed',
+                            'redirect' => APP_URL . '/payment/payment-failed.php?order_id=' . $orderId . '&reason=session_' . $sessionStatus
+                        ]);
+                        exit;
+                    }
+                    if ($sessionStatus === 'succeeded') {
+                        $this->paymentModel->updateStatus($payment['id'], PAYMENT_COMPLETED, $sourceId);
+                        echo json_encode([
+                            'status'   => 'completed',
+                            'redirect' => APP_URL . '/payment/payment-success.php?order_id=' . $orderId . '&session_id=' . urlencode($sourceId)
+                        ]);
+                        exit;
+                    }
+                }
+            } catch (Exception $e) {
+                // PayMongo API unreachable — just return pending
+            }
+        }
+
+        echo json_encode(['status' => 'pending']);
+        exit;
+    }
+
+    /**
      * Handle PayMongo webhook for payment updates
      */
     public function handlePayMongoWebhook() {
