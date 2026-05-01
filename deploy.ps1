@@ -24,7 +24,7 @@ $localRoot = "C:\xampp\htdocs\southdev-home-depot"
 $remoteRoot = "/htdocs"
 
 # Directories/files to always skip
-$excludeDirs  = @('.git', 'repo.git', 'docs', 'database')
+$excludeDirs  = @('.git', 'repo.git', 'docs', 'database', '.venv', 'storage')
 $excludeFiles = @('southdev-deploy.zip', 'ftp_upload.ps1', 'deploy.ps1',
                    'test.html', 'test.php', 'test_deploy.php',
                    'tmp_index_html.html', 'tmp_products_html.html', 'tmp_products_html_after.css.html',
