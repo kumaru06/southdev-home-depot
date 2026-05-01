@@ -52,16 +52,15 @@ try {
         <div class="container topbar-inner">
             <a href="<?= APP_URL ?>" class="brand">
                 <?php
-                    $logoRel = 'assets/uploads/images/southdev.png';
+                    $logoRel = 'assets/uploads/images/logosouthdev2.png';
                     $logoFull = ROOT_PATH . '/' . $logoRel;
                     if (file_exists($logoFull)):
                         $logoUrl = APP_URL . '/' . $logoRel;
                 ?>
-                    <span class="logo-icon"><img src="<?= htmlspecialchars($logoUrl) ?>" alt="<?= htmlspecialchars(APP_NAME) ?> logo"></span>
+                    <span class="brand-logo-image"><img src="<?= htmlspecialchars($logoUrl) ?>" alt="<?= htmlspecialchars(APP_NAME) ?> logo"></span>
                 <?php else: ?>
-                    <span class="logo-icon">SHD</span>
+                    <span class="brand-logo-fallback"><?= htmlspecialchars(APP_NAME) ?></span>
                 <?php endif; ?>
-                <span class="logo-text"><?= APP_NAME ?></span>
             </a>
 
             <form action="<?= APP_URL ?>/index.php" method="GET" class="search-inline" role="search">

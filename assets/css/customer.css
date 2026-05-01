@@ -1967,13 +1967,14 @@ body:not(.admin-layout) .form-control {
 }
 
 /* ---------- Cart ---------- */
-.navbar + .container.cart-page {
+.site-header + .container.cart-page {
+    margin-top: -16px;
     padding-top: 0;
 }
 
 .cart-page {
     position: relative;
-    margin-top: -8px;
+    margin-top: 0;
     padding-top: 0;
     padding-bottom: 2.8rem;
     background:
@@ -2032,9 +2033,10 @@ body:not(.admin-layout) .form-control {
 }
 
 .cart-page .page-heading {
-    color: #fff;
+    color: #0f172a;
     font-size: clamp(2rem, 3vw, 2.6rem);
     letter-spacing: -.04em;
+    margin: 0;
 }
 
 .cart-page .page-heading-badge {
@@ -6589,4 +6591,444 @@ body:not(.admin-layout) .form-control {
     .notif-icon i, .notif-icon svg { width: 18px; height: 18px; }
     .notif-title { font-size: 13px; }
     .notif-message { font-size: 12px; }
+}
+
+/* ========================================================
+   MOBILE RESPONSIVE POLISH — Account, Orders, Checkout
+   ======================================================== */
+
+@media (max-width: 1024px) {
+    .checkout-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .co-summary,
+    .profile-side-rail {
+        position: static;
+    }
+
+    .checkout-sidebar {
+        order: 2;
+    }
+}
+
+@media (max-width: 768px) {
+    .profile-page .profile-hero {
+        margin: 0;
+        border-radius: 22px !important;
+    }
+
+    .profile-page .profile-hero-content {
+        grid-template-columns: 1fr !important;
+        gap: 1rem;
+    }
+
+    .profile-page .profile-meta-tag,
+    .profile-delivery-card strong,
+    .profile-side-list span {
+        max-width: 100%;
+        overflow-wrap: anywhere;
+    }
+
+    .profile-page .form-row,
+    .checkout-page .form-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .profile-page .form-col,
+    .checkout-page .form-col {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .orders-hero-panel,
+    .co-header {
+        align-items: stretch;
+    }
+
+    .orders-hero-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+    }
+
+    .checkout-page {
+        padding-bottom: 2.25rem;
+    }
+
+    .checkout-grid {
+        gap: 18px !important;
+    }
+}
+
+@media (max-width: 680px) {
+    .profile-page {
+        padding-top: .25rem;
+        padding-bottom: 2rem;
+    }
+
+    .profile-page::before {
+        inset: -40px -14px auto;
+        height: 240px;
+    }
+
+    .profile-page .profile-hero-bg {
+        height: 118px;
+        border-radius: 22px;
+    }
+
+    .profile-page .profile-hero-content {
+        padding: 16px 14px 18px;
+        margin-top: -38px;
+        border-radius: 0 0 22px 22px;
+    }
+
+    .profile-page .profile-hero-main {
+        align-items: center;
+        gap: 14px;
+    }
+
+    .profile-page .profile-hero-avatar .profile-photo--lg {
+        width: 88px;
+        height: 88px;
+    }
+
+    .profile-page .profile-camera-btn {
+        width: 34px;
+        height: 34px;
+        font-size: .82rem;
+    }
+
+    .profile-page .profile-hero-name {
+        font-size: clamp(1.45rem, 8vw, 2rem);
+    }
+
+    .profile-page .profile-hero-meta,
+    .profile-page .profile-hero-badges {
+        gap: .5rem;
+    }
+
+    .profile-page .profile-meta-tag,
+    .profile-hero-badge {
+        justify-content: center;
+        min-height: 30px;
+        padding: .34rem .66rem;
+        font-size: .74rem;
+    }
+
+    .profile-hero-actions {
+        width: 100%;
+        flex-direction: column;
+        gap: .55rem;
+    }
+
+    .profile-hero-action {
+        width: 100%;
+        min-height: 44px;
+        justify-content: center;
+    }
+
+    .profile-ring-row {
+        align-items: center;
+        gap: .9rem;
+    }
+
+    .profile-ring-wrap,
+    .profile-ring-svg {
+        width: 82px;
+        height: 82px;
+    }
+
+    .profile-ring-pct {
+        font-size: 1.05rem;
+    }
+
+    .profile-overview-grid {
+        gap: .7rem;
+    }
+
+    .profile-nav-shell {
+        margin: 18px 0 1rem;
+        gap: .75rem;
+    }
+
+    .profile-nav-copy h2 {
+        font-size: 1.18rem;
+        line-height: 1.25;
+    }
+
+    .profile-page .profile-nav-tabs {
+        display: flex;
+        gap: .35rem;
+        overflow-x: auto;
+        padding: .35rem;
+        border-radius: 15px;
+        scrollbar-width: none;
+    }
+
+    .profile-page .profile-nav-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .profile-page .profile-tab {
+        flex: 0 0 auto;
+        min-height: 40px;
+        padding: .62rem .9rem;
+        font-size: .78rem;
+    }
+
+    .profile-page .profile-section-header,
+    .profile-page .profile-section-card form,
+    .profile-side-card {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .profile-page .profile-section-header {
+        padding-top: 16px;
+        padding-bottom: 14px;
+    }
+
+    .profile-page .profile-section-header h3 {
+        font-size: 1.05rem;
+    }
+
+    .profile-page .input-with-action {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: .65rem;
+    }
+
+    .profile-page .input-with-action .btn,
+    .profile-page .form-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .profile-check-row {
+        padding: .85rem;
+        border-radius: 15px;
+    }
+
+    .orders-page {
+        padding-top: .15rem;
+        padding-bottom: 2rem;
+    }
+
+    .orders-hero-panel {
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .orders-hero-subtitle {
+        font-size: .9rem;
+        line-height: 1.62;
+    }
+
+    .orders-stat-card {
+        padding: .85rem;
+        border-radius: 15px;
+    }
+
+    .orders-stat-card strong {
+        font-size: 1.12rem;
+    }
+
+    .orders-stat-card span {
+        font-size: .7rem;
+    }
+
+    .orders-toolbar {
+        align-items: stretch;
+        padding: .85rem;
+        border-radius: 16px;
+    }
+
+    .orders-filter-form,
+    .orders-toolbar-summary,
+    .orders-filter-label,
+    .orders-filter-input,
+    .orders-filter-form .btn {
+        width: 100%;
+        max-width: none;
+    }
+
+    .orders-filter-form .btn {
+        justify-content: center;
+    }
+
+    .order-number {
+        font-size: .98rem;
+        overflow-wrap: anywhere;
+    }
+
+    .order-card--enhanced .order-card-content {
+        padding: 14px 12px;
+    }
+
+    .order-card-amount,
+    .order-card-amount-box,
+    .order-card-main {
+        width: 100%;
+    }
+
+    .order-card-buttons,
+    .order-card-utility {
+        align-items: stretch;
+    }
+
+    .orders-pagination {
+        gap: 8px;
+    }
+
+    .orders-pagination-status,
+    .orders-pagination-btn {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .checkout-page {
+        padding-top: 0;
+    }
+
+    .co-header {
+        margin-bottom: 18px;
+        gap: 12px;
+    }
+
+    .co-kicker {
+        max-width: 100%;
+        white-space: normal;
+        line-height: 1.35;
+        font-size: .66rem;
+        padding: .42rem .68rem;
+    }
+
+    .co-title {
+        font-size: clamp(1.55rem, 9vw, 2rem);
+    }
+
+    .co-intro {
+        line-height: 1.58;
+    }
+
+    .co-card {
+        padding: 0 !important;
+        border-radius: 18px !important;
+    }
+
+    .co-card-header {
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .co-card-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+    }
+
+    .co-saved-addr-bar {
+        align-items: stretch;
+        flex-direction: column;
+        border-radius: 14px;
+    }
+
+    .co-saved-addr-info span {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .co-saved-addr-btn {
+        width: 100%;
+        justify-content: center;
+        min-height: 40px;
+    }
+
+    .co-location-tag {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+        white-space: normal;
+        font-size: .8rem;
+    }
+
+    .co-pay-inner {
+        align-items: flex-start;
+        border-radius: 15px;
+    }
+
+    .co-pay-text {
+        min-width: 0;
+    }
+
+    .co-pay-text strong,
+    .co-pay-text small {
+        overflow-wrap: anywhere;
+    }
+
+    .co-summary {
+        position: static;
+        border-radius: 18px !important;
+    }
+
+    .co-sum-item {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 8px 10px;
+    }
+
+    .co-sum-price {
+        grid-column: 2;
+        justify-self: start;
+    }
+
+    .co-sum-grand {
+        font-size: 1.55rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .orders-hero-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .order-meta-item,
+    .order-payment-badge {
+        width: 100%;
+        justify-content: center;
+        white-space: normal;
+        text-align: center;
+    }
+
+    .profile-ring-row {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .profile-overview-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .co-steps {
+        padding: .7rem .75rem;
+    }
+
+    .co-step-line {
+        width: 22px;
+        margin: 0 6px;
+    }
+
+    .co-pay-inner {
+        gap: 9px;
+        padding: 11px;
+    }
+
+    .co-pay-icon {
+        width: 36px;
+        height: 36px;
+    }
 }

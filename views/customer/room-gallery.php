@@ -101,12 +101,17 @@ require_once INCLUDES_PATH . '/navbar.php';
     margin-bottom: 0;
 }
 
+body {
+    overflow-x: hidden;
+}
+
 .gallery-page {
     --gallery-surface: #ffffff;
     --gallery-border: rgba(15, 23, 42, 0.08);
     --gallery-text: #0f172a;
     --gallery-muted: #64748b;
     --gallery-shadow: 0 20px 55px rgba(15, 23, 42, 0.08);
+    overflow-x: hidden;
     background:
         radial-gradient(circle at top left, rgba(249, 115, 22, 0.14), transparent 28%),
         radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 24%),
@@ -216,9 +221,12 @@ require_once INCLUDES_PATH . '/navbar.php';
 .gallery-mini-card {
     position: relative;
     overflow: hidden;
+    box-shadow: 0 24px 40px rgba(15, 23, 42, 0.14);
+}
+
+.gallery-mini-card {
     border: 0;
     padding: 0;
-    box-shadow: 0 24px 40px rgba(15, 23, 42, 0.14);
     cursor: pointer;
 }
 
@@ -233,7 +241,6 @@ require_once INCLUDES_PATH . '/navbar.php';
     transition: transform .22s ease, box-shadow .22s ease, opacity .22s ease, background .22s ease, border-color .22s ease;
 }
 
-.gallery-feature-card:hover,
 .gallery-mini-card:hover,
 .gallery-card-link:hover,
 .gallery-thumb:hover,
@@ -255,7 +262,46 @@ require_once INCLUDES_PATH . '/navbar.php';
     display: block;
 }
 
-.gallery-feature-overlay,
+.gallery-feature-overlay {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 1.6rem 1.5rem 1.75rem;
+    color: #fff;
+    background: linear-gradient(180deg, transparent 0%, rgba(10, 18, 30, 0.72) 40%, rgba(10, 18, 30, 0.96) 100%);
+}
+
+.gallery-flagship-badge {
+    display: inline-block;
+    padding: .28rem .75rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    backdrop-filter: blur(10px);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: #fff;
+    margin-bottom: .75rem;
+}
+
+.gallery-flagship-title {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 800;
+    line-height: 1.25;
+    letter-spacing: -.02em;
+    margin-bottom: .5rem;
+    color: #fff;
+}
+
+.gallery-flagship-desc {
+    display: block;
+    font-size: .88rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.82);
+}
+
 .gallery-mini-overlay {
     position: absolute;
     inset: auto 0 0 0;
@@ -264,14 +310,12 @@ require_once INCLUDES_PATH . '/navbar.php';
     background: linear-gradient(180deg, transparent 0%, rgba(15, 23, 42, 0.9) 100%);
 }
 
-.gallery-feature-overlay strong,
 .gallery-mini-overlay strong {
     display: block;
     font-size: 1.05rem;
     margin-bottom: .25rem;
 }
 
-.gallery-feature-overlay span,
 .gallery-mini-overlay span {
     font-size: .88rem;
     opacity: .92;
@@ -824,21 +868,14 @@ body.gallery-modal-open {
             </div>
 
             <div class="gallery-hero-visual reveal-on-scroll reveal-right">
-                <?php if ($featuredCollection): ?>
-                    <button
-                        type="button"
-                        class="gallery-feature-card"
-                        data-open-gallery="<?= htmlspecialchars($featuredCollection['slug']) ?>"
-                        data-start-index="0"
-                        aria-label="Open <?= htmlspecialchars($featuredCollection['title']) ?> gallery"
-                    >
-                        <img src="<?= htmlspecialchars($featuredCollection['cover']) ?>" alt="<?= htmlspecialchars($featuredCollection['title']) ?> showcase image">
-                        <span class="gallery-feature-overlay">
-                            <strong><?= htmlspecialchars($featuredCollection['title']) ?></strong>
-                            <span><?= (int) $featuredCollection['count'] ?> photos · Click to open gallery</span>
-                        </span>
-                    </button>
-                <?php endif; ?>
+                <div class="gallery-feature-card">
+                    <img src="<?= APP_URL ?>/assets/uploads/images/homepage.png" alt="Flagship style – professional interior design inspiration">
+                    <span class="gallery-feature-overlay">
+                        <span class="gallery-flagship-badge">Flagship Style</span>
+                        <strong class="gallery-flagship-title">Professional design inspiration starts the moment visitors arrive.</strong>
+                        <span class="gallery-flagship-desc">Use a cleaner, architectural visual direction that feels premium, confident, and store-ready.</span>
+                    </span>
+                </div>
 
                 <div class="gallery-mini-stack">
                     <?php foreach ($secondaryCollections as $collection): ?>

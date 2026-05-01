@@ -4,7 +4,6 @@ $extraJs = ['cart.js'];
 require_once INCLUDES_PATH . '/header.php';
 require_once INCLUDES_PATH . '/navbar.php';
 
-$cartItemCount = is_array($cartItems ?? null) ? count($cartItems) : 0;
 $cartQuantityTotal = 0;
 foreach (($cartItems ?? []) as $cartItemSummary) {
     $cartQuantityTotal += (int) ($cartItemSummary['quantity'] ?? 0);
@@ -12,40 +11,10 @@ foreach (($cartItems ?? []) as $cartItemSummary) {
 ?>
 
 <div class="container cart-page">
-    <section class="cart-hero-panel">
-        <div class="cart-hero-copy">
-            <div class="page-heading-row cart-heading-row">
-                <h1 class="page-heading">Shopping Cart</h1>
-                <?php if ($cartItemCount > 0): ?>
-                    <span class="page-heading-badge"><?= $cartItemCount ?> item<?= $cartItemCount > 1 ? 's' : '' ?></span>
-                <?php endif; ?>
-            </div>
-            <p class="cart-hero-subtitle">Review your selected products, adjust quantities, and continue to checkout when everything looks right.</p>
-        </div>
-
-        <?php if (!empty($cartItems)): ?>
-            <div class="cart-hero-stats" aria-label="Cart overview">
-                <div class="cart-stat-card">
-                    <strong><?= $cartItemCount ?></strong>
-                    <span>Unique items</span>
-                </div>
-                <div class="cart-stat-card">
-                    <strong><?= $cartQuantityTotal ?></strong>
-                    <span>Total quantity</span>
-                </div>
-                <div class="cart-stat-card">
-                    <strong>Free</strong>
-                    <span>Shipping</span>
-                </div>
-                <div class="cart-stat-card">
-                    <strong>₱<?= number_format($cartTotal, 0) ?></strong>
-                    <span>Current total</span>
-                </div>
-            </div>
-        <?php endif; ?>
-    </section>
-
     <?php if (!empty($cartItems)): ?>
+        <div class="page-heading-row" style="margin-bottom: 1rem;">
+            <h1 class="page-heading">Shopping Cart</h1>
+        </div>
         <div class="cart-layout">
             <div class="cart-items-wrap">
                 <div class="cart-table-topbar">

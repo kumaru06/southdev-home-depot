@@ -1025,7 +1025,7 @@ $featuredCollections = [
                                             <?php foreach ($collection['tiles'] as $tileIndex => $tile): ?>
                                                 <div class="collection-side-swatch">
                                                     <img src="<?= APP_URL ?>/<?= htmlspecialchars($tile) ?>" alt="<?= htmlspecialchars($collection['name']) ?> tile variation <?= $tileIndex + 1 ?>">
-                                                    <span class="collection-side-swatch-label">Finish <?= $tileIndex + 1 ?></span>
+                                                    <span class="collection-side-swatch-label"><?= ['MATTE', 'POLISHED', 'TEXTURED'][$tileIndex] ?? ('FINISH ' . ($tileIndex + 1)) ?></span>
                                                 </div>
                                             <?php endforeach; ?>
                                         </div>

@@ -9,10 +9,10 @@ require_once INCLUDES_PATH . '/header.php';
 require_once INCLUDES_PATH . '/navbar.php';
 
 $homeHero = [
-    'image' => 'assets/uploads/images/home/houseoutside.png',
+    'image' => 'assets/uploads/images/storeinside.png',
     'eyebrow' => 'DESIGN-LED SPACES',
-    'title' => 'Turn everyday rooms into polished spaces that feel custom-built.',
-    'copy' => 'From statement living areas to refined bath zones and sleek kitchen corners, Southdev Home Depot brings together the finishes, textures, and inspiration you need to design with confidence.',
+    'title' => 'Build Your <span style="color:#f97316;">Dream Space</span> With Us',
+    'copy' => 'From flooring to structural materials, bathroom fixtures to interior finishes — everything you need to create stunning spaces, all in one place.',
 ];
 
 $heroCards = [
@@ -97,7 +97,12 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
     margin-bottom: 0;
 }
 
+body {
+    overflow-x: hidden;
+}
+
 .home-shell {
+    overflow-x: hidden;
     padding: 0 0 4rem;
 }
 
@@ -107,9 +112,8 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
     background:
         linear-gradient(135deg, rgba(14, 24, 38, .88) 0%, rgba(25, 43, 67, .68) 48%, rgba(38, 59, 92, .58) 100%),
         url("<?= APP_URL ?>/<?= htmlspecialchars($homeHero['image']) ?>") center/cover no-repeat;
-    padding: 4.5rem 2rem 4rem;
+    padding: clamp(2.4rem, 4.5vw, 3.4rem) 2rem 4rem;
     color: #fff;
-    box-shadow: 0 30px 80px rgba(15, 23, 42, .18);
 }
 
 .home-hero::before {
@@ -125,12 +129,9 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
 .home-hero::after {
     content: '';
     position: absolute;
-    inset: auto 0 0 0;
-    height: 170px;
-    background:
-        radial-gradient(120% 90px at 50% 0%, rgba(255, 255, 255, .22) 0%, rgba(255, 255, 255, 0) 70%),
-        linear-gradient(180deg, rgba(248, 250, 252, 0) 0%, rgba(248, 250, 252, .24) 28%, rgba(248, 250, 252, .72) 68%, rgba(248, 250, 252, .96) 88%, rgba(248, 250, 252, 1) 100%);
-    filter: blur(8px);
+    inset: auto 0 -1px 0;
+    height: 200px;
+    background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.5) 45%, rgba(255,255,255,.9) 75%, #ffffff 100%);
     pointer-events: none;
 }
 
@@ -628,7 +629,7 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
 
 @media (max-width: 760px) {
     .home-hero {
-        padding: 3.2rem 1rem 3rem;
+        padding: 2.35rem 1rem 3rem;
     }
 
     .home-content {
@@ -706,7 +707,7 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
     }
 
     .home-hero {
-        padding: 2.6rem .85rem 2.5rem;
+        padding: 1.9rem .85rem 2.5rem;
     }
 
     .home-eyebrow {
@@ -757,7 +758,7 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
                     <?= htmlspecialchars($homeHero['eyebrow']) ?>
                 </div>
 
-                <h1><?= htmlspecialchars($homeHero['title']) ?></h1>
+                <h1><?= $homeHero['title'] ?></h1>
                 <p><?= htmlspecialchars($homeHero['copy']) ?></p>
 
                 <div class="home-hero-actions">
@@ -787,7 +788,7 @@ $storeFeatureImage = 'assets/uploads/images/home/storeinside.png';
 
             <div class="home-hero-side reveal-on-scroll reveal-right">
                 <article class="home-primary-card">
-                    <img src="<?= APP_URL ?>/<?= htmlspecialchars($homeHero['image']) ?>" alt="Southdev Home Depot exterior showcase">
+                    <img src="<?= APP_URL ?>/assets/uploads/images/homepage.png" alt="Southdev Home Depot exterior showcase">
                     <div class="home-primary-card-copy">
                         <span>Flagship Style</span>
                         <h3>Professional design inspiration starts the moment visitors arrive.</h3>
