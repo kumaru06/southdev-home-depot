@@ -331,13 +331,6 @@ p { color: var(--text-secondary); }
         top: 0;
         z-index: 200;
         box-shadow: 0 2px 20px rgba(0,0,0,.08);
-        transition: transform .28s ease, box-shadow .28s ease;
-        will-change: transform;
-    }
-
-    .site-header.is-hidden {
-        transform: translateY(-100%);
-        box-shadow: none;
     }
 
     .reveal-on-scroll {
@@ -1037,11 +1030,6 @@ p { color: var(--text-secondary); }
 
     /* ---------- Tablet breakpoint ---------- */
     @media (max-width: 900px) {
-        .site-header.is-hidden {
-            transform: translateY(0);
-            box-shadow: 0 2px 20px rgba(0,0,0,.08);
-        }
-
         .menu-has-dropdown .submenu {
             position: static !important;
             box-shadow: none;

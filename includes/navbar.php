@@ -254,48 +254,6 @@ try {
                 });
             });
 
-            if (header) {
-                var lastScrollY = window.scrollY || window.pageYOffset || 0;
-                var scrollDelta = 10;
-
-                function syncHeaderVisibility() {
-                    var currentScrollY = window.scrollY || window.pageYOffset || 0;
-
-                    if (window.innerWidth <= 900 || header.classList.contains('mobile-open')) {
-                        header.classList.remove('is-hidden');
-                        lastScrollY = currentScrollY;
-                        return;
-                    }
-
-                    if (currentScrollY <= 24) {
-                        header.classList.remove('is-hidden');
-                        lastScrollY = currentScrollY;
-                        return;
-                    }
-
-                    if (currentScrollY > lastScrollY + scrollDelta) {
-                        header.classList.add('is-hidden');
-                    } else if (currentScrollY < lastScrollY - scrollDelta) {
-                        header.classList.remove('is-hidden');
-                    }
-
-                    lastScrollY = currentScrollY;
-                }
-
-                window.addEventListener('scroll', syncHeaderVisibility, { passive: true });
-                window.addEventListener('resize', syncHeaderVisibility);
-                syncHeaderVisibility();
-            }
-
-            // Close dropdowns when clicking non-dropdown menu links
-            document.querySelectorAll('.main-menu > li:not(.menu-has-dropdown) > a').forEach(function(link){
-                link.addEventListener('click', function(){
-                    document.querySelectorAll('.menu-has-dropdown.open').forEach(function(dd){
-                        dd.classList.remove('open');
-                    });
-                });
-            });
-
             
         });
         </script>
