@@ -59,8 +59,8 @@
    ========================================================== */
 .stat-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
     margin-bottom: 24px;
 }
 .stat-card {
@@ -72,6 +72,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 14px;
+    min-width: 0;
     transition: box-shadow .3s ease, transform .3s ease;
 }
 .stat-card:hover {
@@ -94,12 +95,15 @@
     margin-bottom: 6px;
 }
 .stat-card .stat-value {
-    font-size: clamp(18px, 1.6vw, 24px);
+    font-size: clamp(20px, 1.5vw, 26px);
     font-weight: 800;
     color: var(--charcoal);
-    line-height: 1.15;
+    line-height: 1.2;
     letter-spacing: -.5px;
-    word-break: break-word;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .stat-card .stat-icon {
@@ -666,27 +670,33 @@
 /* ==========================================================
    RESPONSIVE
    ========================================================== */
-@media (max-width: 1400px) {
-    .stat-cards { grid-template-columns: repeat(3, 1fr); }
-}
 @media (max-width: 1200px) {
-    .stat-cards { grid-template-columns: repeat(3, 1fr); }
     .chart-grid { grid-template-columns: 1fr; }
     .dashboard-grid-orders { grid-template-columns: 1fr; }
     .qa-grid { grid-template-columns: repeat(4, 1fr); }
 }
 @media (max-width: 992px) {
-    .stat-cards { grid-template-columns: repeat(2, 1fr); }
+    .stat-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    /* Full-width last card when 7 stats leave a single orphan row */
+    .stat-cards:has(> .stat-card:nth-child(7):last-child) > .stat-card:nth-child(7) {
+        grid-column: 1 / -1;
+    }
     .dashboard-grid-2 { grid-template-columns: 1fr; }
     .dashboard-grid-3 { grid-template-columns: 1fr; }
     .dashboard-grid-orders { grid-template-columns: 1fr; }
     .qa-grid { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 768px) {
-    .stat-cards { grid-template-columns: 1fr 1fr; }
+    .stat-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .stat-card { padding: 16px 18px; }
+    .stat-card .stat-value { font-size: 22px; }
+    .stat-card .stat-icon { display: none; }
     .qa-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 480px) {
     .stat-cards { grid-template-columns: 1fr; }
+    .stat-cards:has(> .stat-card:nth-child(7):last-child) > .stat-card:nth-child(7) {
+        grid-column: auto;
+    }
     .qa-grid { grid-template-columns: repeat(2, 1fr); }
 }

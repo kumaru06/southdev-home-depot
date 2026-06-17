@@ -64,8 +64,19 @@ function Upload-File($localPath, $remotePath) {
     $remoteFile = $parts[-1]
     $localPathEsc = $localPath.Replace('\','\\')
 
-    $result = python -c "
-import ftplib, re, sys
+    $maxRetries = 3
+    $attempt = 0
+    $result = ""
+
+    while ($attempt -lt $maxRetries) {
+        $attempt++
+        if ($attempt -gt 1) {
+            Write-Host "    Retrying ($attempt/$maxRetries)..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 2
+        }
+
+        $result = python -c "
+import ftplib, re, sys, time
 def mkpasv(ftp):
     resp = ftp.sendcmd('PASV')
     m = re.search(r'\|\|\|(\d+)\|', resp)
@@ -77,12 +88,15 @@ try:
     ftp.makepasv = lambda: mkpasv(ftp)
     ftp.cwd('$remoteDir')
     with open('$localPathEsc', 'rb') as f:
-        ftp.storbinary('STOR $remoteFile', f)
+        ftp.storbinary('STOR $remoteFile', f, blocksize=8192)
     ftp.quit()
     print('OK')
 except Exception as e:
     print('ERR:' + str(e))
 " 2>&1
+
+        if ($result -match '^OK') { break }
+    }
 
     if ($result -match '^OK') {
         $kb = [math]::Round((Get-Item $localPath).Length/1024, 1)
