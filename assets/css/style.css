@@ -439,6 +439,14 @@ p { color: var(--text-secondary); }
         z-index: 1;
     }
 
+    /* Align header content with homepage hero (1220px + 2rem gutters) */
+    .site-header .topbar-inner.container,
+    .site-header .main-nav > .container {
+        max-width: 1220px;
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+
     /* ---------- Brand / Logo ---------- */
     .brand {
         flex: 0 0 auto;
@@ -479,17 +487,19 @@ p { color: var(--text-secondary); }
     .brand .brand-logo-image {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        width: clamp(190px, 24vw, 290px);
+        justify-content: flex-start;
+        width: auto;
+        max-width: clamp(190px, 24vw, 290px);
         height: 58px;
         flex-shrink: 0;
     }
     .brand .brand-logo-image img {
-        width: 100%;
+        width: auto;
+        max-width: 100%;
         height: 100%;
         display: block;
         object-fit: contain;
-        object-position: center;
+        object-position: left center;
     }
     .brand .brand-logo-fallback {
         font-family: var(--font);
