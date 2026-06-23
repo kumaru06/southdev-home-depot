@@ -2969,12 +2969,15 @@ select.form-control { cursor: pointer; }
     margin-bottom: 8px;
 }
 .auth-panel .form-control:not(.fl-input) {
-    padding: 13px 14px 13px 44px;
+    padding: 13px 14px;
     border: 1.5px solid var(--border);
     border-radius: 12px;
     font-size: 14px;
     background: var(--neutral);
     transition: all .25s ease;
+}
+.auth-panel .input-icon-wrap .form-control:not(.fl-input) {
+    padding-left: 44px;
 }
 .auth-panel .form-control:not(.fl-input):hover {
     border-color: #cbd5e1;
