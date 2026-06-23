@@ -30,7 +30,10 @@ if (!headers_sent()) {
     <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle) . ' – ' : '' ?><?= APP_NAME ?></title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="<?= APP_URL ?>/assets/favicon.svg">
+    <link rel="icon" href="<?= APP_URL ?>/assets/uploads/favicon/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= APP_URL ?>/assets/uploads/favicon/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?= APP_URL ?>/assets/uploads/favicon/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?= APP_URL ?>/assets/uploads/favicon/apple-touch-icon.png">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
