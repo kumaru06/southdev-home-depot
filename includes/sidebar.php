@@ -21,7 +21,7 @@ $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($
         <ul class="nav-menu">
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=dashboard" class="<?= $currentUrl == 'dashboard' ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-layout-dashboard"></i></span>
+                    <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span>
                     <span class="nav-text">Dashboard</span>
                 </a>
             </li>
@@ -32,43 +32,43 @@ $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($
         <ul class="nav-menu">
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=staff/orders" class="<?= strpos($currentUrl, 'orders') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-clipboard-list"></i></span>
+                    <span class="nav-icon"><i data-lucide="clipboard-list"></i></span>
                     <span class="nav-text">Manage Orders</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=staff/cancel-requests" class="<?= strpos($currentUrl, 'cancel') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-x-circle"></i></span>
+                    <span class="nav-icon"><i data-lucide="x-circle"></i></span>
                     <span class="nav-text">Cancel Requests</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=staff/inventory" class="<?= strpos($currentUrl, 'inventory') !== false && strpos($currentUrl, 'damaged') === false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-warehouse"></i></span>
+                    <span class="nav-icon"><i data-lucide="warehouse"></i></span>
                     <span class="nav-text">Inventory</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=staff/returns" class="<?= strpos($currentUrl, 'returns') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-rotate-ccw"></i></span>
+                    <span class="nav-icon"><i data-lucide="rotate-ccw"></i></span>
                     <span class="nav-text">Return Requests</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=staff/inventory/damaged" class="<?= strpos($currentUrl, 'damaged') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-alert-octagon"></i></span>
+                    <span class="nav-icon"><i data-lucide="alert-octagon"></i></span>
                     <span class="nav-text">Damaged Products</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=staff/reports" class="<?= strpos($currentUrl, 'reports') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-bar-chart-3"></i></span>
+                    <span class="nav-icon"><i data-lucide="bar-chart-3"></i></span>
                     <span class="nav-text">Reports</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=staff/reviews" class="<?= strpos($currentUrl, 'reviews') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-message-square"></i></span>
+                    <span class="nav-icon"><i data-lucide="message-square"></i></span>
                     <span class="nav-text">Reviews</span>
                 </a>
             </li>
@@ -80,31 +80,31 @@ $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($
         <ul class="nav-menu">
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=inventory/stock" class="<?= strpos($currentUrl, 'inventory/stock') !== false && strpos($currentUrl, 'movements') === false && strpos($currentUrl, 'price-history') === false && strpos($currentUrl, 'damaged') === false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-warehouse"></i></span>
+                    <span class="nav-icon"><i data-lucide="warehouse"></i></span>
                     <span class="nav-text">Manage Stock</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=inventory/stock/movements" class="<?= strpos($currentUrl, 'movements') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-activity"></i></span>
+                    <span class="nav-icon"><i data-lucide="activity"></i></span>
                     <span class="nav-text">Stock Movements</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=inventory/stock/price-history" class="<?= strpos($currentUrl, 'price-history') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-trending-up"></i></span>
+                    <span class="nav-icon"><i data-lucide="trending-up"></i></span>
                     <span class="nav-text">Price History</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=inventory/stock/damaged" class="<?= strpos($currentUrl, 'damaged') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-alert-octagon"></i></span>
+                    <span class="nav-icon"><i data-lucide="alert-octagon"></i></span>
                     <span class="nav-text">Damaged Products</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=inventory/reports" class="<?= strpos($currentUrl, 'reports') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-bar-chart-3"></i></span>
+                    <span class="nav-icon"><i data-lucide="bar-chart-3"></i></span>
                     <span class="nav-text">Reports</span>
                 </a>
             </li>
@@ -116,55 +116,55 @@ $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($
         <ul class="nav-menu">
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=admin/orders" class="<?= strpos($currentUrl, 'orders') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-clipboard-list"></i></span>
+                    <span class="nav-icon"><i data-lucide="clipboard-list"></i></span>
                     <span class="nav-text">All Orders</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=admin/cancel-requests" class="<?= strpos($currentUrl, 'cancel') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-x-circle"></i></span>
+                    <span class="nav-icon"><i data-lucide="x-circle"></i></span>
                     <span class="nav-text">Cancel Requests</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=admin/users" class="<?= strpos($currentUrl, 'users') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-users"></i></span>
+                    <span class="nav-icon"><i data-lucide="users"></i></span>
                     <span class="nav-text">Manage Users</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=admin/products" class="<?= strpos($currentUrl, 'products') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-package"></i></span>
+                    <span class="nav-icon"><i data-lucide="package"></i></span>
                     <span class="nav-text">Products</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=admin/categories" class="<?= strpos($currentUrl, 'categories') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-tags"></i></span>
+                    <span class="nav-icon"><i data-lucide="tags"></i></span>
                     <span class="nav-text">Categories</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=admin/inventory" class="<?= strpos($currentUrl, 'inventory') !== false && strpos($currentUrl, 'damaged') === false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-warehouse"></i></span>
+                    <span class="nav-icon"><i data-lucide="warehouse"></i></span>
                     <span class="nav-text">Inventory</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=admin/returns" class="<?= strpos($currentUrl, 'returns') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-rotate-ccw"></i></span>
+                    <span class="nav-icon"><i data-lucide="rotate-ccw"></i></span>
                     <span class="nav-text">Returns</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=admin/inventory/damaged" class="<?= strpos($currentUrl, 'damaged') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-alert-octagon"></i></span>
+                    <span class="nav-icon"><i data-lucide="alert-octagon"></i></span>
                     <span class="nav-text">Damaged Products</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=admin/reviews" class="<?= strpos($currentUrl, 'reviews') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-message-square"></i></span>
+                    <span class="nav-icon"><i data-lucide="message-square"></i></span>
                     <span class="nav-text">Reviews</span>
                 </a>
             </li>
@@ -174,19 +174,19 @@ $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($
         <ul class="nav-menu">
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=admin/logs" class="<?= strpos($currentUrl, 'logs') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-scroll-text"></i></span>
+                    <span class="nav-icon"><i data-lucide="scroll-text"></i></span>
                     <span class="nav-text">System Logs</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=admin/reports" class="<?= strpos($currentUrl, 'reports') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-bar-chart-3"></i></span>
+                    <span class="nav-icon"><i data-lucide="bar-chart-3"></i></span>
                     <span class="nav-text">Reports</span>
                 </a>
             </li>
             <li>
                 <a href="<?= APP_URL ?>/index.php?url=admin/settings" class="<?= strpos($currentUrl, 'settings') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon"><i class="lucide-settings"></i></span>
+                    <span class="nav-icon"><i data-lucide="settings"></i></span>
                     <span class="nav-text">Settings</span>
                 </a>
             </li>
@@ -206,7 +206,7 @@ $initials   = strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1) . substr($
         </div>
 
         <a href="<?= APP_URL ?>/index.php?url=logout" class="sidebar-logout" aria-label="Logout">
-            <i class="lucide-log-out"></i>
+            <i data-lucide="log-out"></i>
             <span class="logout-emoji" aria-hidden="true">➜]</span>
             <span class="logout-text">Logout</span>
         </a>

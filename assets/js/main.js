@@ -107,12 +107,38 @@
         const backdrop = document.querySelector('.sidebar-backdrop');
 
         if (sidebar && toggles.length) {
+            function syncSidebarState() {
+                var isCollapsed = sidebar.classList.contains('collapsed');
+                document.body.classList.toggle('admin-sidebar-collapsed', isCollapsed && window.innerWidth > 992);
+            }
+
+            function markSidebarTransition() {
+                sidebar.classList.add('sidebar--transitioning');
+                var done = false;
+                function onEnd(e) {
+                    if (e.target !== sidebar || e.propertyName !== 'width') return;
+                    if (done) return;
+                    done = true;
+                    sidebar.classList.remove('sidebar--transitioning');
+                    sidebar.removeEventListener('transitionend', onEnd);
+                }
+                sidebar.addEventListener('transitionend', onEnd);
+                window.setTimeout(function () {
+                    if (done) return;
+                    done = true;
+                    sidebar.classList.remove('sidebar--transitioning');
+                    sidebar.removeEventListener('transitionend', onEnd);
+                }, 400);
+            }
+
             toggles.forEach(function (toggle) {
                 toggle.addEventListener('click', function () {
                     /* Desktop: collapse/expand | Mobile: overlay */
                     if (window.innerWidth > 992) {
                         sidebar.classList.toggle('collapsed');
                         localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+                        syncSidebarState();
+                        markSidebarTransition();
                     } else {
                         sidebar.classList.toggle('mobile-open');
                         if (backdrop) backdrop.classList.toggle('active');
@@ -124,6 +150,11 @@
             if (window.innerWidth > 992 && localStorage.getItem('sidebar-collapsed') === 'true') {
                 sidebar.classList.add('collapsed');
             }
+            syncSidebarState();
+
+            window.addEventListener('resize', function () {
+                syncSidebarState();
+            });
         }
 
         if (backdrop) {
