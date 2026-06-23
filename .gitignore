@@ -3,6 +3,10 @@
 .env
 .env.production
 
+# Deployment archives (too large for git)
+southdev-hostinger.zip
+*.zip
+
 # Config (may contain fallback secrets)
 config/config.php
 

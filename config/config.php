@@ -63,7 +63,7 @@ define('APP_NAME', env('APP_NAME', 'Southdev Home Depot'));
 define('APP_TAGLINE', env('APP_TAGLINE', 'Davao City\'s Premier Tiles & Hardware Supply'));
 define('APP_URL', env('APP_URL', $is_local 
     ? 'http://localhost/southdev-home-depot' 
-    : 'https://southdev-home-depot.infinityfreeapp.com'));
+    : 'https://southdevhomedepotdavao.com'));
 define('APP_VERSION', env('APP_VERSION', '1.0.0'));
 define('APP_LOCATION', env('APP_LOCATION', 'Davao City, Philippines'));
 define('APP_MAP_LAT', env('APP_MAP_LAT', ''));
@@ -71,9 +71,9 @@ define('APP_MAP_LNG', env('APP_MAP_LNG', ''));
 define('APP_GOOGLE_MAPS_API_KEY', env('APP_GOOGLE_MAPS_API_KEY', ''));
 
 // Google OAuth Configuration
-define('GOOGLE_CLIENT_ID',     env('GOOGLE_CLIENT_ID', ''));
-define('GOOGLE_CLIENT_SECRET', env('GOOGLE_CLIENT_SECRET', ''));
-define('GOOGLE_REDIRECT_URI',  env('GOOGLE_REDIRECT_URI', APP_URL . '/index.php?url=google-callback'));
+define('GOOGLE_CLIENT_ID',     trim((string) env('GOOGLE_CLIENT_ID', '')));
+define('GOOGLE_CLIENT_SECRET', trim((string) env('GOOGLE_CLIENT_SECRET', '')));
+define('GOOGLE_REDIRECT_URI',  trim((string) env('GOOGLE_REDIRECT_URI', rtrim(APP_URL, '/') . '/google-callback')));
 
 // PayMongo Configuration
 define('PAYMONGO_ENABLED', env('PAYMONGO_ENABLED', true));
