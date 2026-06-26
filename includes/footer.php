@@ -33,7 +33,7 @@
             </div>
             <div class="footer-bottom">
                 <p>&copy; <?= date('Y') ?> <?= APP_NAME ?>. All rights reserved.</p>
-                <p class="footer-credit">Developer: <a href="https://myportfolio-50yb0wbo2-kumaru06s-projects.vercel.app/" target="_blank" rel="noopener noreferrer">Mark Andrey Perez</a></p>
+                <p class="footer-credit">Developer: <a href="https://myportfolio-dlkwwwghm-kumaru06s-projects.vercel.app/" target="_blank" rel="noopener noreferrer">Mark Andrey Perez</a></p>
             </div>
         </div>
     </footer>
