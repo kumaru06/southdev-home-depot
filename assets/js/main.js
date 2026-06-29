@@ -385,8 +385,9 @@
             function openLoginModal() {
                 overlay.classList.add('active');
                 document.body.style.overflow = 'hidden';
-                // Render lucide icons inside the modal
-                if (window.lucide) lucide.createIcons({ nodes: [overlay] });
+                if (window.lucide && !overlay.querySelector('svg.lucide')) {
+                    lucide.createIcons({ nodes: [overlay] });
+                }
                 setTimeout(function () { emailIn && emailIn.focus(); }, 100);
             }
 

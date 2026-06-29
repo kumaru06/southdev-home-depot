@@ -163,6 +163,7 @@ body {
     overflow: hidden;
     padding: clamp(2.4rem, 4.5vw, 3.4rem) 2rem 4rem;
     color: #fff;
+    contain: layout style;
 }
 
 .home-hero-bg {
@@ -177,14 +178,12 @@ body {
     background-size: cover;
     background-position: center;
     opacity: 0;
-    transform: scale(1.04);
-    transition: opacity 1.4s ease, transform 8s ease;
-    will-change: opacity, transform;
+    transform: scale(1);
+    transition: opacity 1.4s ease;
 }
 
 .home-hero-bg-slide.is-active {
     opacity: 1;
-    transform: scale(1);
 }
 
 .home-hero-bg-slide::after {
@@ -237,9 +236,8 @@ body {
     gap: .65rem;
     padding: .7rem 1rem;
     border-radius: 999px;
-    background: rgba(255,255,255,.14);
-    border: 1px solid rgba(255,255,255,.18);
-    backdrop-filter: blur(14px);
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.22);
     font-size: .78rem;
     font-weight: 800;
     letter-spacing: .12em;
@@ -311,9 +309,8 @@ body {
 .home-stat {
     padding: 1rem 1.1rem;
     border-radius: 18px;
-    background: rgba(255,255,255,.1);
-    border: 1px solid rgba(255,255,255,.14);
-    backdrop-filter: blur(16px);
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.18);
 }
 
 .home-stat strong {
@@ -345,6 +342,7 @@ body {
 .home-showcase-track {
     display: flex;
     transition: transform .65s cubic-bezier(.4, 0, .2, 1);
+    transform: translateZ(0);
 }
 
 .home-showcase-slide {
@@ -449,14 +447,13 @@ body {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    border: 1px solid rgba(255,255,255,.22);
-    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.24);
+    background: rgba(255,255,255,.18);
     color: #fff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    backdrop-filter: blur(10px);
     transition: background .2s ease;
 }
 
@@ -857,9 +854,7 @@ body {
 
 .reveal-on-scroll {
     opacity: 0;
-    filter: blur(10px);
-    transition: opacity .7s ease, transform .7s ease, filter .7s ease;
-    will-change: opacity, transform, filter;
+    transition: opacity .7s ease, transform .7s ease;
 }
 
 .reveal-left {
@@ -872,7 +867,6 @@ body {
 
 .reveal-on-scroll.is-visible {
     opacity: 1;
-    filter: blur(0);
     transform: translate3d(0, 0, 0);
 }
 
@@ -886,7 +880,6 @@ body {
     .reveal-left,
     .reveal-right {
         opacity: 1;
-        filter: none;
         transform: none;
         transition: none;
     }
@@ -1245,33 +1238,6 @@ body {
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    var revealItems = Array.from(document.querySelectorAll('.reveal-on-scroll'));
-
-    if (revealItems.length && 'IntersectionObserver' in window) {
-        var observer = new IntersectionObserver(function (entries, obs) {
-            entries.forEach(function (entry) {
-                if (!entry.isIntersecting) {
-                    return;
-                }
-
-                entry.target.classList.add('is-visible');
-                obs.unobserve(entry.target);
-            });
-        }, {
-            threshold: 0.16,
-            rootMargin: '0px 0px -8% 0px'
-        });
-
-        revealItems.forEach(function (item, index) {
-            item.style.transitionDelay = Math.min(index * 60, 240) + 'ms';
-            observer.observe(item);
-        });
-    } else {
-        revealItems.forEach(function (item) {
-            item.classList.add('is-visible');
-        });
-    }
-
     function initSlider(config) {
         var root = document.querySelector(config.root);
         if (!root) {
@@ -1292,7 +1258,7 @@ document.addEventListener('DOMContentLoaded', function () {
             currentIndex = (index + slides.length) % slides.length;
 
             if (track) {
-                track.style.transform = 'translateX(-' + (currentIndex * 100) + '%)';
+                track.style.transform = 'translate3d(-' + (currentIndex * 100) + '%, 0, 0)';
             }
 
             slides.forEach(function (slide, slideIndex) {
@@ -1364,7 +1330,7 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
-    initSlider({
+    var heroBgSlider = initSlider({
         root: '[data-hero-bg-slider]',
         slideSelector: '.home-hero-bg-slide',
         dotSelector: '[data-bg-slide-to]',
@@ -1372,7 +1338,7 @@ document.addEventListener('DOMContentLoaded', function () {
         delay: 5500
     });
 
-    initSlider({
+    var showcaseSlider = initSlider({
         root: '[data-home-showcase]',
         trackSelector: '[data-showcase-track]',
         slideSelector: '.home-showcase-slide',
@@ -1382,6 +1348,23 @@ document.addEventListener('DOMContentLoaded', function () {
         autoplay: true,
         delay: 4500
     });
+
+    var heroSection = document.querySelector('.home-hero');
+    if (heroSection && 'IntersectionObserver' in window) {
+        var heroObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    if (heroBgSlider) heroBgSlider.start();
+                    if (showcaseSlider) showcaseSlider.start();
+                } else {
+                    if (heroBgSlider) heroBgSlider.stop();
+                    if (showcaseSlider) showcaseSlider.stop();
+                }
+            });
+        }, { threshold: 0.05 });
+
+        heroObserver.observe(heroSection);
+    }
 });
 </script>
 

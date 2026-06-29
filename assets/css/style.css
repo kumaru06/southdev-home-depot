@@ -256,12 +256,10 @@ p { color: var(--text-secondary); }
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: rgba(255,255,255,.12);
-    border: 1.5px solid rgba(255,255,255,.2);
+    background: rgba(255,255,255,.16);
+    border: 1.5px solid rgba(255,255,255,.24);
     color: #fff;
     transition: all .22s ease;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
 }
 .nav-cart:hover {
     background: rgba(255,255,255,.2);
@@ -335,11 +333,9 @@ p { color: var(--text-secondary); }
 
     .reveal-on-scroll {
         opacity: 0;
-        filter: blur(4px);
         position: relative;
         isolation: isolate;
-        transition: opacity .6s cubic-bezier(.16,1,.3,1), transform .6s cubic-bezier(.16,1,.3,1), filter .6s ease;
-        will-change: opacity, transform, filter;
+        transition: opacity .6s cubic-bezier(.16,1,.3,1), transform .6s cubic-bezier(.16,1,.3,1);
     }
 
     .reveal-on-scroll::after {
@@ -372,7 +368,6 @@ p { color: var(--text-secondary); }
 
     .reveal-on-scroll.is-visible {
         opacity: 1;
-        filter: blur(0);
         transform: translate3d(0, 0, 0);
     }
 
@@ -393,7 +388,6 @@ p { color: var(--text-secondary); }
         .reveal-left,
         .reveal-right {
             opacity: 1;
-            filter: none;
             transform: none;
             transition: none;
         }
@@ -472,9 +466,7 @@ p { color: var(--text-secondary); }
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: rgba(255,255,255,.18);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        background: rgba(255,255,255,.22);
         box-shadow: 0 2px 12px rgba(0,0,0,.10);
         transition: transform .2s ease, box-shadow .2s ease;
         flex-shrink: 0;
@@ -679,13 +671,11 @@ p { color: var(--text-secondary); }
         width: 44px;
         height: 44px;
         border-radius: 10px;
-        background: rgba(255,255,255,.12);
-        border: 1.5px solid rgba(255,255,255,.18);
+        background: rgba(255,255,255,.18);
+        border: 1.5px solid rgba(255,255,255,.22);
         color: #fff;
         text-decoration: none;
         transition: all .22s ease;
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
     }
     .nav-cart-btn:hover,
     .nav-cart-btn:focus,
@@ -1882,9 +1872,7 @@ p { color: var(--text-secondary); }
 .login-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, .6);
-    backdrop-filter: blur(12px) saturate(1.2);
-    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+    background: rgba(15, 23, 42, .72);
     display: none;
     align-items: center;
     justify-content: center;
@@ -1909,10 +1897,10 @@ p { color: var(--text-secondary); }
     border-radius: 18px;
     box-shadow:
         0 25px 60px -12px rgba(0,0,0,.25),
-        0 0 0 1px rgba(255,255,255,.05),
-        0 0 80px rgba(249,115,22,.06);
+        0 0 0 1px rgba(255,255,255,.05);
     overflow: hidden;
-    animation: loginSlideUp .4s cubic-bezier(.16,1,.3,1) both;
+    animation: loginSlideUp .35s cubic-bezier(.16,1,.3,1) both;
+    transform: translateZ(0);
 }
 .login-modal-close {
     position: absolute;
@@ -1986,10 +1974,8 @@ p { color: var(--text-secondary); }
     height: 26px;
     padding: 0 12px;
     border-radius: 999px;
-    background: rgba(255,255,255,.12);
-    border: 1px solid rgba(255,255,255,.18);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.22);
     font-weight: 700;
     font-size: 10px;
     letter-spacing: .6px;
@@ -2019,18 +2005,6 @@ p { color: var(--text-secondary); }
     justify-content: center;
     background: var(--white);
     position: relative;
-}
-.login-modal-form-panel::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 50%, var(--primary) 100%);
-    background-size: 200% auto;
-    animation: loginShine 3s linear infinite;
-    opacity: .7;
 }
 .login-modal-brand {
     display: flex;
@@ -2511,9 +2485,6 @@ p { color: var(--text-secondary); }
     }
     .login-modal-form-panel {
         padding: 28px 24px;
-    }
-    .login-modal-form-panel::before {
-        display: none;
     }
     .login-modal-media-content {
         left: 20px;
