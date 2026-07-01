@@ -348,6 +348,8 @@ body {
 .home-showcase-slide {
     position: relative;
     flex: 0 0 100%;
+    width: 100%;
+    min-width: 100%;
 }
 
 .home-showcase-slide img {
@@ -372,7 +374,7 @@ body {
     bottom: 0;
     z-index: 1;
     width: min(56%, 420px);
-    padding: 1.35rem 1.35rem 3.4rem;
+    padding: 1.35rem;
     color: #fff;
     text-shadow: 0 2px 14px rgba(0, 0, 0, .35);
 }
@@ -402,68 +404,6 @@ body {
     color: rgba(255,255,255,.82);
     line-height: 1.5;
     font-size: .95rem;
-}
-
-.home-showcase-nav {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 1rem;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: .75rem;
-    padding: 0 1.1rem;
-}
-
-.home-showcase-dots {
-    display: flex;
-    gap: .45rem;
-}
-
-.home-showcase-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    border: 0;
-    padding: 0;
-    background: rgba(255,255,255,.35);
-    cursor: pointer;
-    transition: transform .2s ease, background .2s ease;
-}
-
-.home-showcase-dot.is-active {
-    background: #f97316;
-    transform: scale(1.15);
-}
-
-.home-showcase-arrows {
-    display: flex;
-    gap: .45rem;
-}
-
-.home-showcase-arrow {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 1px solid rgba(255,255,255,.24);
-    background: rgba(255,255,255,.18);
-    color: #fff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background .2s ease;
-}
-
-.home-showcase-arrow:hover {
-    background: rgba(255,255,255,.22);
-}
-
-.home-showcase-arrow svg {
-    width: 16px;
-    height: 16px;
 }
 
 .home-hero-bg-dots {
@@ -501,7 +441,8 @@ body {
     display: block;
     text-decoration: none;
     color: inherit;
-    background: transparent;
+    background: #0f172a;
+    aspect-ratio: 4 / 5;
     transition: transform .25s ease, box-shadow .25s ease;
 }
 
@@ -512,8 +453,10 @@ body {
 
 .home-category-card img {
     width: 100%;
-    height: auto;
+    height: 100%;
     display: block;
+    object-fit: cover;
+    object-position: center center;
 }
 
 .home-category-card::after {
@@ -923,7 +866,7 @@ body {
 
     .home-showcase-copy {
         width: min(62%, 320px);
-        padding: 1rem 1rem 3rem;
+        padding: 1rem;
     }
 
     .home-polish {
@@ -972,7 +915,7 @@ body {
         width: min(68%, 280px);
         left: auto;
         right: 0;
-        padding: .85rem .85rem 2.8rem;
+        padding: .85rem;
     }
 
     .home-showcase-slide::after {
@@ -1102,31 +1045,6 @@ body {
                                 </div>
                             </article>
                         <?php endforeach; ?>
-                    </div>
-
-                    <div class="home-showcase-nav">
-                        <div class="home-showcase-dots">
-                            <?php foreach ($showcaseSlides as $index => $slide): ?>
-                                <button
-                                    type="button"
-                                    class="home-showcase-dot<?= $index === 0 ? ' is-active' : '' ?>"
-                                    data-showcase-to="<?= $index ?>"
-                                    aria-label="Show featured product <?= $index + 1 ?>"
-                                ></button>
-                            <?php endforeach; ?>
-                        </div>
-                        <div class="home-showcase-arrows">
-                            <button type="button" class="home-showcase-arrow" data-showcase-prev aria-label="Previous featured product">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="m15 18-6-6 6-6"></path>
-                                </svg>
-                            </button>
-                            <button type="button" class="home-showcase-arrow" data-showcase-next aria-label="Next featured product">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="m9 18 6-6-6-6"></path>
-                                </svg>
-                            </button>
-                        </div>
                     </div>
                 </div>
 
@@ -1338,16 +1256,135 @@ document.addEventListener('DOMContentLoaded', function () {
         delay: 5500
     });
 
-    var showcaseSlider = initSlider({
+    var showcaseSlider = initShowcaseInfiniteSlider({
         root: '[data-home-showcase]',
         trackSelector: '[data-showcase-track]',
         slideSelector: '.home-showcase-slide',
-        dotSelector: '[data-showcase-to]',
-        prevSelector: '[data-showcase-prev]',
-        nextSelector: '[data-showcase-next]',
         autoplay: true,
         delay: 4500
     });
+
+    function initShowcaseInfiniteSlider(config) {
+        var root = document.querySelector(config.root);
+        if (!root) {
+            return null;
+        }
+
+        var track = root.querySelector(config.trackSelector);
+        if (!track) {
+            return null;
+        }
+
+        var originalSlides = Array.prototype.slice.call(track.querySelectorAll(config.slideSelector));
+        var slideCount = originalSlides.length;
+        if (!slideCount) {
+            return null;
+        }
+
+        if (slideCount > 1) {
+            originalSlides.forEach(function (slide) {
+                var clone = slide.cloneNode(true);
+                clone.setAttribute('aria-hidden', 'true');
+                clone.classList.remove('is-active');
+                track.appendChild(clone);
+            });
+        }
+
+        var allSlides = Array.prototype.slice.call(track.querySelectorAll(config.slideSelector));
+        var currentIndex = 0;
+        var intervalId = null;
+        var delay = config.delay || 5000;
+        var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var isResetting = false;
+
+        function getStepWidth() {
+            return root.clientWidth;
+        }
+
+        function setPosition(animate) {
+            if (animate === false) {
+                track.style.transition = 'none';
+            } else {
+                track.style.transition = '';
+            }
+
+            track.style.transform = 'translate3d(-' + (currentIndex * getStepWidth()) + 'px, 0, 0)';
+
+            if (animate === false) {
+                track.offsetHeight;
+                track.style.transition = '';
+            }
+        }
+
+        function updateSlides() {
+            allSlides.forEach(function (slide, slideIndex) {
+                var isActive = slideIndex === currentIndex;
+                slide.classList.toggle('is-active', isActive);
+                if (slide.hasAttribute('aria-hidden')) {
+                    slide.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+                }
+            });
+        }
+
+        function goTo(index, animate) {
+            currentIndex = index;
+            setPosition(animate !== false);
+            updateSlides();
+        }
+
+        function nextSlide() {
+            if (isResetting || slideCount <= 1) {
+                return;
+            }
+
+            goTo(currentIndex + 1, true);
+        }
+
+        function handleTransitionEnd(event) {
+            if (event.target !== track || event.propertyName !== 'transform' || slideCount <= 1) {
+                return;
+            }
+
+            if (currentIndex >= slideCount) {
+                isResetting = true;
+                goTo(currentIndex - slideCount, false);
+                isResetting = false;
+            }
+        }
+
+        function stopAutoplay() {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+        }
+
+        function startAutoplay() {
+            if (reducedMotion || !config.autoplay || slideCount <= 1) {
+                return;
+            }
+
+            stopAutoplay();
+            intervalId = window.setInterval(nextSlide, delay);
+        }
+
+        function handleResize() {
+            setPosition(false);
+        }
+
+        track.addEventListener('transitionend', handleTransitionEnd);
+        root.addEventListener('mouseenter', stopAutoplay);
+        root.addEventListener('mouseleave', startAutoplay);
+        window.addEventListener('resize', handleResize);
+
+        goTo(0, false);
+        startAutoplay();
+
+        return {
+            stop: stopAutoplay,
+            start: startAutoplay
+        };
+    }
 
     var heroSection = document.querySelector('.home-hero');
     if (heroSection && 'IntersectionObserver' in window) {

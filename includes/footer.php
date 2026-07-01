@@ -33,7 +33,7 @@
             </div>
             <div class="footer-bottom">
                 <p>&copy; <?= date('Y') ?> <?= APP_NAME ?>. All rights reserved.</p>
-                <p class="footer-credit">Developer: <a href="https://myportfolio-dlkwwwghm-kumaru06s-projects.vercel.app/" target="_blank" rel="noopener noreferrer">Mark Andrey Perez</a></p>
+                <p class="footer-credit">Developer: <a href="https://myportfolio-kumaru06s-projects.vercel.app/" target="_blank" rel="noopener noreferrer">Mark Andrey Perez</a></p>
             </div>
         </div>
     </footer>
@@ -398,7 +398,7 @@
     <?php if (isset($isAdmin) && $isAdmin): ?>
     <footer class="admin-footer">
         <span>&copy; <?= date('Y') ?> <?= APP_NAME ?> &mdash; <?= APP_LOCATION ?></span>
-        <span>Developer: <a href="https://myportfolio-50yb0wbo2-kumaru06s-projects.vercel.app/" target="_blank" rel="noopener noreferrer">Mark Andrey Perez</a></span>
+        <span>Developer: <a href="https://myportfolio-kumaru06s-projects.vercel.app/" target="_blank" rel="noopener noreferrer">Mark Andrey Perez</a></span>
     </footer>
     <?php endif; ?>
 
