@@ -12,8 +12,8 @@ require_once INCLUDES_PATH . '/sidebar.php';
         </div>
     </div>
 
-    <div class="page-content">
-        <div class="data-table-wrap">
+    <div class="page-content page-content--table-locked">
+        <div class="data-table-wrap data-table-wrap--locked">
             <table class="data-table">
                 <thead>
                     <tr>

@@ -73,6 +73,18 @@ class Product {
         return $stmt->execute([$id]);
     }
 
+    public function deleteMany(array $ids) {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if (empty($ids)) {
+            return 0;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $this->pdo->prepare("UPDATE products SET is_active = 0 WHERE id IN ($placeholders) AND is_active = 1");
+        $stmt->execute($ids);
+        return $stmt->rowCount();
+    }
+
     public function search($keyword) {
         $stmt = $this->pdo->prepare("SELECT p.*, c.name as category_name FROM products p JOIN categories c ON p.category_id = c.id WHERE p.is_active = 1 AND (p.name LIKE ? OR p.description LIKE ?)");
         $search = "%{$keyword}%";

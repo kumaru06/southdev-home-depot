@@ -526,6 +526,8 @@ switch ($urlParts[0]) {
                     $controller = new ProductController($pdo);
                     if (isset($urlParts[2]) && $urlParts[2] === 'create') {
                         $controller->create();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'bulk-delete') {
+                        $controller->bulkDelete();
                     } elseif (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'edit') {
                         $controller->edit($urlParts[2]);
                     } elseif (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'update') {
@@ -551,12 +553,56 @@ switch ($urlParts[0]) {
                         flash('success', 'Category created.');
                         header('Location: ' . APP_URL . '/index.php?url=admin/categories');
                         exit;
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'bulk-delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+                        AuthMiddleware::superAdmin();
+                        AuthMiddleware::csrf();
+                        $ids = array_values(array_unique(array_filter(array_map('intval', $_POST['category_ids'] ?? []))));
+                        if (empty($ids)) {
+                            flash('error', 'Please select at least one category to delete.');
+                        } else {
+                            $result = $categoryModel->deleteMany($ids);
+                            $deleted = (int) ($result['deleted'] ?? 0);
+                            $blocked = $result['blocked'] ?? [];
+
+                            if ($deleted > 0) {
+                                $logModel->create(
+                                    LOG_CATEGORY_DELETE,
+                                    'Bulk deleted ' . $deleted . ' categor' . ($deleted === 1 ? 'y' : 'ies') . ': #' . implode(', #', $ids)
+                                );
+                            }
+
+                            if ($deleted > 0 && empty($blocked)) {
+                                flash('success', $deleted . ' categor' . ($deleted === 1 ? 'y' : 'ies') . ' deleted.');
+                            } elseif ($deleted > 0 && !empty($blocked)) {
+                                $blockedNames = implode(', ', array_map(function ($row) {
+                                    return $row['name'] . ' (' . $row['product_count'] . ')';
+                                }, $blocked));
+                                flash('warning', $deleted . ' deleted. Skipped categories with products: ' . $blockedNames . '.');
+                            } else {
+                                $blockedNames = implode(', ', array_map(function ($row) {
+                                    return $row['name'] . ' (' . $row['product_count'] . ' products)';
+                                }, $blocked));
+                                flash('error', 'Cannot delete categories that still have products: ' . $blockedNames . '.');
+                            }
+                        }
+                        header('Location: ' . APP_URL . '/index.php?url=admin/categories');
+                        exit;
                     } elseif (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'delete') {
                         AuthMiddleware::superAdmin();
                         AuthMiddleware::csrf();
-                        $categoryModel->delete($urlParts[2]);
-                        $logModel->create(LOG_CATEGORY_DELETE, "Category #{$urlParts[2]} deleted");
-                        flash('success', 'Category deleted.');
+                        $categoryId = (int) $urlParts[2];
+                        $category = $categoryModel->findById($categoryId);
+                        $productCount = $categoryModel->getProductCount($categoryId);
+
+                        if ($productCount > 0) {
+                            $name = $category['name'] ?? ('#' . $categoryId);
+                            flash('error', "Cannot delete \"{$name}\" because it still has {$productCount} product(s). Move or delete those products first.");
+                        } elseif ($categoryModel->delete($categoryId)) {
+                            $logModel->create(LOG_CATEGORY_DELETE, "Category #{$categoryId} deleted");
+                            flash('success', 'Category deleted.');
+                        } else {
+                            flash('error', 'Category not found or already deleted.');
+                        }
                         header('Location: ' . APP_URL . '/index.php?url=admin/categories');
                         exit;
                     } else {

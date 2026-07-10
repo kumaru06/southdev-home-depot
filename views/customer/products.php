@@ -73,7 +73,9 @@ if (!file_exists($display2Full)) {
                 <div class="sidebar-title">Explore</div>
                 <nav class="sidebar-nav">
                     <a href="<?= APP_URL ?>/index.php?url=products" class="<?= !isset($_GET['category']) ? 'active' : '' ?>">
-                        <span><img src="<?= APP_URL ?>/assets/uploads/images/png-icon/tile.png" alt="All Products" style="width:15px;height:15px"> All Products</span>
+                        <span>
+                            <svg class="chip-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><rect x="2.75" y="2.75" width="8" height="8" rx="1.25" stroke="currentColor" stroke-width="1.75"/><rect x="13.25" y="2.75" width="8" height="8" rx="1.25" stroke="currentColor" stroke-width="1.75"/><rect x="2.75" y="13.25" width="8" height="8" rx="1.25" stroke="currentColor" stroke-width="1.75"/><rect x="13.25" y="13.25" width="8" height="8" rx="1.25" stroke="currentColor" stroke-width="1.75"/></svg><span>All Products</span>
+                        </span>
                         <?php if (!empty($products) && !isset($_GET['category'])): ?>
                             <span class="sidebar-count"><?= count($products) ?></span>
                         <?php endif; ?>
@@ -129,7 +131,13 @@ if (!file_exists($display2Full)) {
             <!-- Section heading -->
             <section class="products-catalog-header reveal-on-scroll reveal-left" data-reveal-delay="0">
                 <div class="section-heading">
-                    <span class="section-badge">OUR PRODUCTS</span>
+                    <span class="section-badge">
+                        <svg class="section-badge-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+                            <path d="M4 8.25L12 3.75l8 4.5v9l-8 4.5-8-4.5v-9z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+                            <path d="M4 8.25L12 12.75l8-4.5M12 12.75v9" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+                        </svg>
+                        OUR PRODUCTS
+                    </span>
                     <h2 class="section-title">Everything You Need in <span class="accent-text">One Place</span></h2>
                     <p class="section-subtitle">Browse our complete range of premium building materials, fixtures, and finishes.</p>
                 </div>
@@ -142,7 +150,7 @@ if (!file_exists($display2Full)) {
 
             <div class="category-bar storefront-chips reveal-on-scroll reveal-right" data-reveal-delay="120">
                 <a href="<?= APP_URL ?>/index.php?url=products" class="<?= !isset($_GET['category']) ? 'active' : '' ?>">
-                    <img src="<?= APP_URL ?>/assets/uploads/images/png-icon/tile.png" alt="All Products" style="width:14px;height:14px"> All Products
+                    <svg class="chip-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><rect x="2.75" y="2.75" width="8" height="8" rx="1.25" stroke="currentColor" stroke-width="1.75"/><rect x="13.25" y="2.75" width="8" height="8" rx="1.25" stroke="currentColor" stroke-width="1.75"/><rect x="2.75" y="13.25" width="8" height="8" rx="1.25" stroke="currentColor" stroke-width="1.75"/><rect x="13.25" y="13.25" width="8" height="8" rx="1.25" stroke="currentColor" stroke-width="1.75"/></svg><span>All Products</span>
                 </a>
                 <!-- Category select for quick filtering / mobile users -->
                 <div class="category-select" style="margin-left:12px; display:inline-block; vertical-align:middle;">

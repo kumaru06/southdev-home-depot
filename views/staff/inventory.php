@@ -33,7 +33,7 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
         </div>
     </div>
 
-    <div class="page-content">
+    <div class="page-content page-content--table-locked">
         <?php if (!empty($lowStock)): ?>
             <div class="alert alert-warning" style="display:flex;align-items:flex-start;gap:12px;">
                 <i data-lucide="alert-triangle" style="flex-shrink:0;margin-top:2px;"></i>
@@ -79,7 +79,7 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
             </div>
         </div>
 
-        <div class="data-table-wrap">
+        <div class="data-table-wrap data-table-wrap--locked">
             <table class="data-table">
                 <thead>
                     <tr>

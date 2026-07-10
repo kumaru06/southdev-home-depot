@@ -12,7 +12,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
         </div>
     </div>
 
-    <div class="page-content">
+    <div class="page-content page-content--table-locked">
         <!-- Filter Bar -->
         <div class="card filter-bar">
             <form method="GET" class="filter-form">
@@ -27,7 +27,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
             </form>
         </div>
 
-        <div class="data-table-wrap">
+        <div class="data-table-wrap data-table-wrap--locked">
             <table class="data-table">
                 <thead>
                     <tr>

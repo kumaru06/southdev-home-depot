@@ -55,15 +55,48 @@ class Notification {
     }
 
     /**
-     * Get all notifications for a user (latest first), with optional limit
+     * Get all notifications for a user (latest first), with optional limit and date filter
      */
-    public function getByUserId($userId, $limit = 50) {
+    public function getByUserId($userId, $limit = null, $date = null) {
         if (!$this->ensureTable()) return [];
-        $stmt = $this->pdo->prepare(
-            "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ?"
-        );
-        $stmt->execute([$userId, $limit]);
+
+        if ($date) {
+            $sql = "SELECT * FROM notifications
+                    WHERE user_id = ? AND DATE(created_at) = ?
+                    ORDER BY created_at DESC";
+            if ($limit !== null) {
+                $sql .= " LIMIT ?";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute([$userId, $date, $limit]);
+            } else {
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute([$userId, $date]);
+            }
+            return $stmt->fetchAll();
+        }
+
+        $sql = "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC";
+        if ($limit !== null) {
+            $sql .= " LIMIT ?";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$userId, $limit]);
+        } else {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$userId]);
+        }
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Get total notification count for a user
+     */
+    public function getTotalCount($userId) {
+        if (!$this->ensureTable()) return 0;
+        $stmt = $this->pdo->prepare(
+            "SELECT COUNT(*) FROM notifications WHERE user_id = ?"
+        );
+        $stmt->execute([$userId]);
+        return (int) $stmt->fetchColumn();
     }
 
     /**

@@ -113,7 +113,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
         ];
         ?>
 
-        <div class="card">
+        <div class="card card--table-locked">
             <!-- Role Tabs -->
             <div class="user-role-tabs" style="display:flex; gap:6px; flex-wrap:wrap; padding:16px 20px 0; border-bottom:1px solid var(--border,#e8ecf1);">
                 <?php foreach ($roleTabs as $key => $tab): ?>
@@ -125,7 +125,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
                 <?php endforeach; ?>
             </div>
 
-            <div class="data-table-wrap">
+            <div class="data-table-wrap data-table-wrap--locked">
                 <table class="data-table" id="usersTable">
                     <thead>
                         <tr>

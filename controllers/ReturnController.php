@@ -66,9 +66,13 @@ class ReturnController {
         $data = [
             'order_id'       => intval($_POST['order_id']),
             'user_id'        => $_SESSION['user_id'],
-            'reason'         => trim($_POST['reason']),
-            'selected_items' => array_map('intval', $_POST['return_items'] ?? [])
+            'reason'         => trim($_POST['reason'] ?? ''),
+            'selected_items' => array_map('intval', $_POST['return_items'] ?? []),
+            'proof_image'    => null,
         ];
+
+        $reasonCategory = trim($_POST['reason_category'] ?? '');
+        $proofRequired  = $this->requiresProofPhoto($reasonCategory, $data['reason']);
 
         // Validate: only delivered orders can have return requests
         $order = $this->orderModel->findById($data['order_id']);
@@ -91,6 +95,26 @@ class ReturnController {
 
         if (empty($data['selected_items'])) {
             flash('error', 'Please select the product you want to return.');
+            header('Location: ' . APP_URL . '/index.php?url=returns/request/' . $data['order_id']);
+            exit;
+        }
+
+        if ($data['reason'] === '') {
+            flash('error', 'Please select a reason for your return.');
+            header('Location: ' . APP_URL . '/index.php?url=returns/request/' . $data['order_id']);
+            exit;
+        }
+
+        $uploadResult = $this->handleProofUpload($_FILES['proof_image'] ?? null, (int) $_SESSION['user_id']);
+        if ($uploadResult['error']) {
+            flash('error', $uploadResult['error']);
+            header('Location: ' . APP_URL . '/index.php?url=returns/request/' . $data['order_id']);
+            exit;
+        }
+        $data['proof_image'] = $uploadResult['filename'];
+
+        if ($proofRequired && empty($data['proof_image'])) {
+            flash('error', 'Please upload a photo as proof for damaged or wrong-item returns.');
             header('Location: ' . APP_URL . '/index.php?url=returns/request/' . $data['order_id']);
             exit;
         }
@@ -351,5 +375,76 @@ class ReturnController {
             }
         }
         return false;
+    }
+
+    /**
+     * Damage / wrong-item returns require photo proof.
+     */
+    private function requiresProofPhoto($reasonCategory, $reasonText = '') {
+        $proofCategories = [
+            'Item arrived damaged or broken',
+            'Received wrong item',
+        ];
+        if (in_array($reasonCategory, $proofCategories, true)) {
+            return true;
+        }
+
+        $haystack = strtolower(trim($reasonCategory . ' ' . $reasonText));
+        $keywords = ['damaged', 'broken', 'wrong item', 'received wrong'];
+        foreach ($keywords as $keyword) {
+            if (str_contains($haystack, $keyword)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Handle optional/required proof photo upload for return requests.
+     * @return array{filename:?string,error:?string}
+     */
+    private function handleProofUpload($file, $userId) {
+        if (!is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return ['filename' => null, 'error' => null];
+        }
+
+        if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            return ['filename' => null, 'error' => 'Photo upload failed. Please try again.'];
+        }
+
+        $maxBytes = 5 * 1024 * 1024;
+        if ((int) ($file['size'] ?? 0) > $maxBytes) {
+            return ['filename' => null, 'error' => 'Proof photo is too large. Maximum allowed size is 5 MB.'];
+        }
+
+        $tmpName = $file['tmp_name'] ?? '';
+        if ($tmpName === '' || !is_uploaded_file($tmpName)) {
+            return ['filename' => null, 'error' => 'Invalid proof photo upload.'];
+        }
+
+        $imageInfo = @getimagesize($tmpName);
+        $allowed = [
+            'image/jpeg' => '.jpg',
+            'image/png'  => '.png',
+            'image/webp' => '.webp',
+            'image/gif'  => '.gif',
+        ];
+        $mime = $imageInfo['mime'] ?? '';
+        if (!$imageInfo || !isset($allowed[$mime])) {
+            return ['filename' => null, 'error' => 'Proof photo must be a JPG, PNG, WebP, or GIF image.'];
+        }
+
+        $uploadDir = UPLOADS_PATH . '/returns';
+        if (!is_dir($uploadDir) && !@mkdir($uploadDir, 0755, true)) {
+            return ['filename' => null, 'error' => 'Could not prepare upload folder. Please try again.'];
+        }
+
+        $fileName = 'proof_u' . (int) $userId . '_' . time() . '_' . uniqid() . $allowed[$mime];
+        $targetPath = $uploadDir . '/' . $fileName;
+        if (!move_uploaded_file($tmpName, $targetPath)) {
+            return ['filename' => null, 'error' => 'Failed to save the proof photo. Please try again.'];
+        }
+
+        return ['filename' => 'returns/' . $fileName, 'error' => null];
     }
 }

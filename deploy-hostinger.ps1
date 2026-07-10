@@ -11,8 +11,8 @@ $deployEnv  = Join-Path $localRoot ".env.deploy"
 $remoteRoot = "/public_html"
 
 if (-not (Test-Path $deployEnv)) {
-    Write-Host "Missing .env.deploy — copy .env.deploy.example to .env.deploy and add your FTP password." -ForegroundColor Red
-    Write-Host "Get FTP details: hPanel → Files → FTP Accounts" -ForegroundColor Yellow
+    Write-Host "Missing .env.deploy - copy .env.deploy.example to .env.deploy and add your FTP password." -ForegroundColor Red
+    Write-Host "Get FTP details: hPanel -> Files -> FTP Accounts" -ForegroundColor Yellow
     exit 1
 }
 
@@ -42,7 +42,7 @@ $excludeFiles = @(
 function Upload-File($localPath, $remotePath) {
     $remoteDir  = ($remotePath -replace '/[^/]+$','')
     $remoteFile = ($remotePath -split '/')[-1]
-    $localEsc   = $localPath.Replace('\','\\')
+    $localEsc   = $localPath.Replace("\", "\\")
 
     $result = python -c @"
 import ftplib, sys
@@ -87,7 +87,7 @@ if ($UploadZip) {
     Write-Host "Uploading southdev-hostinger.zip ..." -ForegroundColor White
     if (Upload-File $zip "$remoteRoot/southdev-hostinger.zip") {
         Write-Host ""
-        Write-Host "Zip uploaded. In File Manager: public_html → Extract southdev-hostinger.zip → delete zip." -ForegroundColor Green
+        Write-Host "Zip uploaded. In File Manager: public_html -> Extract southdev-hostinger.zip -> delete zip." -ForegroundColor Green
     }
     exit
 }
@@ -101,10 +101,10 @@ if (Test-Path $envProd) {
 
 if ($Files.Count -gt 0) {
     foreach ($rel in $Files) {
-        $rel = $rel.Replace('/', '\')
+        $rel = $rel.Replace([char]47, [IO.Path]::DirectorySeparatorChar)
         $full = Join-Path $localRoot $rel
         if (Test-Path $full) {
-            Upload-File $full "$remoteRoot/$($rel.Replace('\','/'))"
+            Upload-File $full "$remoteRoot/$($rel.Replace([IO.Path]::DirectorySeparatorChar, [char]47))"
         }
     }
 } else {
@@ -113,14 +113,14 @@ if ($Files.Count -gt 0) {
         Where-Object { $_.LastWriteTime -gt $cutoff } |
         Where-Object {
             $rel = $_.FullName.Substring($localRoot.Length + 1)
-            $top = $rel.Split('\')[0]
+            $top = $rel.Split([IO.Path]::DirectorySeparatorChar)[0]
             $skip = $false
             foreach ($d in $excludeDirs) { if ($rel -like "$d*") { $skip = $true; break } }
             if (-not $skip) { foreach ($f in $excludeFiles) { if ($_.Name -eq $f) { $skip = $true; break } } }
             -not $skip
         }
     foreach ($f in $changed) {
-        $rel = $f.FullName.Substring($localRoot.Length + 1).Replace('\','/')
+        $rel = $f.FullName.Substring($localRoot.Length + 1).Replace([IO.Path]::DirectorySeparatorChar, [char]47)
         Upload-File $f.FullName "$remoteRoot/$rel" | Out-Null
     }
 }

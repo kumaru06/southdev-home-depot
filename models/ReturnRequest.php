@@ -9,6 +9,7 @@ class ReturnRequest {
     public function __construct($pdo) {
         $this->pdo = $pdo;
         $this->ensureSelectedItemsColumn();
+        $this->ensureProofImageColumn();
     }
 
     private function ensureSelectedItemsColumn() {
@@ -16,6 +17,17 @@ class ReturnRequest {
             $stmt = $this->pdo->query("SHOW COLUMNS FROM return_requests LIKE 'selected_items'");
             if (!$stmt->fetch()) {
                 $this->pdo->exec("ALTER TABLE return_requests ADD COLUMN selected_items TEXT NULL AFTER reason");
+            }
+        } catch (Throwable $e) {
+            // Keep existing return flow working if schema check fails.
+        }
+    }
+
+    private function ensureProofImageColumn() {
+        try {
+            $stmt = $this->pdo->query("SHOW COLUMNS FROM return_requests LIKE 'proof_image'");
+            if (!$stmt->fetch()) {
+                $this->pdo->exec("ALTER TABLE return_requests ADD COLUMN proof_image VARCHAR(255) NULL AFTER selected_items");
             }
         } catch (Throwable $e) {
             // Keep existing return flow working if schema check fails.
@@ -53,8 +65,18 @@ class ReturnRequest {
             $selectedItems = json_encode(array_values($selectedItems));
         }
 
-        $stmt = $this->pdo->prepare("INSERT INTO return_requests (order_id, user_id, reason, selected_items) VALUES (?, ?, ?, ?)");
-        return $stmt->execute([$data['order_id'], $data['user_id'], $data['reason'], $selectedItems]);
+        $proofImage = $data['proof_image'] ?? null;
+
+        $stmt = $this->pdo->prepare(
+            "INSERT INTO return_requests (order_id, user_id, reason, selected_items, proof_image) VALUES (?, ?, ?, ?, ?)"
+        );
+        return $stmt->execute([
+            $data['order_id'],
+            $data['user_id'],
+            $data['reason'],
+            $selectedItems,
+            $proofImage
+        ]);
     }
 
     public function getSelectedItemIds($returnRequest) {

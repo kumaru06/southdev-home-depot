@@ -48,6 +48,16 @@ $selectedLookup = array_flip(array_map('intval', $selectedItemIds ?? []));
                     <p><?= nl2br(htmlspecialchars($return['reason'])) ?></p>
                 </div>
 
+                <?php if (!empty($return['proof_image'])): ?>
+                    <div class="return-proof-box">
+                        <span>Customer Photo Proof</span>
+                        <a href="<?= APP_URL ?>/assets/uploads/<?= htmlspecialchars($return['proof_image']) ?>" target="_blank" rel="noopener noreferrer" class="return-proof-link">
+                            <img src="<?= APP_URL ?>/assets/uploads/<?= htmlspecialchars($return['proof_image']) ?>" alt="Return proof photo">
+                        </a>
+                        <small class="return-detail-muted">Click the photo to open full size.</small>
+                    </div>
+                <?php endif; ?>
+
                 <?php if (!empty($return['admin_notes'])): ?>
                     <div class="return-reason-box">
                         <span>Admin Notes</span>

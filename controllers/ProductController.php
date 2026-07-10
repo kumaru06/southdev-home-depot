@@ -298,6 +298,34 @@ class ProductController {
         exit;
     }
 
+    public function bulkDelete() {
+        AuthMiddleware::superAdmin();
+        AuthMiddleware::csrf();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . APP_URL . '/index.php?url=admin/products');
+            exit;
+        }
+
+        $ids = array_map('intval', $_POST['product_ids'] ?? []);
+        $ids = array_values(array_unique(array_filter($ids)));
+
+        if (empty($ids)) {
+            flash('error', 'Please select at least one product to delete.');
+            header('Location: ' . APP_URL . '/index.php?url=admin/products');
+            exit;
+        }
+
+        $deleted = $this->productModel->deleteMany($ids);
+        $this->logModel->create(
+            LOG_PRODUCT_DELETE,
+            'Bulk deleted ' . $deleted . ' product(s): #' . implode(', #', $ids)
+        );
+
+        flash('success', $deleted . ' product' . ($deleted === 1 ? '' : 's') . ' deleted.');
+        header('Location: ' . APP_URL . '/index.php?url=admin/products');
+        exit;
+    }
+
     public function search() {
         $keyword    = trim($_GET['q'] ?? '');
         $products   = $keyword ? $this->productModel->search($keyword) : [];

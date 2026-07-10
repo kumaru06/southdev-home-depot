@@ -26,10 +26,10 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
         </div>
     </div>
 
-    <div class="page-content">
+    <div class="page-content page-content--table-locked">
 
         <!-- Summary Cards -->
-        <div class="stat-cards" style="margin-bottom: 24px;">
+        <div class="stat-cards" style="margin-bottom: 24px; grid-template-columns: repeat(3, minmax(0, 1fr));">
             <div class="stat-card">
                 <div class="stat-info">
                     <span class="stat-label">Total Damaged</span>
@@ -43,6 +43,13 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
                     <span class="stat-value"><?= $summary['received'] ?? 0 ?></span>
                 </div>
                 <div class="stat-icon" style="background:#DBEAFE;color:#1E40AF;"><i data-lucide="package-check"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <span class="stat-label">Inspected</span>
+                    <span class="stat-value"><?= $summary['inspected'] ?? 0 ?></span>
+                </div>
+                <div class="stat-icon" style="background:#FEF3C7;color:#B45309;"><i data-lucide="search-check"></i></div>
             </div>
         </div>
 
@@ -63,7 +70,7 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
         </div>
 
         <!-- Data Table -->
-        <div class="data-table-wrap">
+        <div class="data-table-wrap data-table-wrap--locked">
             <table class="data-table" style="table-layout:auto;">
                 <thead>
                     <tr>
@@ -72,9 +79,10 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
                         <th>SKU</th>
                         <th style="width:50px;text-align:center;">Qty</th>
                         <th>Order</th>
-                        <th style="min-width:260px;">Return Reason</th>
+                        <th style="min-width:220px;">Return Reason</th>
                         <th style="width:110px;">Status</th>
                         <th style="width:110px;">Date</th>
+                        <th style="width:140px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -123,11 +131,24 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
                                 </td>
                                 <td><span class="badge <?= $statusClass ?>"><?= ucfirst(str_replace('_', ' ', $item['status'])) ?></span></td>
                                 <td style="font-size:.84rem;color:var(--text-secondary);"><?= date('M d, Y', strtotime($item['created_at'])) ?></td>
+                                <td>
+                                    <?php if (($item['status'] ?? '') === 'received'): ?>
+                                        <form action="<?= $invBase ?>/damaged/<?= (int) $item['id'] ?>/update" method="POST" class="inline-form">
+                                            <?= csrf_field() ?>
+                                            <input type="hidden" name="status" value="inspected">
+                                            <button type="submit" class="action-btn view" title="Mark as inspected">
+                                                <i data-lucide="search-check" style="width:14px;height:14px;"></i> Inspect
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <span class="text-muted" style="font-size:.82rem;">Done</span>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="8" class="text-center" style="padding:40px 0;">
+                            <td colspan="9" class="text-center" style="padding:40px 0;">
                                 <i data-lucide="check-circle" style="width:40px;height:40px;color:var(--success);opacity:.5;display:block;margin:0 auto 12px;"></i>
                                 <strong>No damaged products found</strong>
                                 <p class="text-muted" style="margin-top:4px;">Damaged items from approved return requests will appear here.</p>

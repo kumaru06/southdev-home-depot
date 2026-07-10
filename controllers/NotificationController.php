@@ -20,8 +20,27 @@ class NotificationController {
     public function index() {
         AuthMiddleware::handle();
         $pageTitle = 'Notifications';
-        $notifications = $this->notificationModel->getByUserId($_SESSION['user_id'], 100);
-        $unreadCount = $this->notificationModel->getUnreadCount($_SESSION['user_id']);
+        $userId = $_SESSION['user_id'];
+
+        $selectedNotifDate = trim((string) ($_GET['notif_date'] ?? ''));
+        $hasNotifDateFilter = false;
+        if ($selectedNotifDate !== '') {
+            $date = DateTime::createFromFormat('Y-m-d', $selectedNotifDate);
+            $hasNotifDateFilter = $date && $date->format('Y-m-d') === $selectedNotifDate;
+            if (!$hasNotifDateFilter) {
+                $selectedNotifDate = '';
+            }
+        }
+
+        $notifications = $this->notificationModel->getByUserId(
+            $userId,
+            null,
+            $hasNotifDateFilter ? $selectedNotifDate : null
+        );
+        $unreadCount = $this->notificationModel->getUnreadCount($userId);
+        $totalCount = $this->notificationModel->getTotalCount($userId);
+        $shownCount = count($notifications);
+
         $extraCss = ['customer.css'];
         require_once VIEWS_PATH . '/customer/notifications.php';
     }

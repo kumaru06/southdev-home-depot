@@ -22,16 +22,17 @@ require_once INCLUDES_PATH . '/navbar.php';
             <div class="return-summary-row"><span>Total</span><strong>₱<?= number_format($order['total_amount'], 2) ?></strong></div>
         </div>
 
-        <form action="<?= APP_URL ?>/index.php?url=returns/submit" method="POST" style="margin-top: 24px;">
+        <form action="<?= APP_URL ?>/index.php?url=returns/submit" method="POST" enctype="multipart/form-data" style="margin-top: 24px;">
             <?= csrf_field() ?>
             <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
+            <input type="hidden" name="reason_category" id="reason_category" value="">
 
             <div class="form-group">
                 <label for="return_reason_select">Reason for Return <span class="required">*</span></label>
                 <select id="return_reason_select" class="form-control" required>
                     <option value="">Select a reason…</option>
-                    <option value="Item arrived damaged or broken">Item arrived damaged or broken</option>
-                    <option value="Received wrong item">Received wrong item</option>
+                    <option value="Item arrived damaged or broken" data-proof="1">Item arrived damaged or broken</option>
+                    <option value="Received wrong item" data-proof="1">Received wrong item</option>
                     <option value="Item does not match description or photos">Item does not match description or photos</option>
                     <option value="Other">Other (please specify)</option>
                 </select>
@@ -61,10 +62,29 @@ require_once INCLUDES_PATH . '/navbar.php';
                 </div>
             </div>
 
+            <div class="form-group" id="return-proof-group" hidden>
+                <label for="proof_image">Photo Proof <span class="required" id="proof-required-mark">*</span></label>
+                <p class="text-muted" style="margin: 0 0 10px;">Upload a clear photo of the damaged or wrong item so staff can review your request.</p>
+                <div class="return-proof-upload">
+                    <label for="proof_image" class="return-proof-dropzone" id="proof_dropzone">
+                        <input type="file" id="proof_image" name="proof_image" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+                        <span class="return-proof-icon" aria-hidden="true">
+                            <i data-lucide="camera" style="width:22px;height:22px;"></i>
+                        </span>
+                        <strong id="proof_filename">Choose photo</strong>
+                        <small>JPG, PNG, WebP, or GIF • Max 5 MB</small>
+                    </label>
+                    <div class="return-proof-preview" id="proof_preview_wrap" hidden>
+                        <img id="proof_preview" src="" alt="Proof preview">
+                        <button type="button" class="return-proof-clear" id="proof_clear" title="Remove photo">Remove</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="form-group" id="return-detail-group">
                 <label for="reason">Additional Details</label>
                 <textarea id="reason" name="reason" class="form-control" rows="4" placeholder="Please provide more details about your return request…"></textarea>
-                <small class="text-muted">Describe the issue in detail. Attach photos if possible when the request is reviewed.</small>
+                <small class="text-muted">Describe the issue in detail to help staff review your request faster.</small>
             </div>
 
             <input type="hidden" name="reason" id="final_reason" value="">
@@ -85,10 +105,45 @@ document.addEventListener('DOMContentLoaded', function(){
     var itemLabel = document.getElementById('return-items-label');
     var textarea = document.getElementById('reason');
     var finalReason = document.getElementById('final_reason');
+    var reasonCategory = document.getElementById('reason_category');
+    var proofGroup = document.getElementById('return-proof-group');
+    var proofInput = document.getElementById('proof_image');
+    var proofFilename = document.getElementById('proof_filename');
+    var proofPreviewWrap = document.getElementById('proof_preview_wrap');
+    var proofPreview = document.getElementById('proof_preview');
+    var proofClear = document.getElementById('proof_clear');
     var form = textarea.closest('form');
+    var previewUrl = null;
 
-    // Show/hide additional details — always visible but required for "Other"
+    function needsProof() {
+        var opt = sel.options[sel.selectedIndex];
+        return !!(opt && opt.getAttribute('data-proof') === '1');
+    }
+
+    function syncProofUi() {
+        var required = needsProof();
+        proofGroup.hidden = !required;
+        if (required) {
+            proofInput.setAttribute('required', 'required');
+        } else {
+            proofInput.removeAttribute('required');
+            clearProof();
+        }
+    }
+
+    function clearProof() {
+        proofInput.value = '';
+        proofFilename.textContent = 'Choose photo';
+        proofPreviewWrap.hidden = true;
+        proofPreview.removeAttribute('src');
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            previewUrl = null;
+        }
+    }
+
     sel.addEventListener('change', function(){
+        reasonCategory.value = this.value || '';
         if (this.value === 'Other') {
             textarea.setAttribute('required', 'required');
             textarea.placeholder = 'Please specify your reason for returning…';
@@ -97,11 +152,34 @@ document.addEventListener('DOMContentLoaded', function(){
             textarea.removeAttribute('required');
             textarea.placeholder = 'Please describe the damage or broken part…';
             itemLabel.innerHTML = 'What damaged product did you receive? <span class="required">*</span>';
+        } else if (this.value === 'Received wrong item') {
+            textarea.removeAttribute('required');
+            textarea.placeholder = 'Please describe what you received vs what you ordered…';
+            itemLabel.innerHTML = 'What wrong product did you receive? <span class="required">*</span>';
         } else {
             textarea.removeAttribute('required');
             textarea.placeholder = 'Please provide more details about your return request…';
             itemLabel.innerHTML = 'What product do you want to return? <span class="required">*</span>';
         }
+        syncProofUi();
+    });
+
+    proofInput.addEventListener('change', function(){
+        var file = this.files && this.files[0];
+        if (!file) {
+            clearProof();
+            return;
+        }
+        proofFilename.textContent = file.name;
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        previewUrl = URL.createObjectURL(file);
+        proofPreview.src = previewUrl;
+        proofPreviewWrap.hidden = false;
+    });
+
+    proofClear.addEventListener('click', function(){
+        clearProof();
+        if (needsProof()) proofInput.focus();
     });
 
     // Combine selected reason + details into final reason field on submit
@@ -112,6 +190,8 @@ document.addEventListener('DOMContentLoaded', function(){
             sel.focus();
             return;
         }
+        reasonCategory.value = selected;
+
         var checkedItems = form.querySelectorAll('input[name="return_items[]"]:checked');
         if (!checkedItems.length) {
             e.preventDefault();
@@ -120,6 +200,15 @@ document.addEventListener('DOMContentLoaded', function(){
             setTimeout(function(){ itemGroup.classList.remove('return-item-error'); }, 1200);
             return;
         }
+
+        if (needsProof() && !(proofInput.files && proofInput.files.length)) {
+            e.preventDefault();
+            proofGroup.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            proofGroup.classList.add('return-proof-error');
+            setTimeout(function(){ proofGroup.classList.remove('return-proof-error'); }, 1200);
+            return;
+        }
+
         var details = textarea.value.trim();
         var combined = '';
         if (selected === 'Other') {
@@ -131,6 +220,8 @@ document.addEventListener('DOMContentLoaded', function(){
         // Disable the textarea name so only the hidden field submits
         textarea.removeAttribute('name');
     });
+
+    syncProofUi();
 });
 </script>
 

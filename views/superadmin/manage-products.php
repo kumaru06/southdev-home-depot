@@ -89,26 +89,42 @@ require_once INCLUDES_PATH . '/sidebar.php';
         </div>
 
         <!-- Products Table -->
-        <div class="card">
-            <div class="card-header" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem;">
-                <div style="display:flex; align-items:center; gap:.5rem;">
+        <div class="card card--table-locked">
+            <div class="products-table-toolbar">
+                <div class="products-table-toolbar__title">
                     <i data-lucide="package" style="width:20px;height:20px;color:var(--accent);"></i>
-                    <h3 style="margin:0; font-size:1.05rem; font-weight:600;">All Products</h3>
+                    <h3>All Products</h3>
                 </div>
-                <div style="display:flex; align-items:center; gap:.75rem;">
-                    <select id="adminCategoryFilter" class="form-control" style="min-width:180px;padding:.45rem;border-radius:6px;border:1px solid var(--border);background:var(--surface);">
+                <div class="products-table-toolbar__actions">
+                    <form id="bulkDeleteForm" class="products-bulk-form" action="<?= APP_URL ?>/index.php?url=admin/products/bulk-delete" method="POST">
+                        <?= csrf_field() ?>
+                        <div id="bulkDeleteIds"></div>
+                        <button type="submit" id="bulkDeleteBtn" class="btn btn-outline btn-sm products-bulk-delete"
+                                data-confirm="Delete the selected products? This cannot be undone."
+                                data-confirm-title="Delete Selected Products"
+                                data-confirm-ok="Delete Selected"
+                                data-confirm-variant="danger"
+                                hidden>
+                            <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+                            Delete Selected (<span id="bulkSelectedCount">0</span>)
+                        </button>
+                    </form>
+                    <select id="adminCategoryFilter" class="form-control products-category-filter">
                         <option value="">All Categories</option>
                         <?php if (!empty($categories)): foreach ($categories as $cat): ?>
                             <option value="<?= htmlspecialchars($cat['name'], ENT_QUOTES) ?>"><?= htmlspecialchars($cat['name']) ?></option>
                         <?php endforeach; endif; ?>
                     </select>
-                    <span class="badge badge-pending" style="font-size:.8rem;"><?= count($products ?? []) ?> items</span>
+                    <span class="badge badge-pending products-count-badge"><?= count($products ?? []) ?> items</span>
                 </div>
             </div>
-            <div class="data-table-wrap">
-                <table class="data-table">
+            <div class="data-table-wrap data-table-wrap--locked">
+                <table class="data-table" id="productsTable">
                     <thead>
                         <tr>
+                            <th style="width:42px;">
+                                <input type="checkbox" id="selectAllProducts" class="product-select-all" title="Select all" aria-label="Select all products">
+                            </th>
                             <th>ID</th>
                             <th>Image</th>
                             <th>Name</th>
@@ -121,7 +137,10 @@ require_once INCLUDES_PATH . '/sidebar.php';
                     <tbody>
                         <?php if (!empty($products)): ?>
                             <?php foreach ($products as $product): ?>
-                                <tr>
+                                <tr data-product-id="<?= (int) $product['id'] ?>">
+                                    <td data-label="Select">
+                                        <input type="checkbox" class="product-row-check" value="<?= (int) $product['id'] ?>" aria-label="Select product #<?= (int) $product['id'] ?>">
+                                    </td>
                                     <td data-label="ID"><?= $product['id'] ?></td>
                                     <td data-label="Image">
                                         <div style="width:48px;height:48px;border-radius:6px;overflow:hidden;border:1px solid var(--neutral);background:var(--neutral);">
@@ -162,7 +181,11 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                                   method="POST" style="display:inline;"
                                                   class="inline-form">
                                                 <?= csrf_field() ?>
-                                                <button type="submit" class="action-btn delete" title="Delete">
+                                                <button type="submit" class="action-btn delete" title="Delete"
+                                                        data-confirm="Delete this product?"
+                                                        data-confirm-title="Delete Product"
+                                                        data-confirm-ok="Delete"
+                                                        data-confirm-variant="danger">
                                                     <i data-lucide="trash-2" style="width:15px;height:15px;"></i> Delete
                                                 </button>
                                             </form>
@@ -171,7 +194,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <tr><td colspan="7" style="text-align:center; padding:2rem;">
+                            <tr><td colspan="8" style="text-align:center; padding:2rem;">
                                 <i data-lucide="package-x" style="width:40px;height:40px;color:var(--steel);margin-bottom:.5rem;display:block;margin:0 auto .5rem;"></i>
                                 <p style="color:var(--steel);">No products found.</p>
                             </td></tr>
@@ -485,15 +508,76 @@ document.addEventListener('DOMContentLoaded', function(){
     if(sel){
         sel.addEventListener('change', function(){
             var v = this.value.trim().toLowerCase();
-            var rows = document.querySelectorAll('.data-table tbody tr');
+            var rows = document.querySelectorAll('#productsTable tbody tr');
             rows.forEach(function(r){
                 var catTd = r.querySelector('td[data-label="Category"]');
                 if(!catTd) return;
                 var text = catTd.textContent.trim().toLowerCase();
                 r.style.display = (v === '' || text === v) ? '' : 'none';
             });
+            syncProductSelection();
         });
     }
+
+    var selectAll = document.getElementById('selectAllProducts');
+    var bulkBtn = document.getElementById('bulkDeleteBtn');
+    var bulkCount = document.getElementById('bulkSelectedCount');
+    var bulkForm = document.getElementById('bulkDeleteForm');
+    var bulkIds = document.getElementById('bulkDeleteIds');
+
+    function visibleRowChecks() {
+        return Array.prototype.slice.call(document.querySelectorAll('#productsTable tbody tr')).filter(function(row){
+            return row.style.display !== 'none';
+        }).map(function(row){
+            return row.querySelector('.product-row-check');
+        }).filter(Boolean);
+    }
+
+    function syncProductSelection() {
+        var checks = visibleRowChecks();
+        var selected = checks.filter(function(c){ return c.checked; });
+        var count = selected.length;
+
+        if (bulkCount) bulkCount.textContent = String(count);
+        if (bulkBtn) {
+            if (count > 0) bulkBtn.removeAttribute('hidden');
+            else bulkBtn.setAttribute('hidden', '');
+        }
+
+        if (selectAll) {
+            selectAll.checked = checks.length > 0 && selected.length === checks.length;
+            selectAll.indeterminate = selected.length > 0 && selected.length < checks.length;
+        }
+
+        if (bulkIds) {
+            bulkIds.innerHTML = selected.map(function(c){
+                return '<input type="hidden" name="product_ids[]" value="' + c.value + '">';
+            }).join('');
+        }
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function(){
+            visibleRowChecks().forEach(function(c){ c.checked = selectAll.checked; });
+            syncProductSelection();
+        });
+    }
+
+    document.querySelectorAll('.product-row-check').forEach(function(c){
+        c.addEventListener('change', syncProductSelection);
+    });
+
+    if (bulkForm) {
+        bulkForm.addEventListener('submit', function(e){
+            syncProductSelection();
+            var selected = document.querySelectorAll('#bulkDeleteIds input[name="product_ids[]"]');
+            if (!selected.length) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    syncProductSelection();
 });
 </script>
 
