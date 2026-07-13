@@ -32,11 +32,12 @@ if (-not $ftpHost -or -not $ftpUser -or -not $ftpPass) {
     exit 1
 }
 
-$excludeDirs  = @('.git', 'repo.git', 'docs', 'database', '.venv', 'storage\mails', 'tools')
+$excludeDirs  = @('.git', 'repo.git', 'docs', 'database', '.venv', 'vendor', 'storage\mails', 'tools', 'node_modules')
 $excludeFiles = @(
     'southdev-hostinger.zip', 'southdev-deploy.zip',
-    'deploy.ps1', 'deploy-hostinger.ps1', 'ftp_upload.ps1', 'ftp_curl_upload.ps1', 'pack-for-hostinger.ps1',
-    '.env', '.env.deploy', '.env.production', '.env.hostinger.example', '.env.deploy.example', '.gitignore'
+    'deploy.ps1', 'deploy-hostinger.ps1', 'deploy-git-status.ps1', 'deploy-full-ftp.py',
+    'ftp_upload.ps1', 'ftp_curl_upload.ps1', 'pack-for-hostinger.ps1',
+    '.env', '.env.deploy', '.env.production', '.env.hostinger.example', '.env.deploy.example', '.env.example', '.gitignore'
 )
 
 function Upload-File($localPath, $remotePath) {

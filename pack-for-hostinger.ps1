@@ -5,10 +5,12 @@ $outZip    = Join-Path $localRoot "southdev-hostinger.zip"
 $excludeDirs  = @('.git', 'repo.git', 'docs', 'database', '.venv', 'storage\mails', 'tools')
 $excludeFiles = @(
     'southdev-hostinger.zip', 'southdev-deploy.zip',
-    'deploy.ps1', 'ftp_upload.ps1', 'ftp_curl_upload.ps1', 'pack-for-hostinger.ps1',
+    'deploy.ps1', 'deploy-hostinger.ps1', 'deploy-git-status.ps1', 'deploy-full-ftp.py',
+    'ftp_upload.ps1', 'ftp_curl_upload.ps1', 'pack-for-hostinger.ps1',
     'test.html', 'test.php', 'test_deploy.php',
     'tmp_index_html.html', 'tmp_products_html.html', 'tmp_products_html_after.css.html',
-    'flowcharts.html', '.env', '.gitignore',
+    'flowcharts.html', '.env', '.env.deploy', '.env.production', '.env.deploy.example',
+    '.env.hostinger.example', '.env.example', '.gitignore',
     'CONFIGURATION_GUIDE.md', 'DEMO_ACCOUNTS.md', 'DEPLOYMENT_CHECKLIST.md',
     'DEPLOYMENT_GUIDE.md', 'EWALLET_API_SETUP.md', 'PAYMONGO_SETUP.md', 'README.md'
 )
