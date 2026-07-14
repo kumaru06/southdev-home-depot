@@ -1934,6 +1934,7 @@ p { color: var(--text-secondary); }
     display: grid;
     grid-template-columns: 1fr 1fr;
     min-height: 420px;
+    transition: opacity .35s ease, transform .35s ease;
 }
 
 /* Left image panel */
@@ -2272,7 +2273,7 @@ p { color: var(--text-secondary); }
     font-weight: 600;
     color: #3c4043;
     text-decoration: none !important;
-    transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
+    transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, opacity .18s ease;
     cursor: pointer;
     margin-top: 2px;
 }
@@ -2284,6 +2285,239 @@ p { color: var(--text-secondary); }
     text-decoration: none !important;
 }
 .btn-google-login svg { flex-shrink: 0; }
+.btn-google-login.is-loading {
+    opacity: .72;
+    pointer-events: none;
+    cursor: wait;
+}
+
+/* Google OAuth modal handoff */
+.login-modal-split.is-faded {
+    opacity: 0;
+    transform: scale(.98);
+    pointer-events: none;
+}
+.login-google-handoff {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+        radial-gradient(ellipse at 30% 20%, rgba(249,115,22,.10), transparent 55%),
+        linear-gradient(160deg, #0f172a 0%, #1b2a4a 55%, #152238 100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .4s ease, visibility .4s ease;
+    z-index: 5;
+}
+.login-google-handoff.active {
+    opacity: 1;
+    visibility: visible;
+}
+.login-google-handoff-inner {
+    text-align: center;
+    padding: 28px 24px;
+    color: #fff;
+    max-width: 320px;
+    animation: loginGoogleHandoffIn .45s cubic-bezier(.16,1,.3,1) both;
+}
+.login-google-handoff-orb {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 18px;
+    border-radius: 18px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+.login-google-handoff-spinner {
+    width: 28px;
+    height: 28px;
+    margin: 0 auto 16px;
+    border: 2.5px solid rgba(255,255,255,.22);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: loginGoogleSpin .75s linear infinite;
+}
+.login-google-handoff-inner h3 {
+    margin: 0 0 8px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    color: #fff;
+}
+.login-google-handoff-inner p {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: rgba(255,255,255,.72);
+}
+@keyframes loginGoogleSpin {
+    to { transform: rotate(360deg); }
+}
+@keyframes loginGoogleHandoffIn {
+    from { opacity: 0; transform: translateY(10px) scale(.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Google signing-in bridge page */
+.google-signing-page {
+    min-height: calc(100vh - 72px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px 64px;
+    background:
+        radial-gradient(ellipse at 20% 10%, rgba(249,115,22,.08), transparent 45%),
+        radial-gradient(ellipse at 80% 90%, rgba(27,42,74,.06), transparent 40%),
+        var(--neutral);
+}
+.google-signing-card {
+    width: min(420px, 100%);
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow-lg);
+    padding: 40px 32px 36px;
+    text-align: center;
+    animation: loginSlideUp .4s cubic-bezier(.16,1,.3,1) both;
+}
+.google-signing-avatar {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(249,115,22,.2);
+    background: var(--neutral);
+}
+.google-signing-avatar-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: linear-gradient(145deg, #fff7ed, #ffedd5);
+}
+.google-signing-spinner {
+    width: 32px;
+    height: 32px;
+    margin: 0 auto 18px;
+    border: 2.5px solid rgba(27,42,74,.12);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: loginGoogleSpin .75s linear infinite;
+}
+.google-signing-card h1 {
+    margin: 0 0 8px;
+    font-size: 1.35rem;
+    font-weight: 750;
+    color: var(--primary);
+    letter-spacing: -.02em;
+}
+.google-signing-card p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+}
+.google-signing-brand {
+    margin-top: 22px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+/* Complete Google account */
+.google-complete-card {
+    width: min(520px, 100%);
+    margin-left: auto;
+    margin-right: auto;
+}
+.google-complete-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.google-complete-header h2 {
+    margin: 0 0 6px;
+    font-size: 1.35rem;
+    color: var(--primary);
+}
+.google-complete-header .auth-tagline {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.45;
+}
+.google-complete-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid rgba(249,115,22,.25);
+    background: var(--neutral);
+}
+.google-complete-avatar-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: linear-gradient(145deg, #fff7ed, #ffedd5);
+}
+.google-complete-email {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    border-radius: 10px;
+    background: var(--neutral);
+    border: 1px solid var(--border);
+}
+.google-complete-email-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+.google-complete-email strong {
+    font-size: 13.5px;
+    color: var(--text-primary);
+    word-break: break-all;
+}
+.google-complete-form .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.google-complete-form .field-hint {
+    display: block;
+    margin-top: 5px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+@media (max-width: 560px) {
+    .google-complete-form .form-row {
+        grid-template-columns: 1fr;
+    }
+    .google-complete-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}
 
 /* ---------- Phone number field with country code ---------- */
 .field-label-sm {

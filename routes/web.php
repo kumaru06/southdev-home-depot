@@ -36,6 +36,21 @@ switch ($urlParts[0]) {
         (new GoogleAuthController($pdo))->handleCallback();
         break;
 
+    case 'google-signing-in':
+        require_once CONTROLLERS_PATH . '/GoogleAuthController.php';
+        (new GoogleAuthController($pdo))->showSigningIn();
+        break;
+
+    case 'complete-google-account':
+        require_once CONTROLLERS_PATH . '/GoogleAuthController.php';
+        $googleAuth = new GoogleAuthController($pdo);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $googleAuth->completeAccount();
+        } else {
+            $googleAuth->showCompleteAccount();
+        }
+        break;
+
     case 'admin-login':
         require_once CONTROLLERS_PATH . '/AuthController.php';
         $controller = new AuthController($pdo);

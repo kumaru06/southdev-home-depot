@@ -8,7 +8,7 @@ param(
 
 $localRoot  = "C:\xampp\htdocs\southdev-home-depot"
 $deployEnv  = Join-Path $localRoot ".env.deploy"
-$remoteRoot = "/public_html"
+$remoteRoot = "/domains/southdevhomedepotdavao.com/public_html"
 
 if (-not (Test-Path $deployEnv)) {
     Write-Host "Missing .env.deploy - copy .env.deploy.example to .env.deploy and add your FTP password." -ForegroundColor Red
@@ -26,6 +26,9 @@ Get-Content $deployEnv | ForEach-Object {
 $ftpHost = $cfg['FTP_HOST']
 $ftpUser = $cfg['FTP_USER']
 $ftpPass = $cfg['FTP_PASS']
+if ($cfg['FTP_REMOTE_ROOT']) {
+    $remoteRoot = $cfg['FTP_REMOTE_ROOT'].TrimEnd('/')
+}
 
 if (-not $ftpHost -or -not $ftpUser -or -not $ftpPass) {
     Write-Host "FTP_HOST, FTP_USER, and FTP_PASS required in .env.deploy" -ForegroundColor Red
@@ -77,6 +80,7 @@ except Exception as e:
 
 Write-Host ""
 Write-Host "Deploy to Hostinger ($ftpHost)" -ForegroundColor Yellow
+Write-Host "Remote root: $remoteRoot" -ForegroundColor Yellow
 Write-Host ""
 
 if ($UploadZip) {
@@ -102,6 +106,16 @@ if (Test-Path $envProd) {
 
 if ($Files.Count -gt 0) {
     foreach ($rel in $Files) {
+        $relNorm = $rel.Replace('\', '/')
+        $baseName = [IO.Path]::GetFileName($relNorm)
+        $skip = $false
+        foreach ($f in $excludeFiles) {
+            if ($baseName -eq $f -or $relNorm -eq $f) { $skip = $true; break }
+        }
+        if ($skip) {
+            Write-Host "  [SKIP] $relNorm (excluded)" -ForegroundColor DarkYellow
+            continue
+        }
         $rel = $rel.Replace([char]47, [IO.Path]::DirectorySeparatorChar)
         $full = Join-Path $localRoot $rel
         if (Test-Path $full) {

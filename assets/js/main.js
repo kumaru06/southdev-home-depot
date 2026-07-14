@@ -368,6 +368,7 @@
             var errorBox = document.getElementById('loginModalError');
             var submitBtn= document.getElementById('loginModalSubmit');
             var emailIn  = document.getElementById('loginModalEmail');
+            var googleHandoffStarted = false;
 
             // Intercept ALL links that go to ?url=login (nav links, buttons, "sign in to purchase", etc.)
             document.addEventListener('click', function (e) {
@@ -398,6 +399,7 @@
             }
 
             function closeLoginModal() {
+                if (googleHandoffStarted) return;
                 overlay.classList.add('closing');
                 overlay.classList.remove('active');
                 setTimeout(function() {
@@ -489,6 +491,46 @@
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i data-lucide="log-in"></i> Sign In';
                 if (window.lucide) lucide.createIcons({ nodes: [submitBtn] });
+            }
+
+            /* —— Google OAuth: loading → modal handoff → redirect —— */
+            var googleBtn = document.getElementById('loginGoogleBtn');
+            var googleHandoff = document.getElementById('loginGoogleHandoff');
+            var modalSplit = overlay.querySelector('.login-modal-split');
+
+            if (googleBtn) {
+                googleBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    if (googleHandoffStarted) return;
+                    googleHandoffStarted = true;
+
+                    var href = googleBtn.getAttribute('href');
+                    if (!href) {
+                        googleHandoffStarted = false;
+                        return;
+                    }
+
+                    googleBtn.classList.add('is-loading');
+                    googleBtn.setAttribute('aria-disabled', 'true');
+                    var label = googleBtn.querySelector('.btn-google-label');
+                    if (label) label.textContent = 'Connecting to Google…';
+
+                    if (closeBtn) closeBtn.style.pointerEvents = 'none';
+
+                    setTimeout(function () {
+                        if (modalSplit) modalSplit.classList.add('is-faded');
+                        if (googleHandoff) {
+                            googleHandoff.hidden = false;
+                            requestAnimationFrame(function () {
+                                googleHandoff.classList.add('active');
+                            });
+                        }
+                    }, 180);
+
+                    setTimeout(function () {
+                        window.location.href = href;
+                    }, 720);
+                });
             }
         })();
 
