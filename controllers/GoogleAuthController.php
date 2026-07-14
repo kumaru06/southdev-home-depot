@@ -20,21 +20,23 @@ class GoogleAuthController
      * -------------------------------------------------------------- */
     public function redirect(): void
     {
-        if (empty(GOOGLE_CLIENT_ID)) {
+        if (empty(GOOGLE_CLIENT_ID) || empty(GOOGLE_CLIENT_SECRET)) {
             $_SESSION['flash_error'] = 'Google login is not configured yet. Please contact the administrator.';
             header('Location: ' . APP_URL . '/index.php');
             exit;
         }
 
-        $state = bin2hex(random_bytes(16));
-        $_SESSION['google_oauth_state'] = $state;
+        // Signed state is CSRF-safe without relying on PHP session surviving the Google round-trip.
+        $state = $this->createOAuthState();
 
         // Remember where to return after login, but only for same-origin URLs.
         $referer = $_SERVER['HTTP_REFERER'] ?? '';
         $appBase = rtrim(APP_URL, '/');
-        $_SESSION['google_redirect_back'] = ($referer && strpos($referer, $appBase) === 0)
+        $back = ($referer && strpos($referer, $appBase) === 0)
             ? $referer
             : APP_URL . '/index.php?url=products';
+        $_SESSION['google_redirect_back'] = $back;
+        $this->setOAuthCookie('google_oauth_back', $back, 600);
 
         $params = http_build_query([
             'client_id'     => GOOGLE_CLIENT_ID,
@@ -46,6 +48,11 @@ class GoogleAuthController
             'prompt'        => 'select_account',
         ]);
 
+        // Flush session before leaving the site so Hostinger can persist it reliably.
+        session_write_close();
+
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
         header('Location: ' . self::GOOGLE_AUTH_URL . '?' . $params);
         exit;
     }
@@ -55,18 +62,12 @@ class GoogleAuthController
      * -------------------------------------------------------------- */
     public function handleCallback(): void
     {
-        // CSRF / state check
-        if (
-            empty($_GET['state']) ||
-            empty($_SESSION['google_oauth_state']) ||
-            !hash_equals($_SESSION['google_oauth_state'], $_GET['state'])
-        ) {
-            unset($_SESSION['google_oauth_state']);
+        // CSRF / state check (HMAC-signed — does not depend on session continuity)
+        if (!$this->verifyOAuthState($_GET['state'] ?? '')) {
             $_SESSION['flash_error'] = 'Invalid OAuth state. Please try again.';
             header('Location: ' . APP_URL . '/index.php');
             exit;
         }
-        unset($_SESSION['google_oauth_state']);
 
         if (isset($_GET['error'])) {
             $_SESSION['flash_error'] = 'Google login was cancelled or denied.';
@@ -96,7 +97,14 @@ class GoogleAuthController
             exit;
         }
 
-        $this->loginOrRegister($googleUser);
+        try {
+            $this->loginOrRegister($googleUser);
+        } catch (Throwable $e) {
+            error_log('Google OAuth login failed: ' . $e->getMessage());
+            $_SESSION['flash_error'] = 'Google login failed due to a server error. Please try again or use email login.';
+            header('Location: ' . APP_URL . '/index.php');
+            exit;
+        }
     }
 
     /* ----------------------------------------------------------------
@@ -193,8 +201,11 @@ class GoogleAuthController
         $_SESSION['user_name']     = $user['first_name'] . ' ' . $user['last_name'];
         $_SESSION['profile_image'] = $user['profile_image'] ?? null;
 
-        $back = $_SESSION['google_redirect_back'] ?? APP_URL . '/index.php?url=products';
+        $back = $_SESSION['google_redirect_back']
+            ?? ($_COOKIE['google_oauth_back'] ?? null)
+            ?? (APP_URL . '/index.php?url=products');
         unset($_SESSION['google_redirect_back']);
+        $this->clearOAuthCookie('google_oauth_back');
 
         $appBase = rtrim(APP_URL, '/');
         if (!$back || strpos($back, $appBase) !== 0) {
@@ -203,6 +214,62 @@ class GoogleAuthController
 
         header('Location: ' . $back);
         exit;
+    }
+
+    /* ----------------------------------------------------------------
+     * Signed OAuth state (survives lost PHP sessions across Google redirects)
+     * -------------------------------------------------------------- */
+    private function createOAuthState(): string
+    {
+        $nonce = bin2hex(random_bytes(16));
+        $exp   = (string) (time() + 600);
+        $payload = $nonce . '.' . $exp;
+        $sig = hash_hmac('sha256', $payload, GOOGLE_CLIENT_SECRET);
+        return $payload . '.' . $sig;
+    }
+
+    private function verifyOAuthState(string $state): bool
+    {
+        $parts = explode('.', $state);
+        if (count($parts) !== 3) {
+            return false;
+        }
+
+        [$nonce, $exp, $sig] = $parts;
+        if ($nonce === '' || !ctype_digit($exp) || $sig === '') {
+            return false;
+        }
+        if ((int) $exp < time()) {
+            return false;
+        }
+
+        $payload = $nonce . '.' . $exp;
+        $expected = hash_hmac('sha256', $payload, GOOGLE_CLIENT_SECRET);
+        return hash_equals($expected, $sig);
+    }
+
+    private function setOAuthCookie(string $name, string $value, int $ttl): void
+    {
+        $secure = strpos(APP_URL, 'https://') === 0;
+        setcookie($name, $value, [
+            'expires'  => time() + $ttl,
+            'path'     => '/',
+            'secure'   => $secure,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
+
+    private function clearOAuthCookie(string $name): void
+    {
+        $secure = strpos(APP_URL, 'https://') === 0;
+        setcookie($name, '', [
+            'expires'  => time() - 3600,
+            'path'     => '/',
+            'secure'   => $secure,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
     }
 
     /* ----------------------------------------------------------------
