@@ -209,6 +209,9 @@
 
         /* ========== Delete Confirmations ========== */
         document.querySelectorAll('.btn-delete, .action-btn.delete').forEach(function (btn) {
+            // Buttons with [data-confirm] are handled by the global handler below.
+            if (btn.hasAttribute('data-confirm') || btn.disabled) return;
+
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
 
@@ -597,6 +600,11 @@
         var confirmVariant = opts.confirmVariant || 'accent'; // accent | danger
 
         return new Promise(function (resolve) {
+            // Avoid stacked/double modals if something fires twice
+            document.querySelectorAll('.confirm-overlay').forEach(function (el) {
+                el.remove();
+            });
+
             var overlay = document.createElement('div');
             overlay.className = 'confirm-overlay';
             overlay.setAttribute('role', 'dialog');
@@ -901,5 +909,79 @@
             document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
         }
     });
+
+    /* ========== Category bar: click-drag scroll ========== */
+    function initCategoryBarDrag(bar) {
+        if (!bar || bar.dataset.dragReady === '1') return;
+        bar.dataset.dragReady = '1';
+
+        let isDown = false;
+        let dragging = false;
+        let startX = 0;
+        let scrollLeft = 0;
+        let pointerId = null;
+        const DRAG_THRESHOLD = 8;
+
+        bar.addEventListener('pointerdown', function (e) {
+            if (e.pointerType === 'touch') return; // native touch pan
+            if (e.button !== 0) return;
+            // Don't steal interaction from form controls if any
+            if (e.target.closest('select, input, button, textarea')) return;
+
+            isDown = true;
+            dragging = false;
+            startX = e.clientX;
+            scrollLeft = bar.scrollLeft;
+            pointerId = e.pointerId;
+        });
+
+        bar.addEventListener('pointermove', function (e) {
+            if (!isDown) return;
+            const dx = e.clientX - startX;
+
+            if (!dragging && Math.abs(dx) > DRAG_THRESHOLD) {
+                dragging = true;
+                bar.classList.add('is-dragging');
+                try { bar.setPointerCapture(pointerId); } catch (_) {}
+            }
+
+            if (dragging) {
+                e.preventDefault();
+                bar.scrollLeft = scrollLeft - dx;
+            }
+        });
+
+        function endDrag() {
+            if (!isDown) return;
+            isDown = false;
+            bar.classList.remove('is-dragging');
+
+            try {
+                if (pointerId != null) bar.releasePointerCapture(pointerId);
+            } catch (_) {}
+
+            if (dragging) {
+                // Block only the click that follows a real drag
+                const suppressClick = function (ev) {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    bar.removeEventListener('click', suppressClick, true);
+                };
+                bar.addEventListener('click', suppressClick, true);
+                setTimeout(function () {
+                    bar.removeEventListener('click', suppressClick, true);
+                }, 50);
+            }
+
+            dragging = false;
+            pointerId = null;
+        }
+
+        bar.addEventListener('pointerup', endDrag);
+        bar.addEventListener('pointercancel', endDrag);
+        window.addEventListener('pointerup', endDrag);
+    }
+
+    document.querySelectorAll('.category-bar').forEach(initCategoryBarDrag);
 
 })();

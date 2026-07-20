@@ -640,6 +640,11 @@ body:not(.admin-layout) .form-control {
     background: rgba(255,255,255,.86);
     backdrop-filter: blur(16px);
     box-shadow: 0 14px 32px rgba(15,23,42,.07);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex-wrap: nowrap;
+    overflow-x: auto;
 }
 
 .products-reveal-sync .category-bar a {
@@ -862,14 +867,31 @@ body:not(.admin-layout) .form-control {
     background: transparent;
     padding: 8px 0 14px;
     display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
     gap: 10px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     overflow-x: auto;
+    overflow-y: hidden;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x proximity;
     scroll-padding: 0 16px;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: pan-x;
 }
 .category-bar::-webkit-scrollbar { display: none; }
+.category-bar.is-dragging {
+    cursor: grabbing;
+    scroll-snap-type: none;
+}
+.category-bar.is-dragging a {
+    pointer-events: none;
+}
 .category-bar a {
     padding: 10px 20px;
     font-size: 13px;
@@ -879,7 +901,7 @@ body:not(.admin-layout) .form-control {
     border-radius: 999px;
     border: 1.5px solid var(--border);
     background: var(--white);
-    transition: all .2s ease;
+    transition: border-color .2s ease, color .2s ease, background .2s ease, box-shadow .2s ease, transform .2s ease;
     letter-spacing: .2px;
     display: inline-flex;
     align-items: center;
@@ -887,7 +909,9 @@ body:not(.admin-layout) .form-control {
     gap: 6px;
     line-height: 1;
     scroll-snap-align: start;
-    flex-shrink: 0;
+    flex: 0 0 auto;
+    max-width: none;
+    box-sizing: border-box;
 }
 .category-bar a span {
     display: inline-flex;
@@ -897,7 +921,6 @@ body:not(.admin-layout) .form-control {
 @media (max-width: 680px) {
     .category-bar { gap: 8px; padding: 6px 0 12px; }
     .category-bar a { padding: 8px 14px; font-size: 12px; }
-    .category-select { display: none !important; /* use pills on mobile, they scroll nicely */ }
 }
 @media (max-width: 420px) {
     .category-bar { gap: 6px; padding: 4px 0 10px; }

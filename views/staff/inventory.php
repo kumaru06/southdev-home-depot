@@ -270,7 +270,6 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
     position: fixed; inset: 0; z-index: 9999;
     background: rgba(0,0,0,.45);
     display: flex; align-items: center; justify-content: center;
-    backdrop-filter: blur(4px);
 }
 .modal-box {
     background: var(--white); border-radius: var(--radius-lg);

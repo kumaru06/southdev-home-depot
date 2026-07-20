@@ -1452,7 +1452,6 @@ body.admin-sidebar-collapsed .top-bar .sidebar-toggle-btn::before {
     position: fixed;
     inset: 0;
     background: rgba(28,28,28,.65);
-    backdrop-filter: blur(4px);
     z-index: 1000;
     display: flex;
     align-items: center;

@@ -152,36 +152,12 @@ if (!file_exists($display2Full)) {
                 <a href="<?= APP_URL ?>/index.php?url=products" class="<?= !isset($_GET['category']) ? 'active' : '' ?>">
                     <svg class="chip-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><rect x="2.75" y="2.75" width="8" height="8" rx="1.25" stroke="currentColor" stroke-width="1.75"/><rect x="13.25" y="2.75" width="8" height="8" rx="1.25" stroke="currentColor" stroke-width="1.75"/><rect x="2.75" y="13.25" width="8" height="8" rx="1.25" stroke="currentColor" stroke-width="1.75"/><rect x="13.25" y="13.25" width="8" height="8" rx="1.25" stroke="currentColor" stroke-width="1.75"/></svg><span>All Products</span>
                 </a>
-                <!-- Category select for quick filtering / mobile users -->
-                <div class="category-select" style="margin-left:12px; display:inline-block; vertical-align:middle;">
-                    <select id="categorySelect" class="form-control" style="min-width:160px;padding:.45rem;border-radius:6px;border:1px solid var(--border);background:var(--surface);">
-                        <option value="">All Categories</option>
-                        <?php if (isset($categories)): foreach ($categories as $cat): ?>
-                            <option value="<?= $cat['id'] ?>" <?= (isset($_GET['category']) && $_GET['category'] == $cat['id']) ? 'selected' : '' ?>><?= htmlspecialchars($cat['name']) ?></option>
-                        <?php endforeach; endif; ?>
-                    </select>
-                </div>
                 <?php if (isset($categories)): foreach ($categories as $cat): ?>
                     <a href="<?= APP_URL ?>/index.php?url=products&category=<?= $cat['id'] ?>" class="<?= (isset($_GET['category']) && $_GET['category'] == $cat['id']) ? 'active' : '' ?>">
                         <?= htmlspecialchars($cat['name']) ?>
                     </a>
                 <?php endforeach; endif; ?>
             </div>
-
-            <script>
-            document.addEventListener('DOMContentLoaded', function(){
-                var sel = document.getElementById('categorySelect');
-                if(!sel) return;
-                sel.addEventListener('change', function(){
-                    var v = this.value;
-                    if(v === ''){
-                        window.location.href = '<?= APP_URL ?>/index.php?url=products';
-                    } else {
-                        window.location.href = '<?= APP_URL ?>/index.php?url=products&category=' + encodeURIComponent(v);
-                    }
-                });
-            });
-            </script>
 
             <!-- Product Grid -->
             <?php if (!empty($products)): ?>
