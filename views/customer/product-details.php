@@ -169,71 +169,75 @@ $skuDisplay = $skuValue !== '' ? $skuValue : 'N/A';
 
         <!-- ========== Reviews Section ========== -->
         <section class="pd-reviews" id="pd-reviews">
-            <div class="pd-reviews__header">
-                <h2 class="pd-reviews__title">Customer Reviews</h2>
-                <?php if ($reviewCount): ?>
-                    <span class="pd-reviews__count"><?= $reviewCount ?> review<?= $reviewCount > 1 ? 's' : '' ?></span>
-                <?php endif; ?>
-            </div>
-
-            <?php if ($reviewCount): ?>
-            <div class="pd-reviews__summary">
-                <div class="pd-reviews__avg">
-                    <span class="pd-reviews__avg-num"><?= $avgRating ?></span>
-                    <div>
-                        <div class="pd-stars">
-                            <?php for ($i=1;$i<=5;$i++): ?>
-                                <span class="<?= $i <= round($avgRating) ? 'pd-star--filled' : 'pd-star--empty' ?>">★</span>
-                            <?php endfor; ?>
-                        </div>
-                        <span class="pd-reviews__avg-sub">Based on <?= $reviewCount ?> review<?= $reviewCount > 1 ? 's' : '' ?></span>
+            <div class="pd-reviews__panel">
+                <div class="pd-reviews__panel-head">
+                    <div class="pd-reviews__header">
+                        <h2 class="pd-reviews__title">Customer Reviews</h2>
+                        <?php if ($reviewCount): ?>
+                            <span class="pd-reviews__count"><?= $reviewCount ?> review<?= $reviewCount > 1 ? 's' : '' ?></span>
+                        <?php endif; ?>
                     </div>
-                </div>
-                <div class="pd-reviews__bars">
-                    <?php for ($s=5; $s>=1; $s--): ?>
-                        <?php $pct = $reviewCount ? round(($ratingDist[$s] / $reviewCount) * 100) : 0; ?>
-                        <div class="pd-reviews__bar-row">
-                            <span class="pd-reviews__bar-label"><?= $s ?> <span class="pd-star--filled">★</span></span>
-                            <div class="pd-reviews__bar-track">
-                                <div class="pd-reviews__bar-fill" style="width:<?= $pct ?>%"></div>
-                            </div>
-                            <span class="pd-reviews__bar-count"><?= $ratingDist[$s] ?></span>
-                        </div>
-                    <?php endfor; ?>
-                </div>
-            </div>
-            <?php endif; ?>
 
-            <div class="pd-reviews__list">
-                <?php if (empty($reviews)): ?>
-                    <div class="pd-reviews__empty">
-                        <p>No reviews yet. Be the first to review this product!</p>
-                    </div>
-                <?php else: ?>
-                    <?php foreach ($reviews as $rv): ?>
-                        <article class="pd-review-card">
-                            <div class="pd-review-card__top">
-                                <div class="pd-review-card__author">
-                                    <div class="pd-review-card__avatar">
-                                        <?= htmlspecialchars(mb_substr($rv['first_name'] ?? '',0,1) . mb_substr($rv['last_name'] ?? '',0,1)) ?>
-                                    </div>
-                                    <div>
-                                        <div class="pd-review-card__name"><?= htmlspecialchars(mask_name($rv['first_name'] ?? '', $rv['last_name'] ?? '')) ?></div>
-                                        <div class="pd-review-card__date"><?= date('M d, Y', strtotime($rv['created_at'])) ?></div>
-                                    </div>
-                                </div>
+                    <?php if ($reviewCount): ?>
+                    <div class="pd-reviews__summary">
+                        <div class="pd-reviews__avg">
+                            <span class="pd-reviews__avg-num"><?= $avgRating ?></span>
+                            <div>
                                 <div class="pd-stars">
                                     <?php for ($i=1;$i<=5;$i++): ?>
-                                        <span class="<?= $i <= intval($rv['rating']) ? 'pd-star--filled' : 'pd-star--empty' ?>">★</span>
+                                        <span class="<?= $i <= round($avgRating) ? 'pd-star--filled' : 'pd-star--empty' ?>">★</span>
                                     <?php endfor; ?>
                                 </div>
+                                <span class="pd-reviews__avg-sub">Based on <?= $reviewCount ?> review<?= $reviewCount > 1 ? 's' : '' ?></span>
                             </div>
-                            <?php if (!empty($rv['comment'])): ?>
-                                <p class="pd-review-card__comment"><?= nl2br(htmlspecialchars($rv['comment'])) ?></p>
-                            <?php endif; ?>
-                        </article>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+                        </div>
+                        <div class="pd-reviews__bars">
+                            <?php for ($s=5; $s>=1; $s--): ?>
+                                <?php $pct = $reviewCount ? round(($ratingDist[$s] / $reviewCount) * 100) : 0; ?>
+                                <div class="pd-reviews__bar-row">
+                                    <span class="pd-reviews__bar-label"><?= $s ?> <span class="pd-star--filled">★</span></span>
+                                    <div class="pd-reviews__bar-track">
+                                        <div class="pd-reviews__bar-fill" style="width:<?= $pct ?>%"></div>
+                                    </div>
+                                    <span class="pd-reviews__bar-count"><?= $ratingDist[$s] ?></span>
+                                </div>
+                            <?php endfor; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+
+                <div class="pd-reviews__list" tabindex="0" aria-label="Customer review list">
+                    <?php if (empty($reviews)): ?>
+                        <div class="pd-reviews__empty">
+                            <p>No reviews yet. Be the first to review this product!</p>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($reviews as $rv): ?>
+                            <article class="pd-review-card">
+                                <div class="pd-review-card__avatar" aria-hidden="true">
+                                    <?= htmlspecialchars(mb_substr($rv['first_name'] ?? '',0,1) . mb_substr($rv['last_name'] ?? '',0,1)) ?>
+                                </div>
+                                <div class="pd-review-card__body">
+                                    <div class="pd-review-card__top">
+                                        <div class="pd-review-card__author">
+                                            <div class="pd-review-card__name"><?= htmlspecialchars(mask_name($rv['first_name'] ?? '', $rv['last_name'] ?? '')) ?></div>
+                                            <div class="pd-review-card__date"><?= date('M d, Y', strtotime($rv['created_at'])) ?></div>
+                                        </div>
+                                        <div class="pd-stars pd-stars--sm">
+                                            <?php for ($i=1;$i<=5;$i++): ?>
+                                                <span class="<?= $i <= intval($rv['rating']) ? 'pd-star--filled' : 'pd-star--empty' ?>">★</span>
+                                            <?php endfor; ?>
+                                        </div>
+                                    </div>
+                                    <?php if (!empty($rv['comment'])): ?>
+                                        <p class="pd-review-card__comment"><?= nl2br(htmlspecialchars($rv['comment'])) ?></p>
+                                    <?php endif; ?>
+                                </div>
+                            </article>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
             </div>
         </section>
     </div>
