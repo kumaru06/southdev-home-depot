@@ -11,6 +11,7 @@ require_once __DIR__ . '/../models/StockMovement.php';
 require_once __DIR__ . '/../models/PriceHistory.php';
 require_once __DIR__ . '/../models/DamagedProduct.php';
 require_once __DIR__ . '/../models/Category.php';
+require_once __DIR__ . '/../models/SupplierRequest.php';
 
 class InventoryController {
     private $inventoryModel;
@@ -19,6 +20,7 @@ class InventoryController {
     private $stockMovementModel;
     private $priceHistoryModel;
     private $damagedProductModel;
+    private $supplierRequestModel;
     private $pdo;
 
     public function __construct($pdo) {
@@ -29,6 +31,7 @@ class InventoryController {
         $this->stockMovementModel   = new StockMovement($pdo);
         $this->priceHistoryModel    = new PriceHistory($pdo);
         $this->damagedProductModel  = new DamagedProduct($pdo);
+        $this->supplierRequestModel = new SupplierRequest($pdo);
     }
 
     /**
@@ -41,12 +44,28 @@ class InventoryController {
         return APP_URL . '/index.php?url=staff/inventory';
     }
 
+    private function supplierRequestsUrl() {
+        return $this->inventoryUrl() . '/supplier-requests';
+    }
+
     public function index() {
         AuthMiddleware::adminOrStaffOrInventory();
         $inventory  = $this->inventoryModel->getAll();
         $lowStock   = $this->inventoryModel->getLowStock();
         $categoryModel = new Category($this->pdo);
         $categories = $categoryModel->getAll();
+
+        // Map product_id => open supplier request id (pending/ordered)
+        $openSupplierByProduct = [];
+        foreach ($this->supplierRequestModel->getAll() as $sr) {
+            if (in_array($sr['status'], ['pending', 'ordered'], true)) {
+                $pid = (int) $sr['product_id'];
+                if (!isset($openSupplierByProduct[$pid])) {
+                    $openSupplierByProduct[$pid] = (int) $sr['id'];
+                }
+            }
+        }
+
         $pageTitle  = 'Inventory Management';
         $isAdmin    = true;
         $extraCss   = ['admin.css'];
@@ -93,10 +112,11 @@ class InventoryController {
         $productId = intval($_POST['product_id'] ?? 0);
         $addQty    = intval($_POST['add_quantity'] ?? 0);
         $reason    = trim($_POST['reason'] ?? 'Stock purchase/restock');
+        $supplierRequestId = intval($_POST['supplier_request_id'] ?? 0);
 
         if ($addQty <= 0) {
             flash('error', 'Quantity must be greater than 0.');
-            header('Location: ' . $this->inventoryUrl());
+            header('Location: ' . ($supplierRequestId ? $this->supplierRequestsUrl() : $this->inventoryUrl()));
             exit;
         }
 
@@ -105,6 +125,21 @@ class InventoryController {
 
         $product = $this->productModel->findById($productId);
         $this->logModel->create(LOG_STOCK_ADD, "Added {$addQty} units to {$product['name']} (ID #{$productId}). Reason: {$reason}");
+
+        if ($supplierRequestId > 0) {
+            $request = $this->supplierRequestModel->findById($supplierRequestId);
+            if ($request && $request['status'] === SupplierRequest::STATUS_ORDERED
+                && (int) $request['product_id'] === $productId) {
+                $this->supplierRequestModel->updateStatus($supplierRequestId, SupplierRequest::STATUS_RECEIVED);
+                $this->logModel->create(
+                    LOG_SUPPLIER_REQUEST,
+                    "Supplier request #{$supplierRequestId} marked received after adding {$addQty} units of {$product['name']}"
+                );
+                flash('success', "Received supplier request #{$supplierRequestId} and added {$addQty} units to {$product['name']}.");
+                header('Location: ' . $this->supplierRequestsUrl());
+                exit;
+            }
+        }
 
         flash('success', "Added {$addQty} units to {$product['name']}.");
         header('Location: ' . $this->inventoryUrl());
@@ -123,24 +158,203 @@ class InventoryController {
         $requestQty = intval($_POST['request_quantity'] ?? 0);
         $notes = trim($_POST['notes'] ?? '');
 
+        if ($productId <= 0 || !$this->productModel->findById($productId)) {
+            flash('error', 'Product not found.');
+            header('Location: ' . $this->inventoryUrl());
+            exit;
+        }
+
         if ($requestQty <= 0) {
             flash('error', 'Request quantity must be greater than 0.');
             header('Location: ' . $this->inventoryUrl());
             exit;
         }
 
-        // Insert supplier request
-        $stmt = $this->pdo->prepare("
-            INSERT INTO supplier_requests (product_id, requested_quantity, status, notes, requested_by, created_at)
-            VALUES (?, ?, 'pending', ?, ?, NOW())
-        ");
-        $stmt->execute([$productId, $requestQty, $notes, $_SESSION['user_id']]);
+        if ($this->supplierRequestModel->hasOpenRequest($productId)) {
+            $openId = $this->supplierRequestModel->getOpenRequestId($productId);
+            flash('error', 'This product already has an open supplier request'
+                . ($openId ? " (#{$openId})" : '')
+                . '. Update that request instead of creating a duplicate.');
+            header('Location: ' . $this->supplierRequestsUrl());
+            exit;
+        }
+
+        $requestId = $this->supplierRequestModel->create(
+            $productId,
+            $requestQty,
+            $notes,
+            $_SESSION['user_id'] ?? null
+        );
 
         $product = $this->productModel->findById($productId);
-        $this->logModel->create(LOG_SUPPLIER_REQUEST, "Supplier request for {$requestQty} units of {$product['name']} (ID #{$productId})");
+        if ($requestId) {
+            $this->logModel->create(
+                LOG_SUPPLIER_REQUEST,
+                "Supplier request #{$requestId} for {$requestQty} units of {$product['name']} (ID #{$productId})"
+            );
+            flash('success', "Supplier request submitted for {$product['name']} ({$requestQty} units). Waiting for Super Admin approval.");
+            header('Location: ' . $this->supplierRequestsUrl());
+            exit;
+        }
 
-        flash('success', "Supplier request submitted for {$product['name']} ({$requestQty} units).");
+        flash('error', 'Failed to submit supplier request.');
         header('Location: ' . $this->inventoryUrl());
+        exit;
+    }
+
+    /**
+     * List supplier restock requests
+     */
+    public function supplierRequests() {
+        AuthMiddleware::adminOrStaffOrInventory();
+        $status   = $_GET['status'] ?? null;
+        $valid    = ['pending', 'ordered', 'received', 'cancelled'];
+        if ($status && !in_array($status, $valid, true)) {
+            $status = null;
+        }
+        $requests = $this->supplierRequestModel->getAll($status);
+        $summary  = $this->supplierRequestModel->getSummary();
+        $pageTitle = 'Supplier Requests';
+        $isAdmin   = true;
+        $extraCss  = ['admin.css'];
+        require_once VIEWS_PATH . '/staff/supplier-requests.php';
+    }
+
+    /**
+     * Update supplier request status (ordered / cancelled)
+     */
+    public function updateSupplierRequestStatus($id) {
+        AuthMiddleware::adminOrStaffOrInventory();
+        AuthMiddleware::csrf();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . $this->supplierRequestsUrl());
+            exit;
+        }
+
+        $id = (int) $id;
+        $status = trim($_POST['status'] ?? '');
+        $request = $this->supplierRequestModel->findById($id);
+
+        if (!$request) {
+            flash('error', 'Supplier request not found.');
+            header('Location: ' . $this->supplierRequestsUrl());
+            exit;
+        }
+
+        $current = $request['status'];
+        $roleId  = (int) ($_SESSION['role_id'] ?? 0);
+        $isSuperAdmin = $roleId === ROLE_SUPER_ADMIN;
+
+        // Only Super Admin can approve (pending → ordered)
+        if ($status === 'ordered') {
+            if (!$isSuperAdmin) {
+                flash('error', 'Only Super Admin can approve and mark a supplier request as ordered.');
+                header('Location: ' . $this->supplierRequestsUrl());
+                exit;
+            }
+            if ($current !== 'pending') {
+                flash('error', 'Only pending requests can be approved.');
+                header('Location: ' . $this->supplierRequestsUrl());
+                exit;
+            }
+        } elseif ($status === 'cancelled') {
+            $canCancel = ($current === 'pending')
+                || ($current === 'ordered' && $isSuperAdmin);
+            if (!$canCancel) {
+                flash('error', 'You cannot cancel this request.');
+                header('Location: ' . $this->supplierRequestsUrl());
+                exit;
+            }
+        } else {
+            flash('error', 'Invalid status transition for this request.');
+            header('Location: ' . $this->supplierRequestsUrl());
+            exit;
+        }
+
+        $this->supplierRequestModel->updateStatus($id, $status);
+        $this->logModel->create(
+            LOG_SUPPLIER_REQUEST,
+            "Supplier request #{$id} ({$request['product_name']}) status: {$current} → {$status}"
+        );
+
+        if ($status === 'ordered') {
+            flash('success', "Supplier request #{$id} approved and marked as Ordered.");
+        } else {
+            flash('success', "Supplier request #{$id} marked as Cancelled.");
+        }
+        header('Location: ' . $this->supplierRequestsUrl());
+        exit;
+    }
+
+    /**
+     * Receive ordered goods: add stock + mark request received
+     */
+    public function receiveSupplierRequest($id) {
+        AuthMiddleware::adminOrStaffOrInventory();
+        AuthMiddleware::csrf();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . $this->supplierRequestsUrl());
+            exit;
+        }
+
+        $id = (int) $id;
+        $request = $this->supplierRequestModel->findById($id);
+        if (!$request) {
+            flash('error', 'Supplier request not found.');
+            header('Location: ' . $this->supplierRequestsUrl());
+            exit;
+        }
+
+        if ($request['status'] !== SupplierRequest::STATUS_ORDERED) {
+            flash('error', 'Only ordered requests can be received.');
+            header('Location: ' . $this->supplierRequestsUrl());
+            exit;
+        }
+
+        $addQty = intval($_POST['add_quantity'] ?? $request['requested_quantity']);
+        $reason = trim($_POST['reason'] ?? '');
+        if ($reason === '') {
+            $reason = "Supplier request #{$id} received";
+        }
+
+        if ($addQty <= 0) {
+            flash('error', 'Received quantity must be greater than 0.');
+            header('Location: ' . $this->supplierRequestsUrl());
+            exit;
+        }
+
+        $productId = (int) $request['product_id'];
+        $this->inventoryModel->adjustQuantity($productId, $addQty);
+        $this->stockMovementModel->record($productId, 'purchase', $addQty, null, $reason, $_SESSION['user_id']);
+        $this->supplierRequestModel->updateStatus($id, SupplierRequest::STATUS_RECEIVED);
+
+        $productName = $request['product_name'] ?? ('Product #' . $productId);
+        $this->logModel->create(
+            LOG_SUPPLIER_REQUEST,
+            "Supplier request #{$id} received: added {$addQty} units of {$productName}"
+        );
+        $this->logModel->create(LOG_STOCK_ADD, "Added {$addQty} units to {$productName} (ID #{$productId}). Reason: {$reason}");
+
+        flash('success', "Request #{$id} received. Added {$addQty} units to {$productName}.");
+        header('Location: ' . $this->supplierRequestsUrl());
+        exit;
+    }
+
+    /**
+     * AJAX: inventory sidebar badge counts (supplier pending + low stock)
+     */
+    public function apiPendingSupplierCount() {
+        AuthMiddleware::adminOrStaffOrInventory();
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        $suppliers = $this->supplierRequestModel->countPending();
+        $lowStock  = $this->inventoryModel->countLowStock();
+        echo json_encode([
+            'count'      => $suppliers, // backward-compatible
+            'suppliers'  => $suppliers,
+            'low_stock'  => $lowStock,
+        ]);
         exit;
     }
 

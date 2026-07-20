@@ -501,6 +501,7 @@
     transition: margin-bottom var(--sidebar-duration) var(--sidebar-ease);
 }
 .sidebar .nav-menu a {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -573,6 +574,39 @@
     opacity: 0;
     max-width: 0;
     pointer-events: none;
+}
+
+/* Pending orders count badge */
+.sidebar .nav-menu a .nav-badge {
+    margin-left: auto;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,.18);
+}
+.sidebar .nav-menu a.active .nav-badge {
+    background: #fff;
+    color: var(--accent);
+}
+.sidebar.collapsed .nav-menu a .nav-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    margin-left: 0;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    font-size: 9px;
 }
 
 /* Collapsed: center icons in narrow rail, remove expanded padding/gap */

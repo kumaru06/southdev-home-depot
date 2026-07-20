@@ -21,6 +21,9 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
             <h2><?= $pageTitle ?></h2>
         </div>
         <div class="top-bar-right">
+            <a href="<?= $invBase ?>/supplier-requests" class="btn btn-outline btn-sm" style="color:#7C3AED;border-color:#7C3AED;">
+                <i data-lucide="truck" style="width:15px;height:15px"></i> Supplier Requests
+            </a>
             <a href="<?= $invBase ?>/damaged" class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);">
                 <i data-lucide="alert-octagon" style="width:15px;height:15px"></i> Damaged Products
             </a>
@@ -147,9 +150,18 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
                                         </button>
                                         <!-- Request Supplier -->
                                         <?php if ($isLow || $isOut): ?>
+                                            <?php
+                                            $openReqId = $openSupplierByProduct[(int)$item['product_id']] ?? null;
+                                            ?>
+                                            <?php if ($openReqId): ?>
+                                        <a href="<?= $invBase ?>/supplier-requests" class="action-btn" style="background:#7C3AED;color:#fff;text-decoration:none;" title="Open supplier request #<?= (int)$openReqId ?>">
+                                            <i data-lucide="truck" style="width:13px;height:13px"></i> View Request
+                                        </a>
+                                            <?php else: ?>
                                         <button type="button" class="action-btn" style="background:#7C3AED;color:#fff;" data-id="<?= $item['product_id'] ?>" data-name="<?= htmlspecialchars($item['product_name'], ENT_QUOTES) ?>" data-qty="<?= $qty ?>" data-mode="supplier" title="Request Supplier">
                                             <i data-lucide="truck" style="width:13px;height:13px"></i> Request Supplier
                                         </button>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -241,7 +253,7 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
             </div>
             <div class="form-group">
                 <label class="form-label">Notes (optional)</label>
-                <textarea name="notes" class="form-control" rows="3" placeholder="Additional notes for supplier..."></textarea>
+                <textarea name="notes" class="form-control" rows="3" placeholder="Internal notes (supplier name, PO reference, etc.)"></textarea>
             </div>
             <div class="form-actions">
                 <button type="button" class="btn btn-outline btn-close-stock-modal">Cancel</button>

@@ -388,6 +388,16 @@ switch ($urlParts[0]) {
                         $controller->addStock();
                     } elseif (isset($urlParts[2]) && $urlParts[2] === 'request-supplier') {
                         $controller->requestSupplier();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'supplier-pending-count') {
+                        $controller->apiPendingSupplierCount();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'supplier-requests') {
+                        if (isset($urlParts[3]) && isset($urlParts[4]) && $urlParts[4] === 'update') {
+                            $controller->updateSupplierRequestStatus($urlParts[3]);
+                        } elseif (isset($urlParts[3]) && isset($urlParts[4]) && $urlParts[4] === 'receive') {
+                            $controller->receiveSupplierRequest($urlParts[3]);
+                        } else {
+                            $controller->supplierRequests();
+                        }
                     } elseif (isset($urlParts[2]) && $urlParts[2] === 'movements') {
                         $controller->movements();
                     } elseif (isset($urlParts[2]) && $urlParts[2] === 'price-history') {
@@ -427,7 +437,9 @@ switch ($urlParts[0]) {
                 case 'orders':
                     require_once CONTROLLERS_PATH . '/OrderController.php';
                     $controller = new OrderController($pdo);
-                    if (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'status') {
+                    if (isset($urlParts[2]) && $urlParts[2] === 'pending-count') {
+                        $controller->apiPendingCount();
+                    } elseif (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'status') {
                         $controller->updateStatus($urlParts[2]);
                     } elseif (isset($urlParts[2])) {
                         $controller->show($urlParts[2]);
@@ -459,6 +471,16 @@ switch ($urlParts[0]) {
                         $controller->addStock();
                     } elseif (isset($urlParts[2]) && $urlParts[2] === 'request-supplier') {
                         $controller->requestSupplier();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'supplier-pending-count') {
+                        $controller->apiPendingSupplierCount();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'supplier-requests') {
+                        if (isset($urlParts[3]) && isset($urlParts[4]) && $urlParts[4] === 'update') {
+                            $controller->updateSupplierRequestStatus($urlParts[3]);
+                        } elseif (isset($urlParts[3]) && isset($urlParts[4]) && $urlParts[4] === 'receive') {
+                            $controller->receiveSupplierRequest($urlParts[3]);
+                        } else {
+                            $controller->supplierRequests();
+                        }
                     } elseif (isset($urlParts[2]) && $urlParts[2] === 'movements') {
                         $controller->movements();
                     } elseif (isset($urlParts[2]) && $urlParts[2] === 'price-history') {
@@ -529,6 +551,8 @@ switch ($urlParts[0]) {
                         $controller->toggleActive($urlParts[2]);
                     } elseif (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'delete') {
                         $controller->delete($urlParts[2]);
+                    } elseif (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'reset-password') {
+                        $controller->resetPassword($urlParts[2]);
                     } elseif (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'update') {
                         $controller->update($urlParts[2]);
                     } else {
@@ -647,7 +671,9 @@ switch ($urlParts[0]) {
                 case 'orders':
                     require_once CONTROLLERS_PATH . '/OrderController.php';
                     $controller = new OrderController($pdo);
-                    if (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'status') {
+                    if (isset($urlParts[2]) && $urlParts[2] === 'pending-count') {
+                        $controller->apiPendingCount();
+                    } elseif (isset($urlParts[2]) && isset($urlParts[3]) && $urlParts[3] === 'status') {
                         $controller->updateStatus($urlParts[2]);
                     } elseif (isset($urlParts[2])) {
                         $controller->show($urlParts[2]);
@@ -665,6 +691,16 @@ switch ($urlParts[0]) {
                         $controller->addStock();
                     } elseif (isset($urlParts[2]) && $urlParts[2] === 'request-supplier') {
                         $controller->requestSupplier();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'supplier-pending-count') {
+                        $controller->apiPendingSupplierCount();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'supplier-requests') {
+                        if (isset($urlParts[3]) && isset($urlParts[4]) && $urlParts[4] === 'update') {
+                            $controller->updateSupplierRequestStatus($urlParts[3]);
+                        } elseif (isset($urlParts[3]) && isset($urlParts[4]) && $urlParts[4] === 'receive') {
+                            $controller->receiveSupplierRequest($urlParts[3]);
+                        } else {
+                            $controller->supplierRequests();
+                        }
                     } elseif (isset($urlParts[2]) && $urlParts[2] === 'movements') {
                         $controller->movements();
                     } elseif (isset($urlParts[2]) && $urlParts[2] === 'price-history') {

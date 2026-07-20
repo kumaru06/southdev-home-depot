@@ -541,6 +541,29 @@ class OrderController {
         require_once VIEWS_PATH . '/staff/manage-orders.php';
     }
 
+    /**
+     * AJAX: pending counts for admin/staff sidebar badges
+     */
+    public function apiPendingCount() {
+        AuthMiddleware::adminOrStaff();
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+
+        $returnModel = new ReturnRequest($this->pdo);
+        $orders  = (int) $this->orderModel->countByStatus(ORDER_PENDING);
+        $cancels = (int) $this->cancelModel->countPending();
+        $returns = (int) $returnModel->countPending();
+
+        echo json_encode([
+            'count'   => $orders, // backward-compatible alias
+            'orders'  => $orders,
+            'cancels' => $cancels,
+            'returns' => $returns,
+        ]);
+        exit;
+    }
+
     /* ===== Customer: Checkout Page ===== */
     public function checkout() {
         AuthMiddleware::handle();

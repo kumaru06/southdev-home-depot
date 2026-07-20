@@ -59,6 +59,15 @@ class ReturnRequest {
         return $stmt->fetchAll();
     }
 
+    public function countPending() {
+        // Match getAll() joins so orphaned returns (missing order/user) are not counted
+        $sql = "SELECT COUNT(*) FROM return_requests rr
+                JOIN orders o ON rr.order_id = o.id
+                JOIN users u ON rr.user_id = u.id
+                WHERE rr.status = 'pending'";
+        return (int) $this->pdo->query($sql)->fetchColumn();
+    }
+
     public function create($data) {
         $selectedItems = $data['selected_items'] ?? null;
         if (is_array($selectedItems)) {

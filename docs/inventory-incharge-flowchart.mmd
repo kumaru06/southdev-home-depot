@@ -1,0 +1,63 @@
+%% SouthDev Home Depot — Inventory In-charge Workflow (Updated)
+%% Import to diagrams.net: Arrange → Insert → Advanced → Mermaid → paste this file
+
+flowchart TB
+    Start([Inventory In-charge]) --> Dash[View inventory dashboard<br/>Manage Stock]
+    Dash --> Low[Show all items + low stock alerts<br/>qty ≤ reorder_level<br/>Sidebar badge count]
+    Low --> Action{Action?}
+
+    Action -->|set stock| Set1[Enter new absolute qty + reason]
+    Set1 --> Set2[Calculate difference from current]
+    Set2 --> Set3[Set new quantity in DB]
+    Set3 --> SetQ{Diff ≠ 0?}
+    SetQ -->|Yes| SetYes[Record StockMovement<br/>type=adjustment]
+    SetQ -->|No| SetNo[No change needed]
+    SetYes --> End1([END])
+    SetNo --> End1
+
+    Action -->|add stock| Add1[Enter qty to add + reason]
+    Add1 --> AddQ{Qty > 0?}
+    AddQ -->|No| AddErr[Must be positive]
+    AddQ -->|Yes| Add2[Increment inventory]
+    Add2 --> Add3[Record StockMovement<br/>type=purchase]
+    Add3 --> End2([END])
+    AddErr --> End2
+
+    Action -->|stock movement| Mov[Filter type / product / date<br/>Display paginated history]
+    Mov --> End3([END])
+
+    Action -->|damaged products| Dmg[View / update damaged records]
+    Dmg --> End4([END])
+
+    Action -->|price history| Price[Filter by product<br/>Show who / when / reason]
+    Price --> End5([END])
+
+    Action -->|request supplier| Sup1[Low/out of stock item<br/>Enter requested qty + notes]
+    Sup1 --> SupQ{Qty > 0?}
+    SupQ -->|No| SupErr[Must be positive]
+    SupQ -->|Yes| SupOpen{Open request<br/>already exists?}
+    SupOpen -->|Yes| SupDup[Block duplicate<br/>Redirect to Supplier Requests]
+    SupOpen -->|No| SupIns[INSERT supplier_requests<br/>status = pending<br/>Log SUPPLIER_REQUEST]
+    SupIns --> SupPend[Pending<br/>Waiting Super Admin approval]
+    SupPend --> SupAdmin{{SUPER ADMIN ONLY<br/>Approve & Mark Ordered<br/>or Cancel}}
+    SupAdmin -->|Cancel| SupCancel[status = cancelled]
+    SupAdmin -->|Approve| SupOrd[status = ordered]
+    SupOrd --> SupRecv[Inventory / Staff / Super Admin<br/>Receive & Add Stock]
+    SupRecv --> SupDone[adjustQuantity + StockMovement<br/>status = received]
+    SupDone --> End6([END])
+    SupErr --> End6
+    SupDup --> End6
+    SupCancel --> End6
+
+    classDef start fill:#F97316,stroke:#EA580C,color:#fff
+    classDef end fill:#16A34A,stroke:#15803D,color:#fff
+    classDef warn fill:#FEF3C7,stroke:#F59E0B
+    classDef admin fill:#1B2A4A,stroke:#0F172A,color:#fff
+    classDef purple fill:#EDE9FE,stroke:#7C3AED
+    classDef ok fill:#DCFCE7,stroke:#16A34A
+    class Start start
+    class End1,End2,End3,End4,End5,End6 end
+    class Low,SupPend warn
+    class SupAdmin admin
+    class Sup1,SupIns,SupOrd purple
+    class SetYes,Add3,SupDone ok

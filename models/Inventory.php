@@ -47,4 +47,14 @@ class Inventory {
         $stmt->execute($threshold ? [$threshold] : []);
         return $stmt->fetchAll();
     }
+
+    public function countLowStock($threshold = null) {
+        $sql = "SELECT COUNT(*) FROM inventory i
+                JOIN products p ON i.product_id = p.id
+                WHERE p.is_active = 1 AND i.quantity <= "
+            . ($threshold ? "?" : "i.reorder_level");
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($threshold ? [$threshold] : []);
+        return (int) $stmt->fetchColumn();
+    }
 }

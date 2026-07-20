@@ -171,6 +171,77 @@ class UserController {
         exit;
     }
 
+    /**
+     * Super Admin: set a new password for staff / inventory accounts
+     */
+    public function resetPassword($id) {
+        AuthMiddleware::superAdmin();
+        AuthMiddleware::csrf();
+
+        $redirect = APP_URL . '/index.php?url=admin/users/' . (int) $id . '/view';
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            flash('error', 'Invalid request.');
+            header('Location: ' . $redirect);
+            exit;
+        }
+
+        $id = (int) $id;
+        $user = $this->userModel->findById($id);
+        if (!$user) {
+            flash('error', 'User not found.');
+            header('Location: ' . APP_URL . '/index.php?url=admin/users');
+            exit;
+        }
+
+        $roleId = (int) ($user['role_id'] ?? 0);
+        if (!in_array($roleId, [ROLE_STAFF, ROLE_INVENTORY], true)) {
+            flash('error', 'Password reset is only available for Staff Admin and Inventory In-Charge accounts.');
+            header('Location: ' . $redirect);
+            exit;
+        }
+
+        if ($id === (int) ($_SESSION['user_id'] ?? 0)) {
+            flash('error', 'Use your profile settings to change your own password.');
+            header('Location: ' . $redirect);
+            exit;
+        }
+
+        $newPassword     = (string) ($_POST['new_password'] ?? '');
+        $confirmPassword = (string) ($_POST['confirm_password'] ?? '');
+
+        if ($newPassword === '' || $confirmPassword === '') {
+            flash('error', 'Please enter and confirm the new password.');
+            header('Location: ' . $redirect);
+            exit;
+        }
+
+        $pwError = validate_password($newPassword);
+        if ($pwError) {
+            flash('error', $pwError);
+            header('Location: ' . $redirect);
+            exit;
+        }
+
+        if (!hash_equals($newPassword, $confirmPassword)) {
+            flash('error', 'New password and confirmation do not match.');
+            header('Location: ' . $redirect);
+            exit;
+        }
+
+        $hash = password_hash($newPassword, PASSWORD_DEFAULT);
+        if ($this->userModel->updatePassword($id, $hash)) {
+            $label = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
+            $this->logModel->create(LOG_USER_UPDATE, "Password reset by super admin for user #{$id}" . ($label !== '' ? " ({$label})" : ''));
+            flash('success', 'Password updated successfully. The user can now sign in with the new password.');
+        } else {
+            flash('error', 'Failed to update password. Please try again.');
+        }
+
+        header('Location: ' . $redirect);
+        exit;
+    }
+
     public function profile() {
         AuthMiddleware::handle();
         $user      = $this->userModel->findById($_SESSION['user_id']);

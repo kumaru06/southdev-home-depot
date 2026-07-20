@@ -366,6 +366,40 @@ $staffProfileFields = [
                         <i data-lucide="info"></i>
                         <p>Use these controls to manage access for this staff or admin account.</p>
                     </div>
+                    <?php
+                    $canResetPassword = in_array((int)($user['role_id'] ?? 0), [ROLE_STAFF, ROLE_INVENTORY], true)
+                        && (int)$user['id'] !== (int)($_SESSION['user_id'] ?? 0);
+                    ?>
+                    <?php if ($canResetPassword): ?>
+                    <div class="vp-reset-password">
+                        <div class="vp-reset-password-header">
+                            <i data-lucide="key-round" style="width:16px;height:16px;"></i>
+                            <strong>Reset Password</strong>
+                        </div>
+                        <p class="vp-reset-password-hint">Set a new password if this user forgot theirs. They can sign in immediately with it.</p>
+                        <form action="<?= APP_URL ?>/index.php?url=admin/users/<?= (int)$user['id'] ?>/reset-password" method="POST" class="vp-reset-password-form" autocomplete="off">
+                            <?= csrf_field() ?>
+                            <div class="form-group">
+                                <label for="admin_new_password">New Password <span class="required">*</span></label>
+                                <input type="password" id="admin_new_password" name="new_password" class="form-control" autocomplete="new-password" minlength="8" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="admin_confirm_password">Confirm Password <span class="required">*</span></label>
+                                <input type="password" id="admin_confirm_password" name="confirm_password" class="form-control" autocomplete="new-password" minlength="8" required>
+                            </div>
+                            <p class="vp-reset-password-rules">Must be at least 8 characters with uppercase, lowercase, and a number.</p>
+                            <button type="submit" class="btn btn-accent"
+                                data-confirm="Reset this user's password? They will need to use the new password on next login."
+                                data-confirm-title="Reset Password"
+                                data-confirm-ok="Reset Password"
+                                data-confirm-variant="danger"
+                                style="display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:.82rem;width:100%;">
+                                <i data-lucide="key-round" style="width:15px;height:15px;"></i>
+                                Set New Password
+                            </button>
+                        </form>
+                    </div>
+                    <?php endif; ?>
                     <div class="vp-action-buttons">
                         <a href="<?= APP_URL ?>/index.php?url=admin/users/<?= $user['id'] ?>/toggle"
                            class="btn <?= $user['is_active'] ? 'btn-danger-outline' : 'btn-success-outline' ?>"
@@ -836,6 +870,42 @@ $staffProfileFields = [
     margin: 0;
     font-size: .82rem;
     line-height: 1.5;
+}
+.vp-reset-password {
+    margin-bottom: 16px;
+    padding: 16px;
+    border-radius: 14px;
+    background: #fff;
+    border: 1px solid rgba(11, 61, 145, .12);
+}
+.vp-reset-password-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    color: var(--primary, #0B3D91);
+    font-size: .9rem;
+}
+.vp-reset-password-hint {
+    margin: 0 0 14px;
+    font-size: .8rem;
+    color: var(--steel, #6c7a8d);
+    line-height: 1.45;
+}
+.vp-reset-password-form .form-group {
+    margin-bottom: 12px;
+}
+.vp-reset-password-form label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--steel, #6c7a8d);
+}
+.vp-reset-password-rules {
+    margin: 0 0 12px;
+    font-size: .72rem;
+    color: var(--steel, #6c7a8d);
 }
 .vp-action-buttons {
     display: grid;
