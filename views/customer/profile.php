@@ -626,14 +626,18 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <style>
 /* Toast styles */
-.ec-toast { min-width:300px; max-width:420px; background:#fff; border-left:4px solid #38b000; box-shadow:0 8px 20px rgba(0,0,0,0.12); border-radius:8px; padding:12px 14px; margin-bottom:12px; overflow:hidden; position:relative; }
+.ec-toast { min-width:min(100%, 300px); max-width:min(420px, calc(100vw - 36px)); background:#fff; border-left:4px solid #38b000; box-shadow:0 8px 20px rgba(0,0,0,0.12); border-radius:8px; padding:12px 14px; margin-bottom:12px; overflow:hidden; position:relative; }
 .ec-toast--info { border-left-color:#1e90ff; }
 .ec-toast--error { border-left-color:#e63946; }
 .ec-toast h4 { margin:0 0 4px 0; font-size:15px; }
-.ec-toast p { margin:0; color:#444; font-size:13px; }
+.ec-toast p { margin:0; color:#444; font-size:13px; padding-right:18px; }
 .ec-toast .ec-toast-close { position:absolute; right:8px; top:8px; border:none; background:transparent; font-size:14px; cursor:pointer; }
 .ec-toast .ec-toast-progress { position:absolute; left:0; bottom:0; height:4px; background:rgba(0,0,0,0.06); width:100%; }
 .ec-toast .ec-toast-progress > i { display:block; height:100%; width:100%; background:linear-gradient(90deg,#2dd4bf,#06b6d4); transform-origin:left; transform:scaleX(1); transition:transform linear; }
+@media (max-width: 480px) {
+    #ec-toast-container { left: 12px; right: 12px; top: 12px; }
+    .ec-toast { max-width: none; width: 100%; }
+}
 </style>
 
 <script>

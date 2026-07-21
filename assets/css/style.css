@@ -1056,11 +1056,13 @@ p { color: var(--text-secondary); }
         .main-menu a { padding: 12px 14px; }
     }
 
-    /* ---------- Mobile breakpoint ---------- */
-    @media (max-width: 680px) {
+    /* ---------- Mobile / tablet breakpoint (align with hamburger @ 900px) ---------- */
+    @media (max-width: 900px) {
         .search-inline { display: none; }
         .auth-links .nav-cart-btn { display: none; }
         .auth-links .nav-notif-btn { display: none; }
+        .auth-links .nav-login-btn,
+        .auth-links .nav-register-btn { display: none; }
         .main-menu { flex-wrap: wrap; gap: 0; justify-content: flex-start; }
         .main-nav {
             max-height: 0;
@@ -1190,23 +1192,24 @@ p { color: var(--text-secondary); }
 
     /* Mobile-specific tweaks */
     .mobile-only { display: none; }
-    @media (max-width: 680px) {
+    @media (max-width: 900px) {
         .topbar .auth-links { display: none; }
         .mobile-only { display: block; }
-        .products-hero {
-            border-radius: 0 !important;
-            margin-left: calc(-1 * var(--container-padding, 24px));
-            margin-right: calc(-1 * var(--container-padding, 24px));
-            overflow: hidden;
+        .site-header .mobile-toggle {
+            display: inline-flex;
+            background: transparent;
+            border-color: rgba(255,255,255,.18);
+            color: #fff;
         }
-        .products-hero { margin-left: -24px; margin-right: -24px; }
+        .site-header .mobile-toggle i,
+        .site-header .mobile-toggle svg { color: #fff; }
     }
 
     /* Mobile bottom bar for cart + auth (shown inside mobile menu) */
     .mobile-nav-extras {
         display: none;
     }
-    @media (max-width: 680px) {
+    @media (max-width: 900px) {
         .mobile-nav-extras {
             display: flex;
             gap: 10px;
@@ -1260,7 +1263,7 @@ p { color: var(--text-secondary); }
 .main-menu > li { transform: none; opacity: 1; transition: transform .32s cubic-bezier(.2,.9,.2,1), opacity .28s ease; }
 
 /* Mobile entry animation */
-@media (max-width: 680px) {
+@media (max-width: 900px) {
     .main-menu > li { transform: translateY(-8px); opacity: 0; }
     .site-header.mobile-open .main-menu > li { transform: translateY(0); opacity: 1; }
     .site-header.mobile-open .main-menu > li:nth-child(1) { transition-delay: 0.03s; }
@@ -2769,15 +2772,14 @@ p { color: var(--text-secondary); }
         min-height: auto;
     }
     .login-modal-media {
-        min-height: 200px;
+        display: none;
     }
     .login-modal-form-panel {
-        padding: 28px 24px;
+        padding: 24px 20px;
     }
-    .login-modal-media-content {
-        left: 20px;
-        right: 20px;
-        bottom: 20px;
+    .login-modal-recaptcha .g-recaptcha {
+        transform: scale(0.86);
+        transform-origin: center center;
     }
 }
 

@@ -969,6 +969,7 @@ body {
 @media (max-width: 760px) {
     .home-hero {
         padding: 2.35rem 1rem 3rem;
+        min-height: 0;
     }
 
     .home-content {
@@ -983,14 +984,22 @@ body {
         grid-template-columns: 1fr;
     }
 
+    .home-hero-visit-grid {
+        gap: .7rem;
+    }
+
     .home-section-head {
         flex-direction: column;
         align-items: start;
     }
 
     .home-showcase-copy {
-        width: min(62%, 320px);
+        width: min(72%, 320px);
         padding: 1rem;
+    }
+
+    .home-showcase-slide {
+        min-height: 280px;
     }
 
     .home-polish {
@@ -1003,6 +1012,11 @@ body {
 
     .home-hero-bg-dots {
         display: none;
+    }
+
+    .home-hero-stage,
+    .home-hero-visual {
+        min-height: 0;
     }
 }
 

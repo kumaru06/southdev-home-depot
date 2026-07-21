@@ -149,10 +149,24 @@
             .home-hero-meta,
             .home-mini-grid,
             .home-signature-grid,
+            .home-hero-perks,
+            .home-hero-visit-grid,
             .collections-metrics,
             .inspire-grid,
             .gallery-collection-grid {
                 grid-template-columns: 1fr !important;
+            }
+
+            .home-showcase-copy {
+                width: min(78%, 280px) !important;
+                left: auto !important;
+                right: 0 !important;
+            }
+
+            .home-hero-visit-item,
+            .home-hero-perk,
+            .home-stat {
+                min-width: 0;
             }
 
             .collections-shell,
@@ -399,6 +413,25 @@
             .faq-help a {
                 min-height: 44px;
                 justify-content: center;
+            }
+
+            .home-hero-actions .btn,
+            .home-shop-cta .btn,
+            .home-polish .btn {
+                width: 100% !important;
+                justify-content: center;
+            }
+
+            .ab-hero-stats,
+            .ab-values-grid,
+            .ab-story-pillars {
+                grid-template-columns: 1fr !important;
+            }
+
+            .checkout-grid,
+            .cart-layout,
+            .profile-layout {
+                grid-template-columns: 1fr !important;
             }
         }
     </style>

@@ -14,7 +14,7 @@ require_once INCLUDES_PATH . '/navbar.php';
     <div class="card" style="margin-bottom:2rem;">
         <form action="<?= APP_URL ?>/index.php" method="GET" class="search-bar" style="display:flex; gap:.75rem; flex-wrap:wrap;">
             <input type="hidden" name="url" value="orders/track">
-            <div class="input-icon-wrap" style="flex:1; min-width:250px;">
+            <div class="input-icon-wrap" style="flex:1; min-width:min(100%, 250px);">
                 <input type="text" name="order_number" class="form-control"
                        placeholder="Enter your order number (e.g. SHD-20260214-A1B2C3)"
                        value="<?= htmlspecialchars($orderNumber ?? '') ?>" required>

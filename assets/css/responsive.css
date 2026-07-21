@@ -56,13 +56,10 @@
     .dashboard-grid-2 { grid-template-columns: 1fr; }
     .dashboard-grid-3 { grid-template-columns: 1fr; }
 
-    /* Navbar responsive */
+    /* Navbar responsive (legacy .navbar) */
     .navbar .nav-links { display: none; }
     .navbar .mobile-toggle { display: flex; }
-    /* Also support site-header mobile toggle (two-row header) */
-    .site-header .topbar-inner { position: relative; }
-    .site-header .mobile-toggle { display: flex; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); z-index: 120; background: transparent; border-color: rgba(255,255,255,.18); color: #fff; }
-    .site-header .mobile-toggle i { color: #fff; }
+    /* site-header hamburger: shown via style.css / footer overrides at 900px — avoid absolute overlap */
     .navbar .nav-links.mobile-open {
         display: flex;
         flex-direction: column;
