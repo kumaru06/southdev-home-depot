@@ -668,10 +668,17 @@
             var prevOverflow = document.body.style.overflow;
             document.body.style.overflow = 'hidden';
 
+            var closing = false;
             var cleanup = function (result) {
+                if (closing) return;
+                closing = true;
                 document.body.style.overflow = prevOverflow;
-                overlay.remove();
-                resolve(result);
+                // Fade out before removing (mirror of the fade-in animation)
+                overlay.classList.add('confirm-overlay--closing');
+                setTimeout(function () {
+                    overlay.remove();
+                    resolve(result);
+                }, 240);
             };
 
             var cancelBtn = dialog.querySelector('.confirm-cancel');

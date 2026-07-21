@@ -1803,6 +1803,22 @@ p { color: var(--text-secondary); }
     from { transform: translateY(16px) scale(.94); opacity: 0; }
     to   { transform: translateY(0) scale(1); opacity: 1; }
 }
+/* Fade-out on close (mirrors fade-in) */
+.confirm-overlay--closing {
+    animation: overlayFadeOut .24s ease both;
+    pointer-events: none;
+}
+.confirm-overlay--closing .confirm-dialog {
+    animation: confirmPopOut .22s cubic-bezier(.5,0,.75,.4) both;
+}
+@keyframes overlayFadeOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+}
+@keyframes confirmPopOut {
+    from { transform: translateY(0) scale(1); opacity: 1; }
+    to   { transform: translateY(14px) scale(.94); opacity: 0; }
+}
 .confirm-header {
     display: flex;
     align-items: center;

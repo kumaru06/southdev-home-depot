@@ -92,18 +92,38 @@ require_once INCLUDES_PATH . '/sidebar.php';
             <!-- Update Status -->
             <div class="card">
                 <h3><i data-lucide="settings"></i> Update Status</h3>
-                <form action="<?= APP_URL ?>/index.php?url=staff/orders/<?= $order['id'] ?>/status" method="POST">
+                <?php
+                    $orderStatusFlow = [
+                        'pending'    => 'processing',
+                        'processing' => 'shipped',
+                        'shipped'    => 'delivered',
+                    ];
+                    $currentOrderStatus = strtolower((string) ($order['status'] ?? ''));
+                    $nextOrderStatus = $orderStatusFlow[$currentOrderStatus] ?? null;
+                ?>
+                <?php if ($nextOrderStatus): ?>
+                <form action="<?= APP_URL ?>/index.php?url=staff/orders/<?= $order['id'] ?>/status"
+                      method="POST"
+                      class="js-order-status-form"
+                      data-current-status="<?= htmlspecialchars($currentOrderStatus) ?>"
+                      data-next-status="<?= htmlspecialchars($nextOrderStatus) ?>">
                     <?= csrf_field() ?>
                     <div class="form-group">
                         <label for="status">New Status</label>
                         <select name="status" id="status" class="form-control">
-                            <?php foreach (['pending','processing','shipped','delivered','cancelled'] as $s): ?>
-                                <option value="<?= $s ?>" <?= $order['status'] == $s ? 'selected' : '' ?>><?= ucfirst($s) ?></option>
-                            <?php endforeach; ?>
+                            <option value="<?= htmlspecialchars($nextOrderStatus) ?>"><?= ucfirst($nextOrderStatus) ?></option>
                         </select>
                     </div>
                     <button type="submit" class="btn btn-accent btn-block"><i data-lucide="check"></i> Update Status</button>
                 </form>
+                <p style="margin-top:10px;font-size:.78rem;color:var(--text-secondary);">
+                    Next step only. Once updated, this order cannot return to <?= ucfirst($currentOrderStatus) ?>.
+                </p>
+                <?php else: ?>
+                <div class="alert alert-info" style="margin:12px 0 0;">
+                    This order is <?= htmlspecialchars(ucfirst($currentOrderStatus)) ?> and its status can no longer be changed.
+                </div>
+                <?php endif; ?>
 
                 <h3 style="margin-top: 24px;"><i data-lucide="map-pin"></i> Shipping Address</h3>
                 <p><?= htmlspecialchars($order['shipping_address']) ?></p>
@@ -151,5 +171,42 @@ require_once INCLUDES_PATH . '/sidebar.php';
         <a href="<?= APP_URL ?>/index.php?url=staff/orders" class="btn btn-outline"><i data-lucide="arrow-left"></i> Back to Orders</a>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.js-order-status-form').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (form.dataset.confirmed === '1') return;
+            event.preventDefault();
+
+            var current = form.dataset.currentStatus || '';
+            var next = form.dataset.nextStatus || '';
+            var titleCase = function (value) {
+                return value ? value.charAt(0).toUpperCase() + value.slice(1) : '';
+            };
+            var proceed = function () {
+                form.dataset.confirmed = '1';
+                form.submit();
+            };
+            var message = 'Change order status from ' + titleCase(current) + ' to ' + titleCase(next)
+                + '? This cannot be undone and the order cannot return to ' + titleCase(current) + '.';
+
+            if (typeof window.confirmDialog === 'function') {
+                window.confirmDialog({
+                    title: 'Confirm status update',
+                    message: message,
+                    confirmText: 'Update to ' + titleCase(next),
+                    cancelText: 'Keep ' + titleCase(current),
+                    confirmVariant: 'accent'
+                }).then(function (confirmed) {
+                    if (confirmed) proceed();
+                });
+            } else if (window.confirm(message)) {
+                proceed();
+            }
+        });
+    });
+});
+</script>
 
 <?php require_once INCLUDES_PATH . '/footer.php'; ?>

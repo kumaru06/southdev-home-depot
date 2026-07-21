@@ -419,7 +419,7 @@ class OrderController {
         AuthMiddleware::csrf();
 
         $status = $_POST['status'] ?? '';
-        $allowedStatuses = [ORDER_PENDING, ORDER_PROCESSING, ORDER_SHIPPED, ORDER_DELIVERED, ORDER_CANCELLED];
+        $allowedStatuses = [ORDER_PENDING, ORDER_PROCESSING, ORDER_SHIPPED, ORDER_DELIVERED];
         if (!in_array($status, $allowedStatuses, true)) {
             flash('error', 'Invalid order status.');
             header('Location: ' . APP_URL . '/index.php?url=staff/orders/' . $id);
@@ -427,8 +427,32 @@ class OrderController {
         }
 
         $order = $this->orderModel->findById($id);
+        if (!$order) {
+            flash('error', 'Order not found.');
+            header('Location: ' . APP_URL . '/index.php?url=staff/orders');
+            exit;
+        }
+
+        // Order fulfillment is forward-only and sequential:
+        // pending -> processing -> shipped -> delivered.
+        $nextStatus = [
+            ORDER_PENDING    => ORDER_PROCESSING,
+            ORDER_PROCESSING => ORDER_SHIPPED,
+            ORDER_SHIPPED    => ORDER_DELIVERED,
+        ];
+        $currentStatus = (string) ($order['status'] ?? '');
+        $expectedStatus = $nextStatus[$currentStatus] ?? null;
+        if ($expectedStatus === null || $status !== $expectedStatus) {
+            $message = in_array($currentStatus, [ORDER_DELIVERED, ORDER_CANCELLED], true)
+                ? 'This order is already final and its status can no longer be changed.'
+                : 'Invalid status transition. Orders must follow Pending → Processing → Shipped → Delivered and cannot move backward.';
+            flash('error', $message);
+            header('Location: ' . APP_URL . '/index.php?url=staff/orders/' . $id);
+            exit;
+        }
+
         $this->orderModel->updateStatus($id, $status);
-        $this->logModel->create(LOG_ORDER_STATUS, "Order #{$id} status changed to: {$status}");
+        $this->logModel->create(LOG_ORDER_STATUS, "Order #{$id} status changed: {$currentStatus} → {$status}");
 
         // Auto-mark COD payment as paid when order is delivered
         if ($status === ORDER_DELIVERED) {

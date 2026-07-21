@@ -208,10 +208,212 @@ require_once INCLUDES_PATH . '/sidebar.php';
 </div>
 
 <!-- Product Edit Modal -->
+<style>
+/* ---------- Premium Edit Product modal ---------- */
+#productEditModal {
+    background: rgba(15, 23, 42, .62);
+}
+#productEditModal .modal-box {
+    width: 640px;
+    max-width: 94vw;
+    max-height: 92vh;
+    border-radius: 20px;
+    border: 1px solid rgba(148, 163, 184, .18);
+    box-shadow: 0 32px 80px rgba(2, 6, 23, .35), 0 4px 18px rgba(2, 6, 23, .18);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(26px) scale(.96);
+    opacity: 0;
+    transition: transform .32s cubic-bezier(.21, 1.02, .35, 1), opacity .26s ease;
+}
+#productEditModal .modal-box form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+#productEditModal .modal-header,
+#productEditModal .modal-footer {
+    flex-shrink: 0;
+}
+#productEditModal .modal-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+#productEditModal.active .modal-box {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+/* Smooth close: keep overlay visible while the box animates out */
+#productEditModal.closing {
+    opacity: 0;
+    visibility: visible;
+    transition: opacity .28s ease .06s, visibility 0s linear .34s;
+}
+#productEditModal.closing .modal-box {
+    transform: translateY(18px) scale(.96);
+    opacity: 0;
+    transition: transform .28s cubic-bezier(.5, 0, .75, .4), opacity .24s ease;
+}
+#productEditModal .modal-header {
+    padding: 20px 26px;
+    background: linear-gradient(135deg, #1B2A4A 0%, #24385f 55%, #2D4A7A 100%);
+    border-bottom: none;
+    gap: 14px;
+}
+#productEditModal .modal-header h3 {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -.01em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#productEditModal .pe-header-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: rgba(249, 115, 22, .18);
+    border: 1px solid rgba(249, 115, 22, .35);
+    color: #fb923c;
+}
+#productEditModal .modal-close {
+    background: rgba(255, 255, 255, .1);
+    border: 1px solid rgba(255, 255, 255, .16);
+    color: rgba(255, 255, 255, .85);
+    border-radius: 10px;
+    font-size: 19px;
+    transition: background .2s ease, color .2s ease, transform .18s ease;
+}
+#productEditModal .modal-close:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+    transform: rotate(90deg);
+}
+#productEditModal .modal-body {
+    padding: 26px;
+    background:
+        radial-gradient(900px 240px at 50% -80px, rgba(45, 74, 122, .05), transparent 60%),
+        var(--white);
+}
+#productEditModal .form-label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-secondary, #64748b);
+    margin-bottom: 6px;
+}
+#productEditModal .form-control {
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 13px;
+    font-size: .88rem;
+    background: #fbfcfe;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+#productEditModal .form-control:focus {
+    border-color: var(--accent, #F97316);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(249, 115, 22, .1);
+    outline: none;
+}
+#productEditModal textarea.form-control { resize: vertical; min-height: 84px; }
+#productEditModal .pe-media-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px;
+    border: 1px dashed rgba(148, 163, 184, .55);
+    border-radius: 14px;
+    background: rgba(248, 250, 252, .8);
+    margin-bottom: 18px;
+}
+#productEditModal .pe-thumb {
+    width: 84px;
+    height: 84px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(2, 6, 23, .08);
+}
+#productEditModal .pe-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#productEditModal .pe-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--white);
+    cursor: pointer;
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--charcoal, #1B2A4A);
+    transition: border-color .2s ease, color .2s ease, box-shadow .2s ease, transform .15s ease;
+}
+#productEditModal .pe-upload-btn:hover {
+    border-color: var(--accent, #F97316);
+    color: var(--accent, #F97316);
+    box-shadow: 0 3px 10px rgba(249, 115, 22, .14);
+    transform: translateY(-1px);
+}
+#productEditModal .pe-upload-hint {
+    display: block;
+    margin-top: 6px;
+    font-size: .72rem;
+    color: var(--text-muted, #94a3b8);
+}
+#productEditModal .modal-footer {
+    padding: 18px 26px;
+    background: rgba(248, 250, 252, .9);
+    border-top: 1px solid var(--border);
+    gap: 10px;
+}
+#productEditModal .modal-footer .btn {
+    border-radius: 11px;
+    padding: 10px 20px;
+    font-weight: 700;
+}
+#productEditModal .modal-footer .btn-accent {
+    box-shadow: 0 6px 18px rgba(249, 115, 22, .3);
+    transition: transform .18s ease, box-shadow .2s ease, background .2s ease;
+}
+#productEditModal .modal-footer .btn-accent:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 9px 24px rgba(249, 115, 22, .38);
+}
+@media (max-width: 640px) {
+    #productEditModal .modal-box { width: 100%; max-width: calc(100vw - 20px); border-radius: 16px; }
+    #productEditModal .modal-body { padding: 18px; }
+    #productEditModal .modal-header { padding: 16px 18px; }
+    #productEditModal .modal-footer { padding: 14px 18px; }
+    #productEditModal .pe-media-card { flex-wrap: wrap; }
+}
+</style>
 <div id="productEditModal" class="modal-overlay" style="display:flex;align-items:center;justify-content:center;">
     <div class="modal-box">
         <div class="modal-header">
-            <h3 id="productEditTitle">Edit Product</h3>
+            <h3>
+                <span class="pe-header-icon">
+                    <i data-lucide="package" style="width:17px;height:17px;"></i>
+                </span>
+                <span id="productEditTitle">Edit Product</span>
+            </h3>
             <button type="button" class="modal-close" aria-label="Close">&times;</button>
         </div>
         <form id="productEditForm" method="POST" enctype="multipart/form-data" action="#">
@@ -253,15 +455,16 @@ require_once INCLUDES_PATH . '/sidebar.php';
                     <textarea name="description" id="pe_desc" class="form-control" rows="3"></textarea>
                 </div>
 
-                <div class="form-row" style="align-items:center; gap:.75rem;">
-                    <div style="width:80px;height:80px;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--neutral);">
-                        <img id="pe_image_preview" src="<?= APP_URL ?>/assets/uploads/placeholder.svg" alt="" style="width:100%;height:100%;object-fit:cover;">
+                <div class="pe-media-card">
+                    <div class="pe-thumb">
+                        <img id="pe_image_preview" src="<?= APP_URL ?>/assets/uploads/placeholder.svg" alt="">
                     </div>
-                    <div style="flex:1;">
-                        <label class="form-label">Replace Image</label><br>
-                        <label for="pe_image_input" style="display:inline-flex; align-items:center; gap:.4rem; padding:.45rem .85rem; border:1.5px solid var(--border); border-radius:var(--radius-sm); background:var(--white); cursor:pointer; font-size:.8rem; color:var(--text-primary); transition:border-color .2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
-                            <i data-lucide="upload" style="width:13px;height:13px;"></i> Choose Image
+                    <div style="flex:1; min-width:150px;">
+                        <label class="form-label">Product Image</label>
+                        <label for="pe_image_input" class="pe-upload-btn">
+                            <i data-lucide="upload" style="width:14px;height:14px;"></i> Replace Image
                         </label>
+                        <span class="pe-upload-hint">JPG, PNG, or WebP — cropped square</span>
                         <input type="file" name="image" id="pe_image_input" accept="image/jpeg,image/png,image/webp,image/gif" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;">
                     </div>
                     <div style="width:120px;">
@@ -272,12 +475,14 @@ require_once INCLUDES_PATH . '/sidebar.php';
 
                 <div class="form-group">
                     <label class="form-label">Price Change Reason (optional)</label>
-                    <input type="text" name="price_change_reason" id="pe_price_reason" class="form-control">
+                    <input type="text" name="price_change_reason" id="pe_price_reason" class="form-control" placeholder="e.g. Supplier price increase">
                 </div>
             </div>
             <div class="modal-footer">
-                <a href="<?= APP_URL ?>/index.php?url=admin/products" class="btn btn-outline">Cancel</a>
-                <button type="submit" class="btn btn-accent">Save Changes</button>
+                <button type="button" class="btn btn-outline" id="productEditCancel">Cancel</button>
+                <button type="submit" class="btn btn-accent">
+                    <i data-lucide="save" style="width:15px;height:15px;"></i> Save Changes
+                </button>
             </div>
         </form>
     </div>
@@ -449,9 +654,8 @@ document.head.appendChild(cropperScript);
                             }
                         }
                     }catch(ex){}
-                    document.getElementById('productEditModal').classList.remove('active');
+                    closeEditModal();
                     editCroppedBlob = null;
-                    clearEditModal();
                 } else {
                     throw new Error((data&&data.message)||'Save failed');
                 }
@@ -470,15 +674,31 @@ document.head.appendChild(cropperScript);
         }
     }
 
+    // Animated close: fade the box out first, then hide the overlay
+    function closeEditModal(){
+        var overlay = document.getElementById('productEditModal');
+        if(!overlay || !overlay.classList.contains('active')) return;
+        overlay.classList.add('closing');
+        overlay.classList.remove('active');
+        setTimeout(function(){
+            overlay.classList.remove('closing');
+            clearEditModal();
+        }, 340);
+    }
+
     var editModalOverlay = document.getElementById('productEditModal');
     if(editModalOverlay){
         editModalOverlay.addEventListener('click', function(e){
-            if(e.target===editModalOverlay || e.target.closest('.modal-close')){
-                editModalOverlay.classList.remove('active');
-                clearEditModal();
+            if(e.target===editModalOverlay || e.target.closest('.modal-close') || e.target.closest('#productEditCancel')){
+                closeEditModal();
             }
         });
     }
+
+    // Esc key closes the edit modal
+    document.addEventListener('keydown', function(e){
+        if(e.key === 'Escape') closeEditModal();
+    });
 })();
 </script>
 

@@ -87,57 +87,71 @@ require_once INCLUDES_PATH . '/sidebar.php';
 </div>
 
 <!-- ===== View Reply Modal ===== -->
-<div id="crViewReplyModal" class="modal-overlay">
-    <div class="modal-box" style="max-width:480px;padding:1.25rem;">
-        <div class="modal-header" style="margin-bottom:.75rem;">
-            <h3>Staff Reply</h3>
-            <button type="button" class="modal-close" onclick="document.getElementById('crViewReplyModal').classList.remove('active')">&times;</button>
+<div id="crViewReplyModal" class="modal-overlay cr-modal">
+    <div class="modal-box" style="width:480px;">
+        <div class="modal-header">
+            <h3>
+                <span class="cr-header-icon">
+                    <i data-lucide="message-square-reply" style="width:17px;height:17px;"></i>
+                </span>
+                Staff Reply
+            </h3>
+            <button type="button" class="modal-close" aria-label="Close" onclick="document.getElementById('crViewReplyModal').classList.remove('active')">&times;</button>
         </div>
-        <div class="cr-modal-info" style="margin-bottom:.75rem;">
-            <div class="cr-info-row">
-                <span class="cr-info-label">Order</span>
-                <span class="cr-info-value" id="vrOrder"></span>
+        <div class="cr-modal-body">
+            <div class="cr-modal-info">
+                <div class="cr-info-row">
+                    <span class="cr-info-label">Order</span>
+                    <span class="cr-info-value" id="vrOrder"></span>
+                </div>
+                <div class="cr-info-row">
+                    <span class="cr-info-label">Decision</span>
+                    <span class="cr-info-value" id="vrStatus"></span>
+                </div>
             </div>
-            <div class="cr-info-row">
-                <span class="cr-info-label">Decision</span>
-                <span class="cr-info-value" id="vrStatus"></span>
-            </div>
+            <div class="cr-reply-bubble" id="vrReplyText"></div>
         </div>
-        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:1rem 1.25rem;font-size:.92rem;line-height:1.6;color:var(--charcoal);white-space:pre-wrap;" id="vrReplyText"></div>
-        <div class="form-actions" style="margin-top:1.25rem;">
+        <div class="cr-modal-footer">
             <button type="button" class="btn btn-outline" onclick="document.getElementById('crViewReplyModal').classList.remove('active')">Close</button>
         </div>
     </div>
 </div>
 
 <!-- ===== Reply Modal ===== -->
-<div id="crReplyModal" class="modal-overlay">
-    <div class="modal-box" style="max-width:520px;">
+<div id="crReplyModal" class="modal-overlay cr-modal">
+    <div class="modal-box" style="width:540px;">
         <div class="modal-header">
-            <h3 id="crReplyTitle">Reply to Cancel Request</h3>
-            <button type="button" class="modal-close" onclick="closeCrModal()">&times;</button>
-        </div>
-        <div class="cr-modal-info">
-            <div class="cr-info-row">
-                <span class="cr-info-label">Customer</span>
-                <span class="cr-info-value" id="crCustomer"></span>
-            </div>
-            <div class="cr-info-row">
-                <span class="cr-info-label">Order</span>
-                <span class="cr-info-value" id="crOrder"></span>
-            </div>
-            <div class="cr-info-row">
-                <span class="cr-info-label">Reason</span>
-                <span class="cr-info-value" id="crReason" style="font-style:italic;color:var(--text-secondary);"></span>
-            </div>
+            <h3>
+                <span class="cr-header-icon">
+                    <i data-lucide="message-square-reply" style="width:17px;height:17px;"></i>
+                </span>
+                <span id="crReplyTitle">Reply to Cancel Request</span>
+            </h3>
+            <button type="button" class="modal-close" aria-label="Close" onclick="closeCrModal()">&times;</button>
         </div>
         <form id="crReplyForm" method="POST">
             <?= csrf_field() ?>
-            <div class="form-group">
-                <label class="form-label">Your Reply to Customer <span style="color:var(--text-secondary);font-weight:400;">(visible to customer)</span></label>
-                <textarea name="admin_notes" id="crReplyText" class="form-control" rows="3" placeholder="e.g. We've approved your cancellation. Refund will be processed within 3-5 days." required></textarea>
+            <div class="cr-modal-body">
+                <div class="cr-modal-info">
+                    <div class="cr-info-row">
+                        <span class="cr-info-label">Customer</span>
+                        <span class="cr-info-value" id="crCustomer"></span>
+                    </div>
+                    <div class="cr-info-row">
+                        <span class="cr-info-label">Order</span>
+                        <span class="cr-info-value" id="crOrder"></span>
+                    </div>
+                    <div class="cr-info-row">
+                        <span class="cr-info-label">Reason</span>
+                        <span class="cr-info-value" id="crReason" style="font-style:italic;color:var(--text-secondary);"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Your Reply to Customer <span style="color:var(--text-secondary);font-weight:400;text-transform:none;letter-spacing:0;">(visible to customer)</span></label>
+                    <textarea name="admin_notes" id="crReplyText" class="form-control" rows="3" placeholder="e.g. We've approved your cancellation. Refund will be processed within 3-5 days." required></textarea>
+                </div>
             </div>
-            <div class="form-actions">
+            <div class="cr-modal-footer">
                 <button type="button" class="btn btn-outline" onclick="closeCrModal()">Cancel</button>
                 <button type="submit" class="btn" id="crSubmitBtn">
                     <i data-lucide="send" style="width:15px;height:15px;"></i> <span id="crSubmitText">Approve & Reply</span>
@@ -148,34 +162,195 @@ require_once INCLUDES_PATH . '/sidebar.php';
 </div>
 
 <style>
-.modal-overlay {
+/* Premium cancel-request modals — fade in AND out via transitions, no blur */
+.cr-modal {
     position: fixed; inset: 0; z-index: 9999;
-    background: rgba(0,0,0,.45);
+    background: rgba(15, 23, 42, .62);
     display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .28s ease, visibility .28s ease;
 }
-.modal-box {
-    background: var(--white); border-radius: var(--radius-lg);
-    padding: 1.75rem; width: 90%; box-shadow: var(--shadow-lg);
+.cr-modal.active {
+    opacity: 1;
+    visibility: visible;
 }
-.modal-header {
+.cr-modal .modal-box {
+    background: var(--white);
+    border-radius: 20px;
+    border: 1px solid rgba(148, 163, 184, .18);
+    max-width: 94vw;
+    max-height: 92vh;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 32px 80px rgba(2, 6, 23, .35), 0 4px 18px rgba(2, 6, 23, .18);
+    transform: translateY(26px) scale(.96);
+    opacity: 0;
+    transition: transform .32s cubic-bezier(.21, 1.02, .35, 1), opacity .26s ease;
+}
+.cr-modal.active .modal-box {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+.cr-modal .modal-box form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+.cr-modal .modal-header {
     display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 1.25rem;
+    gap: 14px;
+    padding: 18px 24px;
+    margin: 0;
+    background: linear-gradient(135deg, #1B2A4A 0%, #24385f 55%, #2D4A7A 100%);
+    flex-shrink: 0;
 }
-.modal-header h3 { margin: 0; font-size: 1.1rem; }
-.modal-close {
-    background: none; border: none; font-size: 1.5rem;
-    cursor: pointer; color: var(--text-secondary);
+.cr-modal .modal-header h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -.01em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.cr-header-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px; height: 34px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: rgba(249, 115, 22, .18);
+    border: 1px solid rgba(249, 115, 22, .35);
+    color: #fb923c;
+}
+.cr-modal .modal-close {
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(255, 255, 255, .1);
+    border: 1px solid rgba(255, 255, 255, .16);
+    color: rgba(255, 255, 255, .85);
+    border-radius: 10px;
+    font-size: 19px;
     line-height: 1;
+    cursor: pointer;
+    transition: background .2s ease, color .2s ease, transform .18s ease;
 }
-.modal-close:hover { color: var(--danger); }
+.cr-modal .modal-close:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+    transform: rotate(90deg);
+}
+.cr-modal-body {
+    padding: 22px 24px 16px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+.cr-modal .form-label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-secondary, #64748b);
+    margin-bottom: 6px;
+}
+.cr-modal .form-control {
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 13px;
+    font-size: .88rem;
+    background: #fbfcfe;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.cr-modal .form-control:focus {
+    border-color: var(--accent, #F97316);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(249, 115, 22, .1);
+    outline: none;
+}
+.cr-modal textarea.form-control { resize: vertical; min-height: 90px; }
+.cr-reply-bubble {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    font-size: .92rem;
+    line-height: 1.6;
+    color: var(--charcoal);
+    white-space: pre-wrap;
+}
+.cr-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    background: rgba(248, 250, 252, .9);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.cr-modal-footer .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 12px;
+    padding: 11px 18px;
+    font-weight: 700;
+    font-size: .84rem;
+    line-height: 1;
+    min-height: 44px;
+    transition: transform .15s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+}
+.cr-modal-footer .btn-outline {
+    background: #fff;
+    border: 1.5px solid #e2e8f0;
+    color: #1e293b;
+}
+.cr-modal-footer .btn-outline:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+.cr-modal-footer .btn-accent {
+    background: linear-gradient(135deg, #F97316 0%, #ea6a0c 100%);
+    border: none;
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(249, 115, 22, .32);
+}
+.cr-modal-footer .btn-accent:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 26px rgba(249, 115, 22, .4);
+}
+.cr-modal-footer .btn-danger-solid {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border: none;
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(239, 68, 68, .32);
+}
+.cr-modal-footer .btn-danger-solid:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 26px rgba(239, 68, 68, .4);
+}
 
 /* Cancel Request Modal Info */
 .cr-modal-info {
     background: #f8fafc;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 1rem 1.25rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.1rem;
     display: flex;
     flex-direction: column;
     gap: .6rem;
@@ -255,20 +430,20 @@ require_once INCLUDES_PATH . '/sidebar.php';
                 title.textContent    = 'Approve & Reply';
                 submitTxt.textContent = 'Approve & Send Reply';
                 submitBtn.className  = 'btn btn-accent';
+                submitBtn.removeAttribute('style');
                 replyTxt.placeholder = 'e.g. Your cancellation has been approved. Refund will be processed shortly.';
                 form.action = '<?= APP_URL ?>/index.php?url=staff/cancel-requests/' + id + '/approve';
             } else {
                 title.textContent    = 'Reject & Reply';
                 submitTxt.textContent = 'Reject & Send Reply';
-                submitBtn.className  = 'btn';
-                submitBtn.style.background = 'var(--danger)';
-                submitBtn.style.borderColor = 'var(--danger)';
-                submitBtn.style.color = '#fff';
+                submitBtn.className  = 'btn btn-danger-solid';
+                submitBtn.removeAttribute('style');
                 replyTxt.placeholder = 'e.g. We cannot cancel this order as it has already been shipped.';
                 form.action = '<?= APP_URL ?>/index.php?url=staff/cancel-requests/' + id + '/reject';
             }
 
             modal.classList.add('active');
+            if (window.lucide) lucide.createIcons({ nodes: [modal] });
             setTimeout(function(){ replyTxt.focus(); }, 100);
             return;
         }

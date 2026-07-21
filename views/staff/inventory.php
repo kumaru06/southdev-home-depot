@@ -180,112 +180,225 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
 
 <!-- ===== Stock Action Modal ===== -->
 <?php if ($canManageStock): ?>
-<div id="stockModal" class="modal-overlay" style="display:none;">
-    <div class="modal-box" style="max-width:480px;">
-        <div class="modal-header">
-            <h3 id="stockModalTitle">Update Stock</h3>
-            <button type="button" class="modal-close">&times;</button>
-        </div>
-
-        <!-- Update Stock Form -->
-        <form id="formUpdateStock" action="<?= $invBase ?>/update" method="POST" style="display:none;">
-            <?= csrf_field() ?>
-            <input type="hidden" name="product_id" id="updateProductId">
-            <div class="form-group">
-                <label class="form-label">Product</label>
-                <input type="text" id="updateProductName" class="form-control" readonly>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Set Quantity To</label>
-                <input type="number" name="quantity" id="updateQuantity" class="form-control" min="0" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Reason</label>
-                <input type="text" name="reason" class="form-control" placeholder="e.g. Manual count correction" value="Manual stock update">
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-outline btn-close-stock-modal">Cancel</button>
-                <button type="submit" class="btn btn-accent">Update Stock</button>
-            </div>
-        </form>
-
-        <!-- Add Stock Form -->
-        <form id="formAddStock" action="<?= $invBase ?>/add-stock" method="POST" style="display:none;">
-            <?= csrf_field() ?>
-            <input type="hidden" name="product_id" id="addProductId">
-            <div class="form-group">
-                <label class="form-label">Product</label>
-                <input type="text" id="addProductName" class="form-control" readonly>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Current Stock</label>
-                <input type="text" id="addCurrentStock" class="form-control" readonly>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Quantity to Add</label>
-                <input type="number" name="add_quantity" id="addQuantityInput" class="form-control" min="1" required placeholder="e.g. 50" oninput="updateNewTotal()">
-            </div>
-            <div class="form-group">
-                <label class="form-label">New Total After Adding</label>
-                <input type="text" id="addNewTotal" class="form-control" readonly style="font-weight:700; color:var(--accent); background:#fff8f0;">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Reason</label>
-                <input type="text" name="reason" class="form-control" placeholder="e.g. New shipment received" value="Stock purchase/restock">
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-outline btn-close-stock-modal">Cancel</button>
-                <button type="submit" class="btn btn-accent"><i data-lucide="plus-circle" style="width:15px;height:15px"></i> Add Stock</button>
-            </div>
-        </form>
-
-        <!-- Supplier Request Form -->
-        <form id="formSupplier" action="<?= $invBase ?>/request-supplier" method="POST" style="display:none;">
-            <?= csrf_field() ?>
-            <input type="hidden" name="product_id" id="supplierProductId">
-            <div class="form-group">
-                <label class="form-label">Product</label>
-                <input type="text" id="supplierProductName" class="form-control" readonly>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Requested Quantity</label>
-                <input type="number" name="request_quantity" class="form-control" min="1" required placeholder="e.g. 100">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Notes (optional)</label>
-                <textarea name="notes" class="form-control" rows="3" placeholder="Internal notes (supplier name, PO reference, etc.)"></textarea>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-outline btn-close-stock-modal">Cancel</button>
-                <button type="submit" class="btn btn-accent" style="background:#7C3AED;border-color:#7C3AED;">
-                    <i data-lucide="truck" style="width:15px;height:15px"></i> Submit Request
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <style>
-.modal-overlay {
-    position: fixed; inset: 0; z-index: 9999;
-    background: rgba(0,0,0,.45);
-    display: flex; align-items: center; justify-content: center;
+/* Premium inventory stock modal — no backdrop blur (perf) */
+#stockModal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(15, 23, 42, .62);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .28s ease, visibility 0s linear .28s;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    filter: none !important;
 }
-.modal-box {
-    background: var(--white); border-radius: var(--radius-lg);
-    padding: 1.75rem; width: 90%; box-shadow: var(--shadow-lg);
+#stockModal.active {
+    display: flex;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity .28s ease, visibility 0s;
 }
-.modal-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 1.25rem;
+#stockModal.closing {
+    display: flex;
+    opacity: 0;
+    visibility: visible;
+    transition: opacity .28s ease .06s, visibility 0s linear .34s;
 }
-.modal-header h3 { margin: 0; font-size: 1.1rem; }
-.modal-close {
-    background: none; border: none; font-size: 1.5rem;
-    cursor: pointer; color: var(--text-secondary);
+#stockModal .modal-box {
+    width: 520px;
+    max-width: 94vw;
+    max-height: 92vh;
+    background: #fff;
+    border-radius: 20px;
+    border: 1px solid rgba(148, 163, 184, .18);
+    box-shadow: 0 32px 80px rgba(2, 6, 23, .35), 0 4px 18px rgba(2, 6, 23, .18);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(26px) scale(.96);
+    opacity: 0;
+    transition: transform .32s cubic-bezier(.21, 1.02, .35, 1), opacity .26s ease;
+}
+#stockModal.active .modal-box {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+#stockModal.closing .modal-box {
+    transform: translateY(18px) scale(.96);
+    opacity: 0;
+    transition: transform .28s cubic-bezier(.5, 0, .75, .4), opacity .24s ease;
+}
+#stockModal .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 18px 24px;
+    margin: 0;
+    background: linear-gradient(135deg, #1B2A4A 0%, #24385f 55%, #2D4A7A 100%);
+    border-bottom: none;
+}
+#stockModal .modal-header h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -.01em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#stockModal .stock-header-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: rgba(249, 115, 22, .18);
+    border: 1px solid rgba(249, 115, 22, .35);
+    color: #fb923c;
+}
+#stockModal[data-mode="supplier"] .stock-header-icon {
+    background: rgba(124, 58, 237, .2);
+    border-color: rgba(124, 58, 237, .4);
+    color: #c4b5fd;
+}
+#stockModal .modal-close {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, .1);
+    border: 1px solid rgba(255, 255, 255, .16);
+    color: rgba(255, 255, 255, .85);
+    border-radius: 10px;
+    font-size: 19px;
     line-height: 1;
+    cursor: pointer;
+    transition: background .2s ease, color .2s ease, transform .18s ease;
 }
-.modal-close:hover { color: var(--danger); }
+#stockModal .modal-close:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+    transform: rotate(90deg);
+}
+#stockModal .stock-modal-body {
+    padding: 22px 24px 16px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    background:
+        radial-gradient(800px 200px at 50% -70px, rgba(45, 74, 122, .05), transparent 60%),
+        #fff;
+}
+#stockModal .form-label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-secondary, #64748b);
+    margin-bottom: 6px;
+}
+#stockModal .form-control {
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 13px;
+    font-size: .88rem;
+    background: #fbfcfe;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+#stockModal .form-control:focus {
+    border-color: var(--accent, #F97316);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(249, 115, 22, .1);
+    outline: none;
+}
+#stockModal .form-control[readonly] {
+    background: #f1f5f9;
+    color: #334155;
+    font-weight: 600;
+}
+#stockModal #addNewTotal {
+    font-weight: 800 !important;
+    color: var(--accent) !important;
+    background: #fff8f0 !important;
+}
+#stockModal .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    margin: 0;
+    background: rgba(248, 250, 252, .9);
+    border-top: 1px solid var(--border);
+}
+#stockModal .form-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 12px;
+    padding: 11px 18px;
+    font-weight: 700;
+    font-size: .84rem;
+    letter-spacing: .02em;
+    line-height: 1;
+    min-height: 44px;
+    transition: transform .15s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+}
+#stockModal .form-actions .btn i,
+#stockModal .form-actions .btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+#stockModal .form-actions .btn-outline {
+    background: #fff;
+    border: 1.5px solid #e2e8f0;
+    color: #1e293b;
+}
+#stockModal .form-actions .btn-outline:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+#stockModal .form-actions .btn-accent {
+    background: linear-gradient(135deg, #F97316 0%, #ea6a0c 100%);
+    border: none;
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(249, 115, 22, .32);
+}
+#stockModal .form-actions .btn-accent:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 26px rgba(249, 115, 22, .4);
+    background: linear-gradient(135deg, #fb8330 0%, #F97316 100%);
+}
+#stockModal .form-actions .btn-accent:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, .28);
+}
+#stockModal[data-mode="supplier"] .form-actions .btn-accent {
+    background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+    box-shadow: 0 8px 20px rgba(124, 58, 237, .32);
+}
+#stockModal[data-mode="supplier"] .form-actions .btn-accent:hover {
+    background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+    box-shadow: 0 12px 26px rgba(124, 58, 237, .4);
+}
 .row-danger { background: var(--danger-bg) !important; }
 
 /* ====== Inventory Filter Bar ====== */
@@ -343,8 +456,112 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
     .inv-filter-row { flex-direction: column; align-items: stretch; }
     .inv-filter-select { min-width: 100%; }
     .inv-filter-count { margin-left: 0; text-align: center; }
+    #stockModal .modal-box { border-radius: 16px; }
 }
 </style>
+
+<div id="stockModal" class="modal-overlay" data-mode="update">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>
+                <span class="stock-header-icon" id="stockHeaderIcon">
+                    <i data-lucide="package" style="width:17px;height:17px;"></i>
+                </span>
+                <span id="stockModalTitle">Update Stock</span>
+            </h3>
+            <button type="button" class="modal-close" aria-label="Close">&times;</button>
+        </div>
+
+        <!-- Update Stock Form -->
+        <form id="formUpdateStock" action="<?= $invBase ?>/update" method="POST" style="display:none;">
+            <?= csrf_field() ?>
+            <input type="hidden" name="product_id" id="updateProductId">
+            <div class="stock-modal-body">
+                <div class="form-group">
+                    <label class="form-label">Product</label>
+                    <input type="text" id="updateProductName" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Set Quantity To</label>
+                    <input type="number" name="quantity" id="updateQuantity" class="form-control" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Reason</label>
+                    <input type="text" name="reason" class="form-control" placeholder="e.g. Manual count correction" value="Manual stock update">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline btn-close-stock-modal">Cancel</button>
+                <button type="submit" class="btn btn-accent">
+                    <i data-lucide="package-check" style="width:16px;height:16px"></i>
+                    <span>Update Stock</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Add Stock Form -->
+        <form id="formAddStock" action="<?= $invBase ?>/add-stock" method="POST" style="display:none;">
+            <?= csrf_field() ?>
+            <input type="hidden" name="product_id" id="addProductId">
+            <div class="stock-modal-body">
+                <div class="form-group">
+                    <label class="form-label">Product</label>
+                    <input type="text" id="addProductName" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Current Stock</label>
+                    <input type="text" id="addCurrentStock" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Quantity to Add</label>
+                    <input type="number" name="add_quantity" id="addQuantityInput" class="form-control" min="1" required placeholder="e.g. 50" oninput="updateNewTotal()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">New Total After Adding</label>
+                    <input type="text" id="addNewTotal" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Reason</label>
+                    <input type="text" name="reason" class="form-control" placeholder="e.g. New shipment received" value="Stock purchase/restock">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline btn-close-stock-modal">Cancel</button>
+                <button type="submit" class="btn btn-accent">
+                    <i data-lucide="plus-circle" style="width:16px;height:16px"></i>
+                    <span>Add Stock</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Supplier Request Form -->
+        <form id="formSupplier" action="<?= $invBase ?>/request-supplier" method="POST" style="display:none;">
+            <?= csrf_field() ?>
+            <input type="hidden" name="product_id" id="supplierProductId">
+            <div class="stock-modal-body">
+                <div class="form-group">
+                    <label class="form-label">Product</label>
+                    <input type="text" id="supplierProductName" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Requested Quantity</label>
+                    <input type="number" name="request_quantity" class="form-control" min="1" required placeholder="e.g. 100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes (optional)</label>
+                    <textarea name="notes" class="form-control" rows="3" placeholder="Internal notes (supplier name, PO reference, etc.)"></textarea>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline btn-close-stock-modal">Cancel</button>
+                <button type="submit" class="btn btn-accent">
+                    <i data-lucide="truck" style="width:16px;height:16px"></i>
+                    <span>Submit Request</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script>
 /* ====== Inventory Filter ====== */
@@ -388,6 +605,18 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
     /* ---- helpers ---- */
     function $(id) { return document.getElementById(id); }
 
+    function setStockHeaderIcon(mode) {
+        var iconWrap = $('stockHeaderIcon');
+        if (!iconWrap) return;
+        var icon = 'package';
+        if (mode === 'add') icon = 'plus-circle';
+        if (mode === 'supplier') icon = 'truck';
+        iconWrap.innerHTML = '<i data-lucide="' + icon + '" style="width:17px;height:17px;"></i>';
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons({ nodes: [iconWrap] });
+        }
+    }
+
     function openStockModal(btn) {
         var productId   = btn.getAttribute('data-id');
         var productName = btn.getAttribute('data-name');
@@ -395,11 +624,17 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
         var mode        = btn.getAttribute('data-mode');
 
         var modal = $('stockModal');
+        modal.classList.remove('closing');
+        modal.setAttribute('data-mode', mode || 'update');
         modal.style.display = 'flex';
+        // force reflow so open animation plays
+        void modal.offsetWidth;
         modal.classList.add('active');
+
         $('formUpdateStock').style.display       = 'none';
         $('formAddStock').style.display          = 'none';
         $('formSupplier').style.display          = 'none';
+        setStockHeaderIcon(mode);
 
         if (mode === 'update') {
             $('stockModalTitle').textContent  = 'Update Stock — ' + productName;
@@ -422,12 +657,21 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
             $('supplierProductName').value    = productName;
             $('formSupplier').style.display   = 'block';
         }
+
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons({ nodes: [modal] });
+        }
     }
 
     function closeStockModal() {
         var modal = $('stockModal');
+        if (!modal || (!modal.classList.contains('active') && modal.style.display === 'none')) return;
+        modal.classList.add('closing');
         modal.classList.remove('active');
-        modal.style.display = 'none';
+        setTimeout(function () {
+            modal.classList.remove('closing');
+            modal.style.display = 'none';
+        }, 340);
     }
 
     /* Expose globally so inline onclick still works as fallback */
@@ -459,7 +703,7 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
         }
 
         /* Close modal – × button or Cancel button */
-        if (e.target.closest('.modal-close') || e.target.closest('.btn-close-stock-modal')) {
+        if (e.target.closest('#stockModal .modal-close') || e.target.closest('.btn-close-stock-modal')) {
             closeStockModal();
             return;
         }
@@ -468,6 +712,10 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
         if (e.target.id === 'stockModal') {
             closeStockModal();
         }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeStockModal();
     });
 })();
 </script>

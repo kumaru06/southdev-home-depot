@@ -16,7 +16,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
         <!-- Filter Bar -->
         <div class="card filter-bar">
             <form method="GET" class="filter-form">
-                <input type="hidden" name="url" value="staff/returns">
+                <input type="hidden" name="url" value="<?= htmlspecialchars($returnBaseUrl ?? 'staff/returns') ?>">
                 <select name="status" class="form-control">
                     <option value="">All Statuses</option>
                     <?php foreach (['pending','approved','rejected','completed'] as $s): ?>
@@ -25,7 +25,37 @@ require_once INCLUDES_PATH . '/sidebar.php';
                 </select>
                 <button type="submit" class="btn btn-accent"><i data-lucide="filter"></i> Filter</button>
             </form>
+            <div class="return-order-search">
+                <i data-lucide="search" class="return-order-search-icon"></i>
+                <input type="search" id="returnOrderSearch" class="form-control"
+                       placeholder="Search order number…" autocomplete="off">
+            </div>
         </div>
+        <style>
+        .return-order-search {
+            position: relative;
+            margin-left: auto;
+        }
+        .return-order-search .form-control {
+            width: 260px;
+            height: 42px;
+            padding-left: 38px;
+        }
+        .return-order-search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted, #94a3b8);
+            pointer-events: none;
+        }
+        @media (max-width: 576px) {
+            .return-order-search { margin-left: 0; width: 100%; }
+            .return-order-search .form-control { width: 100%; }
+        }
+        </style>
 
         <div class="data-table-wrap data-table-wrap--locked">
             <table class="data-table">
@@ -98,6 +128,37 @@ document.addEventListener('DOMContentLoaded', function () {
             if (href) window.location.href = href;
         });
     });
+
+    /* ---- Live order-number search (client-side, no reload) ---- */
+    var orderSearch = document.getElementById('returnOrderSearch');
+    if (orderSearch) {
+        var tbody = document.querySelector('.data-table tbody');
+        var noMatchRow = null;
+
+        function ensureNoMatchRow() {
+            if (noMatchRow) return noMatchRow;
+            noMatchRow = document.createElement('tr');
+            noMatchRow.id = 'returnSearchNoMatch';
+            noMatchRow.style.display = 'none';
+            noMatchRow.innerHTML = '<td colspan="8" class="text-center" style="padding:2rem;color:var(--text-secondary);">No returns match that order number.</td>';
+            tbody.appendChild(noMatchRow);
+            return noMatchRow;
+        }
+
+        orderSearch.addEventListener('input', function () {
+            var q = this.value.trim().toLowerCase();
+            var rows = tbody.querySelectorAll('tr.js-return-row');
+            var shown = 0;
+            rows.forEach(function (row) {
+                var orderCell = row.querySelector('td:nth-child(2)');
+                var text = orderCell ? orderCell.textContent.trim().toLowerCase() : '';
+                var match = q === '' || text.indexOf(q) !== -1;
+                row.style.display = match ? '' : 'none';
+                if (match) shown++;
+            });
+            ensureNoMatchRow().style.display = (rows.length > 0 && shown === 0) ? '' : 'none';
+        });
+    }
 
     // Helper: submit form with a named button value (since form.submit() skips button values)
     function submitFormWithStatus(form, statusValue) {
