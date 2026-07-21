@@ -1322,11 +1322,18 @@ p { color: var(--text-secondary); }
     font-size: 13px;
     line-height: 1.6;
 }
+.footer-brand-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    margin-top: 14px;
+}
 .footer-social-link {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    margin-top: 14px;
+    margin-top: 0;
     padding: 8px 12px;
     border-radius: 999px;
     background: rgba(255,255,255,.06);
@@ -1346,6 +1353,14 @@ p { color: var(--text-secondary); }
 }
 .footer-fb-icon {
     color: #1877f2;
+    flex-shrink: 0;
+}
+.footer-zen-logo {
+    display: block;
+    height: 36px;
+    width: auto;
+    max-width: min(180px, 48vw);
+    object-fit: contain;
     flex-shrink: 0;
 }
 .footer-col ul,
