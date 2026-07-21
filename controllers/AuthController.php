@@ -63,6 +63,19 @@ class AuthController {
             strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
         ) || (strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false);
 
+        if (!verify_recaptcha()) {
+            $msg = 'Please complete the reCAPTCHA verification.';
+            if ($isAjax) {
+                session_write_close();
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['success' => false, 'message' => $msg]);
+                exit;
+            }
+            flash('error', $msg);
+            header('Location: ' . APP_URL . '/index.php?url=login');
+            exit;
+        }
+
         $login    = trim($_POST['email'] ?? '');  // accepts email or username
         $password = $_POST['password'] ?? '';
 
@@ -290,6 +303,26 @@ class AuthController {
         exit;
     }
 
+    /**
+     * AJAX endpoint: check if an email is already registered.
+     */
+    public function checkEmail() {
+        header('Content-Type: application/json');
+        $email = trim($_GET['email'] ?? $_POST['email'] ?? '');
+
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode(['available' => false, 'message' => 'Please enter a valid email address.']);
+            exit;
+        }
+
+        $taken = (bool) $this->userModel->findByEmail($email);
+        echo json_encode([
+            'available' => !$taken,
+            'message'   => $taken ? 'Email is already registered.' : 'Email is available.'
+        ]);
+        exit;
+    }
+
     public function register() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . APP_URL . '/index.php?url=register');
@@ -297,6 +330,12 @@ class AuthController {
         }
 
         AuthMiddleware::csrf();
+
+        if (!verify_recaptcha()) {
+            flash('error', 'Please complete the reCAPTCHA verification.');
+            header('Location: ' . APP_URL . '/index.php?url=register');
+            exit;
+        }
 
         $data = [
             'first_name' => trim($_POST['first_name'] ?? ''),
@@ -313,6 +352,18 @@ class AuthController {
             flash('error', 'Please fill in all required fields.');
             header('Location: ' . APP_URL . '/index.php?url=register');
             exit;
+        }
+
+        // Names: letters and spaces only, auto-capitalize each word
+        foreach (['first_name', 'last_name'] as $nameField) {
+            $clean = preg_replace('/\s+/', ' ', preg_replace('/[^A-Za-z\s]/', '', $data[$nameField]));
+            $clean = trim($clean ?? '');
+            if ($clean === '' || !preg_match('/^[A-Za-z]+(?: [A-Za-z]+)*$/', $clean)) {
+                flash('error', 'First and last name may only contain letters.');
+                header('Location: ' . APP_URL . '/index.php?url=register');
+                exit;
+            }
+            $data[$nameField] = ucwords(strtolower($clean));
         }
 
         // Validate phone number if provided

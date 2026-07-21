@@ -475,7 +475,7 @@ try {
                     </div>
                 </div>
 
-                <div class="login-modal-error" id="loginModalError" style="display:none;"></div>
+                <div class="login-modal-error" id="loginModalError"></div>
 
                 <form id="loginModalForm" method="POST" action="<?= APP_URL ?>/index.php?url=login">
                     <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
@@ -494,6 +494,12 @@ try {
                             <button type="button" class="login-pw-toggle" onclick="(function(b){var i=b.previousElementSibling.previousElementSibling;var isP=i.type==='password';i.type=isP?'text':'password';b.textContent=isP?'Hide':'Show';})(this)" aria-label="Toggle password visibility">Show</button>
                         </div>
                     </div>
+
+                    <?php if (recaptcha_enabled()): ?>
+                    <div class="login-modal-recaptcha">
+                        <?= recaptcha_widget() ?>
+                    </div>
+                    <?php endif; ?>
 
                     <button type="submit" class="btn btn-accent btn-block" id="loginModalSubmit">
                         Sign In

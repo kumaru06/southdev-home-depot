@@ -79,6 +79,12 @@ switch ($urlParts[0]) {
         $controller->checkUsername();
         break;
 
+    case 'check-email':
+        require_once CONTROLLERS_PATH . '/AuthController.php';
+        $controller = new AuthController($pdo);
+        $controller->checkEmail();
+        break;
+
     case 'logout':
         require_once CONTROLLERS_PATH . '/AuthController.php';
         $controller = new AuthController($pdo);

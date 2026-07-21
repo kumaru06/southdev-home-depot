@@ -29,13 +29,13 @@ require_once INCLUDES_PATH . '/header.php';
                     <div class="form-row">
                         <div class="form-group form-col fl-group">
                             <div class="fl-wrap">
-                                <input type="text" id="first_name" name="first_name" class="form-control form-control-sm fl-input" placeholder=" " autocomplete="given-name" required>
+                                <input type="text" id="first_name" name="first_name" class="form-control form-control-sm fl-input name-letter-input" placeholder=" " autocomplete="given-name" required pattern="[A-Za-z][A-Za-z ]*" maxlength="50" title="Letters only">
                                 <label for="first_name" class="fl-label">First Name <span class="required">*</span></label>
                             </div>
                         </div>
                         <div class="form-group form-col fl-group">
                             <div class="fl-wrap">
-                                <input type="text" id="last_name" name="last_name" class="form-control form-control-sm fl-input" placeholder=" " autocomplete="family-name" required>
+                                <input type="text" id="last_name" name="last_name" class="form-control form-control-sm fl-input name-letter-input" placeholder=" " autocomplete="family-name" required pattern="[A-Za-z][A-Za-z ]*" maxlength="50" title="Letters only">
                                 <label for="last_name" class="fl-label">Last Name <span class="required">*</span></label>
                             </div>
                         </div>
@@ -77,6 +77,7 @@ require_once INCLUDES_PATH . '/header.php';
                                 <input type="email" id="email" name="email" class="form-control form-control-sm fl-input" placeholder=" " autocomplete="email" required>
                                 <label for="email" class="fl-label">Email Address <span class="required">*</span></label>
                             </div>
+                            <small id="email-feedback" class="email-feedback" style="display:none;"></small>
                         </div>
                     </div>
 
@@ -107,6 +108,12 @@ require_once INCLUDES_PATH . '/header.php';
                             <small class="pwd-match-text" id="pwd-match-text"></small>
                         </div>
                     </div>
+
+                    <?php if (recaptcha_enabled()): ?>
+                    <div class="register-recaptcha">
+                        <?= recaptcha_widget() ?>
+                    </div>
+                    <?php endif; ?>
 
                     <button type="submit" class="btn btn-accent btn-block" id="register-submit-btn">
                         Create Account
@@ -357,6 +364,13 @@ require_once INCLUDES_PATH . '/header.php';
 #username.input-taken      { border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220,38,38,.1) !important; }
 #username.input-available  { border-color: #16a34a !important; box-shadow: 0 0 0 3px rgba(22,163,74,.1) !important; }
 
+.email-feedback { display: block; margin-top: 4px; font-size: .69rem; font-weight: 600; }
+.email-feedback.taken    { color: #dc2626; }
+.email-feedback.available{ color: #16a34a; }
+.email-feedback.checking { color: #9ca3af; }
+#email.input-taken      { border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220,38,38,.1) !important; }
+#email.input-available  { border-color: #16a34a !important; box-shadow: 0 0 0 3px rgba(22,163,74,.1) !important; }
+
 /* ─── Submit button ─────────────────────────────────────────────────────── */
 .register-panel .btn-block {
     display: flex;
@@ -375,6 +389,12 @@ require_once INCLUDES_PATH . '/header.php';
     box-shadow: 0 4px 14px rgba(249,115,22,.35);
     transition: transform .15s, box-shadow .2s, filter .2s;
     cursor: pointer;
+}
+
+.register-recaptcha {
+    display: flex;
+    justify-content: center;
+    margin: 2px 0 4px;
 }
 
 .register-panel .btn-block:hover {
@@ -650,6 +670,33 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 <script>
+// Name fields: letters + spaces only, auto-capitalize each word
+document.addEventListener('DOMContentLoaded', function () {
+    function capitalizeWords(str) {
+        return str.replace(/\b([a-z])/g, function (m, c) { return c.toUpperCase(); });
+    }
+
+    document.querySelectorAll('.name-letter-input').forEach(function (input) {
+        input.addEventListener('input', function () {
+            var start = input.selectionStart;
+            var end = input.selectionEnd;
+            var cleaned = input.value.replace(/[^A-Za-z\s]/g, '');
+            cleaned = cleaned.replace(/\s{2,}/g, ' ');
+            var formatted = capitalizeWords(cleaned.toLowerCase());
+            if (input.value !== formatted) {
+                input.value = formatted;
+                try { input.setSelectionRange(start, end); } catch (e) {}
+            }
+        });
+
+        input.addEventListener('blur', function () {
+            input.value = capitalizeWords(input.value.trim().replace(/[^A-Za-z\s]/g, '').replace(/\s{2,}/g, ' ').toLowerCase());
+        });
+    });
+});
+</script>
+
+<script>
 // Real-time username availability check
 document.addEventListener('DOMContentLoaded', function(){
     var usernameInput = document.getElementById('username');
@@ -707,6 +754,67 @@ document.addEventListener('DOMContentLoaded', function(){
             if (usernameInput.classList.contains('input-taken')) {
                 e.preventDefault();
                 usernameInput.focus();
+                feedback.style.display = 'block';
+            }
+        });
+    }
+});
+
+// Real-time email availability check
+document.addEventListener('DOMContentLoaded', function () {
+    var emailInput = document.getElementById('email');
+    var feedback = document.getElementById('email-feedback');
+    var debounceTimer = null;
+
+    if (!emailInput || !feedback) return;
+
+    emailInput.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        var val = emailInput.value.trim();
+
+        emailInput.classList.remove('input-taken', 'input-available');
+        feedback.style.display = 'none';
+        feedback.className = 'email-feedback';
+        emailInput.setCustomValidity('');
+
+        if (!val) return;
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) return;
+
+        feedback.textContent = 'Checking...';
+        feedback.className = 'email-feedback checking';
+        feedback.style.display = 'block';
+
+        debounceTimer = setTimeout(function () {
+            fetch('<?= APP_URL ?>/index.php?url=check-email&email=' + encodeURIComponent(val))
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    feedback.style.display = 'block';
+                    if (data.available) {
+                        feedback.textContent = '\u2713 ' + data.message;
+                        feedback.className = 'email-feedback available';
+                        emailInput.classList.remove('input-taken');
+                        emailInput.classList.add('input-available');
+                        emailInput.setCustomValidity('');
+                    } else {
+                        feedback.textContent = '\u2717 ' + data.message;
+                        feedback.className = 'email-feedback taken';
+                        emailInput.classList.remove('input-available');
+                        emailInput.classList.add('input-taken');
+                        emailInput.setCustomValidity(data.message);
+                    }
+                })
+                .catch(function () {
+                    feedback.style.display = 'none';
+                });
+        }, 400);
+    });
+
+    var form = emailInput.closest('form');
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            if (emailInput.classList.contains('input-taken')) {
+                e.preventDefault();
+                emailInput.focus();
                 feedback.style.display = 'block';
             }
         });

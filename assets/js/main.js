@@ -392,6 +392,10 @@
                 if (window.lucide && !overlay.querySelector('svg.lucide')) {
                     lucide.createIcons({ nodes: [overlay] });
                 }
+                // Modal is now visible — render its reCAPTCHA (can't render while hidden)
+                setTimeout(function () {
+                    if (window.__renderRecaptchas) window.__renderRecaptchas();
+                }, 120);
                 setTimeout(function () { emailIn && emailIn.focus(); }, 100);
             }
 
@@ -408,7 +412,7 @@
                 setTimeout(function() {
                     overlay.classList.remove('closing');
                     document.body.style.overflow = '';
-                    if (errorBox) { errorBox.style.display = 'none'; errorBox.textContent = ''; }
+                    if (errorBox) { errorBox.classList.remove('show'); errorBox.textContent = ''; }
                 }, 250);
             }
 
@@ -435,9 +439,17 @@
                     var email    = form.querySelector('[name="email"]').value.trim();
                     var password = form.querySelector('[name="password"]').value;
                     var csrf     = form.querySelector('[name="csrf_token"]').value;
+                    var captchaEl = form.querySelector('[name="g-recaptcha-response"]');
+                    var captcha  = captchaEl ? captchaEl.value : '';
+                    var needsCaptcha = !!form.querySelector('.g-recaptcha');
 
                     if (!email || !password) {
                         showLoginError('Please fill in all fields.');
+                        return;
+                    }
+
+                    if (needsCaptcha && !captcha) {
+                        showLoginError('Please complete the reCAPTCHA verification.');
                         return;
                     }
 
@@ -451,6 +463,9 @@
                     var body = 'csrf_token=' + encodeURIComponent(csrf)
                              + '&email=' + encodeURIComponent(email)
                              + '&password=' + encodeURIComponent(password);
+                    if (captcha) {
+                        body += '&g-recaptcha-response=' + encodeURIComponent(captcha);
+                    }
 
                     fetch(form.action, {
                         method: 'POST',
@@ -471,6 +486,7 @@
                         } else {
                             showLoginError(data.message || 'Invalid email or password.');
                             resetSubmitBtn();
+                            resetLoginCaptcha();
                             if (data.redirect) {
                                 setTimeout(function () { window.location.href = data.redirect; }, 1500);
                             }
@@ -479,6 +495,7 @@
                     .catch(function () {
                         showLoginError('Something went wrong. Please try again.');
                         resetSubmitBtn();
+                        resetLoginCaptcha();
                     });
                 });
             }
@@ -486,7 +503,7 @@
             function showLoginError(msg) {
                 if (!errorBox) return;
                 errorBox.textContent = msg;
-                errorBox.style.display = 'block';
+                errorBox.classList.add('show');
             }
 
             function resetSubmitBtn() {
@@ -494,6 +511,18 @@
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i data-lucide="log-in"></i> Sign In';
                 if (window.lucide) lucide.createIcons({ nodes: [submitBtn] });
+            }
+
+            function resetLoginCaptcha() {
+                var holder = form && form.querySelector('.g-recaptcha');
+                if (!holder || typeof grecaptcha === 'undefined' || !grecaptcha.reset) return;
+                try {
+                    if (holder.dataset.widgetId !== undefined) {
+                        grecaptcha.reset(parseInt(holder.dataset.widgetId, 10));
+                    } else {
+                        grecaptcha.reset();
+                    }
+                } catch (err) {}
             }
 
             /* —— Google OAuth: loading → modal handoff → redirect —— */

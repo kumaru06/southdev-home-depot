@@ -13,6 +13,16 @@
                     <h4><?= APP_NAME ?></h4>
                     <p class="footer-tagline"><?= APP_TAGLINE ?></p>
                     <p class="footer-desc">Your trusted partner for premium building materials, fixtures, and interior finishes. Quality you can count on.</p>
+                    <a class="footer-social-link"
+                       href="https://www.facebook.com/profile.php?id=61586345777494"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       aria-label="Southdev Home Depot on Facebook">
+                        <svg class="footer-fb-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+                            <path fill="currentColor" d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953h-1.513c-1.491 0-1.956.928-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+                        </svg>
+                        <span>Follow us on Facebook</span>
+                    </a>
                 </div>
                 <div class="footer-col">
                     <h5>Quick Links</h5>
@@ -419,6 +429,24 @@
             };
         }
     ?>
+    <?php if (recaptcha_enabled() && empty($_SESSION['user_id'])): ?>
+    <script>
+        // Explicit rendering: auto-render fails for widgets inside hidden
+        // containers (e.g. the login modal), so we render visible ones on load
+        // and let the modal-open handler render the rest.
+        window.__renderRecaptchas = function () {
+            if (!window.grecaptcha || !window.grecaptcha.render) return;
+            document.querySelectorAll('.g-recaptcha').forEach(function (el) {
+                if (el.dataset.widgetId !== undefined) return;
+                if (el.offsetParent === null) return; // still hidden, render later
+                try {
+                    el.dataset.widgetId = grecaptcha.render(el, { sitekey: el.getAttribute('data-sitekey') });
+                } catch (e) {}
+            });
+        };
+    </script>
+    <script src="https://www.google.com/recaptcha/api.js?onload=__renderRecaptchas&render=explicit" async defer></script>
+    <?php endif; ?>
     <script src="<?= APP_URL ?>/assets/js/main.js?v=<?= $asset_v('assets/js/main.js') ?>"></script>
     <script src="<?= APP_URL ?>/assets/js/validation.js?v=<?= $asset_v('assets/js/validation.js') ?>"></script>
     <?php if (isset($extraJs) && is_array($extraJs)): ?>

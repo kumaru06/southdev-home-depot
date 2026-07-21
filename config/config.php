@@ -75,6 +75,10 @@ define('GOOGLE_CLIENT_ID',     trim((string) env('GOOGLE_CLIENT_ID', '')));
 define('GOOGLE_CLIENT_SECRET', trim((string) env('GOOGLE_CLIENT_SECRET', '')));
 define('GOOGLE_REDIRECT_URI',  trim((string) env('GOOGLE_REDIRECT_URI', rtrim(APP_URL, '/') . '/google-callback')));
 
+// Google reCAPTCHA v2 (https://www.google.com/recaptcha/admin) — free; skipped when keys empty
+define('RECAPTCHA_SITE_KEY',   trim((string) env('RECAPTCHA_SITE_KEY', '')));
+define('RECAPTCHA_SECRET_KEY', trim((string) env('RECAPTCHA_SECRET_KEY', '')));
+
 // PayMongo Configuration
 define('PAYMONGO_ENABLED', env('PAYMONGO_ENABLED', true));
 define('PAYMONGO_SECRET_KEY', env('PAYMONGO_SECRET_KEY', ''));
@@ -170,4 +174,57 @@ function flash($key, $message = null) {
 
 function has_flash($key) {
     return isset($_SESSION['flash_' . $key]);
+}
+
+/** True when both reCAPTCHA keys are configured in .env */
+function recaptcha_enabled(): bool {
+    return RECAPTCHA_SITE_KEY !== '' && RECAPTCHA_SECRET_KEY !== '';
+}
+
+/**
+ * Verify Google reCAPTCHA v2 response.
+ * Returns true when captcha is disabled (keys not set) so local/dev keeps working.
+ */
+function verify_recaptcha(?string $response = null): bool {
+    if (!recaptcha_enabled()) {
+        return true;
+    }
+
+    $response = $response ?? (string) ($_POST['g-recaptcha-response'] ?? '');
+    if ($response === '') {
+        return false;
+    }
+
+    $payload = http_build_query([
+        'secret'   => RECAPTCHA_SECRET_KEY,
+        'response' => $response,
+        'remoteip' => $_SERVER['REMOTE_ADDR'] ?? '',
+    ]);
+
+    $ctx = stream_context_create([
+        'http' => [
+            'method'  => 'POST',
+            'header'  => "Content-Type: application/x-www-form-urlencoded\r\n",
+            'content' => $payload,
+            'timeout' => 10,
+        ],
+    ]);
+
+    $raw = @file_get_contents('https://www.google.com/recaptcha/api/siteverify', false, $ctx);
+    if ($raw === false) {
+        return false;
+    }
+
+    $data = json_decode($raw, true);
+    return !empty($data['success']);
+}
+
+/** Render the reCAPTCHA v2 checkbox widget (empty string if not configured). */
+function recaptcha_widget(string $extraClass = ''): string {
+    if (!recaptcha_enabled()) {
+        return '';
+    }
+    $class = trim('g-recaptcha ' . $extraClass);
+    return '<div class="' . htmlspecialchars($class, ENT_QUOTES, 'UTF-8') . '"'
+        . ' data-sitekey="' . htmlspecialchars(RECAPTCHA_SITE_KEY, ENT_QUOTES, 'UTF-8') . '"></div>';
 }
