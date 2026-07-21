@@ -286,12 +286,14 @@ $isSuperAdmin = (int)($_SESSION['role_id'] ?? 0) === ROLE_SUPER_ADMIN;
         document.getElementById('receiveQty').value = qty;
         document.getElementById('receiveReason').value = 'Supplier request #' + id + ' received';
         modal.style.display = 'flex';
+        modal.classList.add('active');
         if (window.lucide && typeof window.lucide.createIcons === 'function') {
             window.lucide.createIcons();
         }
     }
 
     function closeReceive() {
+        modal.classList.remove('active');
         modal.style.display = 'none';
     }
 
