@@ -223,11 +223,13 @@ body {
     display: grid;
     grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr);
     gap: 2rem;
-    align-items: start;
+    align-items: stretch;
 }
 
 .home-hero-copy {
     max-width: 640px;
+    display: flex;
+    flex-direction: column;
 }
 
 .home-eyebrow {
@@ -323,6 +325,124 @@ body {
 .home-stat span {
     font-size: .92rem;
     color: rgba(255,255,255,.78);
+}
+
+.home-hero-note {
+    /* auto margin + fixed padding: leftover column space spreads evenly across blocks */
+    margin-top: auto;
+    padding-top: 1.6rem;
+    max-width: 650px;
+}
+
+.home-hero-note p {
+    padding: 1.1rem 1.3rem;
+    border-radius: 18px;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.16);
+}
+
+.home-hero-visit {
+    margin-top: auto;
+    padding-top: 1.4rem;
+    max-width: 650px;
+}
+
+.home-hero-visit-head {
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.65);
+    margin-bottom: .7rem;
+}
+
+.home-hero-visit-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .9rem;
+}
+
+.home-hero-visit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: .7rem;
+    padding: .9rem .95rem;
+    border-radius: 16px;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.16);
+}
+
+.home-hero-visit-item strong {
+    display: block;
+    font-size: .82rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: .12rem;
+}
+
+.home-hero-visit-item span:not(.home-hero-perk-icon) {
+    font-size: .78rem;
+    line-height: 1.45;
+    color: rgba(255,255,255,.72);
+}
+
+.home-hero-note p {
+    margin: 0;
+    font-size: .98rem;
+    line-height: 1.7;
+    color: rgba(255,255,255,.82);
+    max-width: none;
+}
+
+.home-hero-perks {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .9rem;
+    /* Pin to the bottom so the left column ends level with the right-side cards */
+    margin-top: auto;
+    padding-top: 1.4rem;
+    max-width: 650px;
+}
+
+.home-hero-perk {
+    display: flex;
+    align-items: flex-start;
+    gap: .8rem;
+    padding: .95rem 1rem;
+    border-radius: 16px;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.16);
+}
+
+.home-hero-perk-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: rgba(249,115,22,.22);
+    color: #fb923c;
+}
+
+.home-hero-perk-icon svg {
+    width: 17px;
+    height: 17px;
+}
+
+.home-hero-perk strong {
+    display: block;
+    font-size: .88rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: .15rem;
+}
+
+.home-hero-perk span:not(.home-hero-perk-icon) {
+    font-size: .8rem;
+    line-height: 1.5;
+    color: rgba(255,255,255,.72);
 }
 
 .home-hero-side {
@@ -854,6 +974,8 @@ body {
     }
 
     .home-hero-meta,
+    .home-hero-perks,
+    .home-hero-visit-grid,
     .home-signature-grid,
     .home-mini-grid {
         grid-template-columns: 1fr;
@@ -909,6 +1031,35 @@ body {
     .home-stat,
     .home-polish-content {
         padding: 1rem;
+    }
+
+    .home-hero-note p {
+        padding: .95rem 1.05rem;
+        font-size: .92rem;
+        line-height: 1.62;
+    }
+
+    .home-hero-visit-item,
+    .home-hero-perk {
+        padding: .8rem .9rem;
+        align-items: center;
+    }
+
+    .home-hero-visit-item strong,
+    .home-hero-perk strong {
+        font-size: .84rem;
+        margin-bottom: .05rem;
+    }
+
+    .home-hero-visit-item span:not(.home-hero-perk-icon),
+    .home-hero-perk span:not(.home-hero-perk-icon) {
+        font-size: .78rem;
+        line-height: 1.45;
+    }
+
+    .home-hero-perk-icon {
+        width: 30px;
+        height: 30px;
     }
 
     .home-showcase-copy {
@@ -1028,6 +1179,87 @@ body {
                     <div class="home-stat">
                         <strong>100%</strong>
                         <span>Quality-focused sourcing</span>
+                    </div>
+                </div>
+
+                <div class="home-hero-note">
+                    <p>
+                        From single-room makeovers to full builds, our Davao City showroom carries the
+                        tiles, flooring, and fixtures your project needs &mdash; backed by a team that can
+                        guide you from inspiration to installation. Drop by the store or order online,
+                        and we&rsquo;ll handle the rest.
+                    </p>
+                </div>
+
+                <div class="home-hero-visit">
+                    <div class="home-hero-visit-head">Visit Our Showroom</div>
+                    <div class="home-hero-visit-grid">
+                        <div class="home-hero-visit-item">
+                            <span class="home-hero-perk-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            </span>
+                            <div>
+                                <strong>Location</strong>
+                                <span><?= APP_LOCATION ?></span>
+                            </div>
+                        </div>
+                        <div class="home-hero-visit-item">
+                            <span class="home-hero-perk-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            </span>
+                            <div>
+                                <strong>Store Hours</strong>
+                                <span>Mon&ndash;Sat: 8:00 AM &ndash; 5:00 PM</span>
+                            </div>
+                        </div>
+                        <div class="home-hero-visit-item">
+                            <span class="home-hero-perk-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                            </span>
+                            <div>
+                                <strong>Call Us</strong>
+                                <span>+63 (939) 939 8250</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="home-hero-perks">
+                    <div class="home-hero-perk">
+                        <span class="home-hero-perk-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        </span>
+                        <div>
+                            <strong>Store-Ready Stock</strong>
+                            <span>Browse online, pick up in-store or have it delivered</span>
+                        </div>
+                    </div>
+                    <div class="home-hero-perk">
+                        <span class="home-hero-perk-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                        </span>
+                        <div>
+                            <strong>Local Delivery</strong>
+                            <span>Fast hauling around Davao City and nearby areas</span>
+                        </div>
+                    </div>
+                    <div class="home-hero-perk">
+                        <span class="home-hero-perk-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                        </span>
+                        <div>
+                            <strong>Flexible Payments</strong>
+                            <span>Cash on delivery, GCash, and card payments accepted</span>
+                        </div>
+                    </div>
+                    <div class="home-hero-perk">
+                        <span class="home-hero-perk-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                        </span>
+                        <div>
+                            <strong>Expert Guidance</strong>
+                            <span>Product advice from our showroom team, free of charge</span>
+                        </div>
                     </div>
                 </div>
             </div>
