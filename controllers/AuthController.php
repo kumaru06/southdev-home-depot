@@ -206,6 +206,12 @@ class AuthController {
 
         AuthMiddleware::csrf();
 
+        if (!verify_recaptcha()) {
+            flash('error', 'Please complete the reCAPTCHA verification.');
+            header('Location: ' . APP_URL . '/index.php?url=admin-login');
+            exit;
+        }
+
         $email    = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
 

@@ -23,9 +23,11 @@ class Product {
         if ($categoryId) {
             $sql .= " AND p.category_id = ?";
             $params[] = $categoryId;
+            $sql .= " ORDER BY p.created_at DESC";
+        } else {
+            // "All Products": group by category with Tiles (main product line) first
+            $sql .= " ORDER BY CASE WHEN c.name = 'Tiles' THEN 0 ELSE 1 END, c.name ASC, p.name ASC";
         }
-
-        $sql .= " ORDER BY p.created_at DESC";
 
         if ($limit) {
             $sql .= " LIMIT ? OFFSET ?";

@@ -41,6 +41,16 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
 .auth-panel .fl-wrap .fl-input {
     padding-left: 14px !important;
 }
+.admin-login-recaptcha {
+    display: flex;
+    justify-content: center;
+    margin: 4px 0 14px;
+    overflow: hidden;
+}
+.admin-login-recaptcha .g-recaptcha {
+    transform: scale(0.92);
+    transform-origin: center center;
+}
 </style>
 
 <div class="container">
@@ -86,6 +96,12 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
                                 <button type="button" class="auth-pw-toggle" onclick="(function(b){var i=b.previousElementSibling.previousElementSibling;var isP=i.type==='password';i.type=isP?'text':'password';b.textContent=isP?'Hide':'Show';})(this)" aria-label="Toggle password visibility">Show</button>
                             </div>
                         </div>
+
+                        <?php if (recaptcha_enabled()): ?>
+                        <div class="admin-login-recaptcha">
+                            <?= recaptcha_widget() ?>
+                        </div>
+                        <?php endif; ?>
 
                         <button type="submit" class="btn btn-accent btn-block">
                             Sign In
