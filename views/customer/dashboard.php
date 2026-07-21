@@ -235,8 +235,10 @@ body {
 .home-eyebrow {
     display: inline-flex;
     align-items: center;
+    align-self: flex-start; /* don't stretch to full hero column width */
+    width: fit-content;
     gap: .65rem;
-    padding: .7rem 1rem;
+    padding: .55rem .95rem;
     border-radius: 999px;
     background: rgba(255,255,255,.18);
     border: 1px solid rgba(255,255,255,.22);
