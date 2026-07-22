@@ -60,8 +60,19 @@
     <?php if (!isset($isAdmin) || !$isAdmin): ?>
     <style>
         @media (max-width: 900px) {
+            html,
             body:not(.admin-layout) {
                 overflow-x: hidden;
+                max-width: 100%;
+            }
+
+            .container.cart-page,
+            .cart-page,
+            .cart-layout,
+            .cart-items-wrap,
+            .cart-summary {
+                max-width: 100%;
+                min-width: 0;
             }
 
             .site-header .topbar-inner {

@@ -109,7 +109,43 @@
                 }
             });
         });
+
+        /* Match selected-items panel height to Order Summary on desktop */
+        syncCartPanelHeights();
+        window.addEventListener('resize', syncCartPanelHeights);
+
+        var summary = document.querySelector('.cart-summary');
+        if (summary && typeof ResizeObserver !== 'undefined') {
+            var ro = new ResizeObserver(function () { syncCartPanelHeights(); });
+            ro.observe(summary);
+        }
+
+        document.querySelectorAll('.cart-items-wrap img').forEach(function (img) {
+            if (!img.complete) {
+                img.addEventListener('load', syncCartPanelHeights);
+            }
+        });
     });
+
+    function syncCartPanelHeights() {
+        var itemsWrap = document.querySelector('.cart-items-wrap');
+        var summary = document.querySelector('.cart-summary');
+        if (!itemsWrap || !summary) return;
+
+        if (window.matchMedia('(max-width: 992px)').matches) {
+            itemsWrap.style.height = '';
+            itemsWrap.style.maxHeight = '';
+            return;
+        }
+
+        itemsWrap.style.height = '';
+        itemsWrap.style.maxHeight = '';
+        var summaryHeight = Math.ceil(summary.getBoundingClientRect().height);
+        if (summaryHeight > 0) {
+            itemsWrap.style.height = summaryHeight + 'px';
+            itemsWrap.style.maxHeight = summaryHeight + 'px';
+        }
+    }
 
     /* Expose */
     window.addToCart = addToCart;

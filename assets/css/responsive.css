@@ -122,27 +122,9 @@
     .timeline-step { text-align: left; display: flex; align-items: center; gap: 16px; }
     .timeline-step .step-dot { margin: 0; }
 
-    /* Cart responsive */
+    /* Cart responsive — compact card layout (details in customer.css) */
     .cart-table thead { display: none; }
-    .cart-table tr {
-        display: block;
-        padding: 16px 0;
-        border-bottom: 1px solid var(--border);
-    }
-    .cart-table td {
-        display: flex;
-        justify-content: space-between;
-        padding: 6px 0;
-        border: none;
-    }
-    .cart-table td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        font-size: 12px;
-        color: var(--text-muted);
-        text-transform: uppercase;
-    }
-    .cart-summary { max-width: 100%; margin-left: 0; }
+    .cart-summary { max-width: 100%; margin-left: 0; overflow: hidden; }
 
     /* Data table horizontal scroll */
     .data-table-wrap { overflow-x: auto; }
@@ -220,7 +202,17 @@
 @media (max-width: 430px) {
     .checkout-grid { grid-template-columns: 1fr !important; }
     .checkout-sidebar, .checkout-main { width: 100% !important; }
-    .cart-summary { padding: 16px !important; }
+    .cart-summary {
+        max-width: 100% !important;
+        overflow: hidden !important;
+    }
+    .cart-summary-meta {
+        padding-top: 14px !important;
+    }
+    .cart-summary-actions .btn {
+        white-space: normal;
+        min-height: 48px;
+    }
 }
 
 /* ---------- Print ---------- */

@@ -24,56 +24,58 @@ foreach (($cartItems ?? []) as $cartItemSummary) {
                     </div>
                     <span class="cart-table-pill"><?= $cartQuantityTotal ?> total unit<?= $cartQuantityTotal !== 1 ? 's' : '' ?></span>
                 </div>
-                <table class="cart-table">
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Price</th>
-                            <th>Quantity</th>
-                            <th>Subtotal</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($cartItems as $idx => $item): ?>
-                            <tr class="cart-row" style="animation-delay: <?= $idx * 0.04 ?>s">
-                                <td data-label="Product">
-                                    <div class="cart-product">
-                                        <?php if ($item['image']): ?>
-                                            <img src="<?= APP_URL ?>/assets/uploads/<?= $item['image'] ?>" alt="<?= htmlspecialchars($item['product_name']) ?>" class="cart-thumb">
-                                        <?php else: ?>
-                                            <div class="cart-thumb cart-thumb-placeholder"><span style="font-size:11px;font-weight:700;color:var(--text-muted);">N/A</span></div>
-                                        <?php endif; ?>
-                                        <div class="cart-product-info">
-                                            <span class="cart-product-name"><?= htmlspecialchars($item['product_name']) ?></span>
-                                            <span class="cart-product-unit">₱<?= number_format($item['price'], 2) ?> each</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td data-label="Price"><span class="cart-price">₱<?= number_format($item['price'], 2) ?></span></td>
-                                <td data-label="Quantity">
-                                    <div class="qty-stepper" data-cart-id="<?= $item['id'] ?>">
-                                        <button class="qty-btn qty-minus">−</button>
-                                        <input type="number" value="<?= $item['quantity'] ?>" min="1" class="qty-input">
-                                        <button class="qty-btn qty-plus">+</button>
-                                    </div>
-                                </td>
-                                <td data-label="Subtotal"><strong class="cart-subtotal">₱<?= number_format($item['price'] * $item['quantity'], 2) ?></strong></td>
-                                <td data-label="Remove">
-                                    <button type="button" class="btn btn-danger btn-sm cart-remove-btn" onclick="removeFromCart(<?= $item['id'] ?>)" title="Remove item" aria-label="Remove <?= htmlspecialchars($item['product_name']) ?> from cart">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <path d="M3 6h18"/>
-                                            <path d="M8 6V4h8v2"/>
-                                            <path d="M19 6l-1 14H6L5 6"/>
-                                            <path d="M10 11v6"/>
-                                            <path d="M14 11v6"/>
-                                        </svg>
-                                    </button>
-                                </td>
+                <div class="cart-items-scroll">
+                    <table class="cart-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Subtotal</th>
+                                <th></th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($cartItems as $idx => $item): ?>
+                                <tr class="cart-row" style="animation-delay: <?= $idx * 0.04 ?>s">
+                                    <td data-label="Product">
+                                        <div class="cart-product">
+                                            <?php if ($item['image']): ?>
+                                                <img src="<?= APP_URL ?>/assets/uploads/<?= $item['image'] ?>" alt="<?= htmlspecialchars($item['product_name']) ?>" class="cart-thumb">
+                                            <?php else: ?>
+                                                <div class="cart-thumb cart-thumb-placeholder"><span style="font-size:11px;font-weight:700;color:var(--text-muted);">N/A</span></div>
+                                            <?php endif; ?>
+                                            <div class="cart-product-info">
+                                                <span class="cart-product-name"><?= htmlspecialchars($item['product_name']) ?></span>
+                                                <span class="cart-product-unit">₱<?= number_format($item['price'], 2) ?> each</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td data-label="Price"><span class="cart-price">₱<?= number_format($item['price'], 2) ?></span></td>
+                                    <td data-label="Quantity">
+                                        <div class="qty-stepper" data-cart-id="<?= $item['id'] ?>">
+                                            <button class="qty-btn qty-minus">−</button>
+                                            <input type="number" value="<?= $item['quantity'] ?>" min="1" class="qty-input">
+                                            <button class="qty-btn qty-plus">+</button>
+                                        </div>
+                                    </td>
+                                    <td data-label="Subtotal"><strong class="cart-subtotal">₱<?= number_format($item['price'] * $item['quantity'], 2) ?></strong></td>
+                                    <td data-label="Remove">
+                                        <button type="button" class="btn btn-danger btn-sm cart-remove-btn" onclick="removeFromCart(<?= $item['id'] ?>)" title="Remove item" aria-label="Remove <?= htmlspecialchars($item['product_name']) ?> from cart">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M3 6h18"/>
+                                                <path d="M8 6V4h8v2"/>
+                                                <path d="M19 6l-1 14H6L5 6"/>
+                                                <path d="M10 11v6"/>
+                                                <path d="M14 11v6"/>
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="cart-summary">
