@@ -258,6 +258,9 @@ $reachStats = [
     text-transform: uppercase;
     margin-bottom: 1.25rem;
     border: 1px solid rgba(255,255,255,.14);
+    width: fit-content;
+    max-width: 100%;
+    justify-self: start;
 }
 .ab-hero-eyebrow-dot {
     width: 28px; height: 28px;

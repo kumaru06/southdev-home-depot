@@ -124,10 +124,10 @@ $pageTitle = 'Payment';
             <?php if (defined('PAYMONGO_ENABLED') && PAYMONGO_ENABLED): ?>
                 <!-- GCash: user clicks button → opens popup (user gesture) → polls status here -->
                 <div id="gcash-btn-area" style="text-align:center;">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/GCash_logo.svg/200px-GCash_logo.svg.png" alt="GCash" style="height:48px;margin-bottom:1rem;display:block;margin-left:auto;margin-right:auto;">
+                    <img src="<?= APP_URL ?>/assets/uploads/images/logo/gcashlogo.png" alt="GCash" style="height:48px;margin-bottom:1rem;display:block;margin-left:auto;margin-right:auto;">
                     <p style="font-size:.9rem;color:var(--steel);margin-bottom:1.25rem;">Click the button below to open the GCash payment window.</p>
-                    <button id="gcash-pay-btn" onclick="gcashOpenPopup()" class="btn btn-accent" style="min-width:200px;">Pay with GCash</button>
-                    <div style="margin-top:1rem;">
+                    <div class="btn-group" style="max-width:220px;margin-left:auto;margin-right:auto;">
+                        <button id="gcash-pay-btn" onclick="gcashOpenPopup()" class="btn btn-accent">Pay with GCash</button>
                         <a href="<?= APP_URL ?>/payment/payment-failed.php?order_id=<?= $orderId ?>" class="btn btn-outline">Cancel</a>
                     </div>
                 </div>

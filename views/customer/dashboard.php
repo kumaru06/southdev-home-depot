@@ -67,7 +67,7 @@ $categoryCards = [
     [
         'title' => 'Floor & Wall Tiles',
         'label' => 'Porcelain, ceramic & designer series',
-        'image' => $landingBase . 'crafted-modern-spaces-2.png',
+        'image' => $landingBase . 'laptopmockup.png',
         'link' => 'products',
     ],
     [

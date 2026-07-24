@@ -331,7 +331,7 @@ if ($receiptEmail && $order) {
             </div>
         <?php endif; ?>
 
-        <div class="btn-group">
+        <div class="btn-group" style="max-width:240px;margin-left:auto;margin-right:auto;">
             <a href="<?= APP_URL ?>/index.php?url=orders/<?= $orderId ?>" class="btn btn-accent">View Order</a>
             <a href="<?= APP_URL ?>/index.php?url=products" class="btn btn-outline">Continue Shopping</a>
         </div>
