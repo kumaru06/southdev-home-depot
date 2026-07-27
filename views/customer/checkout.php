@@ -145,9 +145,14 @@ require_once INCLUDES_PATH . '/navbar.php';
                         </div>
                     </div>
                     <div class="co-card-body">
+                        <?php
+                        $enabledPayments = $enabledPayments ?? ['cod', 'gcash', 'card', 'qrph'];
+                        $firstPay = $enabledPayments[0] ?? 'cod';
+                        ?>
                         <div class="co-pay-options">
-                            <label class="co-pay-opt active">
-                                <input type="radio" name="payment_method" value="cod" checked>
+                            <?php if (in_array('cod', $enabledPayments, true)): ?>
+                            <label class="co-pay-opt<?= $firstPay === 'cod' ? ' active' : '' ?>">
+                                <input type="radio" name="payment_method" value="cod"<?= $firstPay === 'cod' ? ' checked' : '' ?>>
                                 <div class="co-pay-inner">
                                     <span class="co-pay-radio"></span>
                                     <span class="co-pay-icon"><img src="<?= APP_URL ?>/assets/uploads/images/logo/COD2.png" alt="COD" class="co-pay-logo"></span>
@@ -157,8 +162,10 @@ require_once INCLUDES_PATH . '/navbar.php';
                                     </span>
                                 </div>
                             </label>
-                            <label class="co-pay-opt">
-                                <input type="radio" name="payment_method" value="gcash">
+                            <?php endif; ?>
+                            <?php if (in_array('gcash', $enabledPayments, true)): ?>
+                            <label class="co-pay-opt<?= $firstPay === 'gcash' ? ' active' : '' ?>">
+                                <input type="radio" name="payment_method" value="gcash"<?= $firstPay === 'gcash' ? ' checked' : '' ?>>
                                 <div class="co-pay-inner">
                                     <span class="co-pay-radio"></span>
                                     <span class="co-pay-icon"><img src="<?= APP_URL ?>/assets/uploads/images/logo/gcashlogo.png" alt="GCash" class="co-pay-logo"></span>
@@ -168,8 +175,10 @@ require_once INCLUDES_PATH . '/navbar.php';
                                     </span>
                                 </div>
                             </label>
-                            <label class="co-pay-opt">
-                                <input type="radio" name="payment_method" value="card">
+                            <?php endif; ?>
+                            <?php if (in_array('card', $enabledPayments, true)): ?>
+                            <label class="co-pay-opt<?= $firstPay === 'card' ? ' active' : '' ?>">
+                                <input type="radio" name="payment_method" value="card"<?= $firstPay === 'card' ? ' checked' : '' ?>>
                                 <div class="co-pay-inner">
                                     <span class="co-pay-radio"></span>
                                     <span class="co-pay-icon"><img src="<?= APP_URL ?>/assets/uploads/images/logo/creditcard.png" alt="Credit Card" class="co-pay-logo"></span>
@@ -179,8 +188,10 @@ require_once INCLUDES_PATH . '/navbar.php';
                                     </span>
                                 </div>
                             </label>
-                            <label class="co-pay-opt">
-                                <input type="radio" name="payment_method" value="qrph">
+                            <?php endif; ?>
+                            <?php if (in_array('qrph', $enabledPayments, true)): ?>
+                            <label class="co-pay-opt<?= $firstPay === 'qrph' ? ' active' : '' ?>">
+                                <input type="radio" name="payment_method" value="qrph"<?= $firstPay === 'qrph' ? ' checked' : '' ?>>
                                 <div class="co-pay-inner">
                                     <span class="co-pay-radio"></span>
                                     <span class="co-pay-icon" style="background:#fff;border:1.5px solid #e5e7eb;border-radius:8px;display:flex;align-items:center;justify-content:center;width:40px;height:40px;">
@@ -192,6 +203,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                                     </span>
                                 </div>
                             </label>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>

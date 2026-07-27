@@ -757,11 +757,15 @@ switch ($urlParts[0]) {
                     break;
 
                 case 'settings':
-                    AuthMiddleware::superAdmin();
-                    $pageTitle = 'System Settings';
-                    $isAdmin   = true;
-                    $extraCss  = ['admin.css'];
-                    require_once VIEWS_PATH . '/superadmin/system-settings.php';
+                    require_once CONTROLLERS_PATH . '/SettingsController.php';
+                    $settingsController = new SettingsController($pdo);
+                    if (isset($urlParts[2]) && $urlParts[2] === 'update') {
+                        $settingsController->updateGeneral();
+                    } elseif (isset($urlParts[2]) && $urlParts[2] === 'payment') {
+                        $settingsController->updatePayment();
+                    } else {
+                        $settingsController->index();
+                    }
                     break;
 
                 default:

@@ -35,12 +35,13 @@ class ProductController {
     public function index() {
         $categoryId = $_GET['category'] ?? null;
         $page       = max(1, intval($_GET['page'] ?? 1));
-        $offset     = ($page - 1) * ITEMS_PER_PAGE;
+        $perPage    = $this->itemsPerPage();
+        $offset     = ($page - 1) * $perPage;
 
-        $products      = $this->productModel->getAll($categoryId, ITEMS_PER_PAGE, $offset);
+        $products      = $this->productModel->getAll($categoryId, $perPage, $offset);
         $categories    = $this->categoryModel->getAll();
         $totalProducts = $this->productModel->count($categoryId);
-        $totalPages    = ceil($totalProducts / ITEMS_PER_PAGE);
+        $totalPages    = ceil($totalProducts / $perPage);
 
         // Load average ratings for the listed products
         $productRatings = [];
@@ -61,12 +62,13 @@ class ProductController {
     public function alt() {
         $categoryId = $_GET['category'] ?? null;
         $page       = max(1, intval($_GET['page'] ?? 1));
-        $offset     = ($page - 1) * ITEMS_PER_PAGE;
+        $perPage    = $this->itemsPerPage();
+        $offset     = ($page - 1) * $perPage;
 
-        $products      = $this->productModel->getAll($categoryId, ITEMS_PER_PAGE, $offset);
+        $products      = $this->productModel->getAll($categoryId, $perPage, $offset);
         $categories    = $this->categoryModel->getAll();
         $totalProducts = $this->productModel->count($categoryId);
-        $totalPages    = ceil($totalProducts / ITEMS_PER_PAGE);
+        $totalPages    = ceil($totalProducts / $perPage);
 
         // Load average ratings for the listed products
         $productRatings = [];
@@ -334,5 +336,10 @@ class ProductController {
         $extraCss   = ['customer.css'];
         // Use the alternate products layout (grid-focused) for search results
         require_once VIEWS_PATH . '/customer/products_alt.php';
+    }
+
+    private function itemsPerPage(): int {
+        require_once MODELS_PATH . '/Setting.php';
+        return (new Setting($this->pdo))->itemsPerPage();
     }
 }

@@ -122,6 +122,13 @@ class CartController {
         $userModel = new User($this->pdo);
         $savedUser = $userModel->findById($_SESSION['user_id']) ?: null;
 
+        require_once MODELS_PATH . '/Setting.php';
+        $settingModel = new Setting($this->pdo);
+        $enabledPayments = $settingModel->getEnabledPayments();
+        if (empty($enabledPayments)) {
+            $enabledPayments = ['cod'];
+        }
+
         $pageTitle = 'Checkout';
         $extraCss  = ['customer.css'];
         require_once VIEWS_PATH . '/customer/checkout.php';

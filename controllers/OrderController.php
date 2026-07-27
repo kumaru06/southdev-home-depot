@@ -153,7 +153,17 @@ class OrderController {
             $this->pdo->beginTransaction();
 
             $totalAmount = $this->cartModel->getCartTotal($_SESSION['user_id']);
-            $paymentMethod = trim($_POST['payment_method'] ?? 'cod');
+            $paymentMethod = strtolower(trim($_POST['payment_method'] ?? 'cod'));
+
+            require_once MODELS_PATH . '/Setting.php';
+            $settingModel = new Setting($this->pdo);
+            $allowedMethods = $settingModel->getEnabledPayments();
+            if (empty($allowedMethods)) {
+                $allowedMethods = ['cod'];
+            }
+            if (!in_array($paymentMethod, $allowedMethods, true)) {
+                throw new Exception('Selected payment method is not available. Please choose another option.');
+            }
 
             $orderId = $this->orderModel->create([
                 'user_id'          => $_SESSION['user_id'],

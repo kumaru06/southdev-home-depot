@@ -296,6 +296,12 @@ class UserController {
                 exit;
             }
 
+            if ($currentPassword === $newPassword) {
+                flash('error', 'New password must be different from your current password.');
+                header('Location: ' . APP_URL . '/index.php?url=' . $returnUrl);
+                exit;
+            }
+
             $user = $this->userModel->findById($_SESSION['user_id']);
             $storedHash = $user['password'] ?? '';
 
@@ -305,12 +311,22 @@ class UserController {
                 exit;
             }
 
+            if (password_verify($newPassword, $storedHash)) {
+                flash('error', 'New password must be different from your current password.');
+                header('Location: ' . APP_URL . '/index.php?url=' . $returnUrl);
+                exit;
+            }
+
             $hash = password_hash($newPassword, PASSWORD_DEFAULT);
             $this->userModel->updatePassword($_SESSION['user_id'], $hash);
             $this->logModel->create(LOG_USER_UPDATE, 'Password changed for user #' . (int)$_SESSION['user_id']);
 
             flash('success', 'Password updated successfully.');
-            header('Location: ' . APP_URL . '/index.php?url=' . $returnUrl);
+            $redirect = APP_URL . '/index.php?url=' . $returnUrl;
+            if (stripos($returnUrl, 'settings') !== false) {
+                $redirect .= '&pw=1';
+            }
+            header('Location: ' . $redirect);
             exit;
         }
 
