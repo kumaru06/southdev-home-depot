@@ -12,6 +12,8 @@ A PHP-based e-commerce platform for home improvement products.
 - Super admin system management
 - Payment gateway integration
 
+For the full feature list and tech stack, see **[FEATURES.md](FEATURES.md)**.
+
 ## Setup
 1. Import `database/southdev.sql` into MySQL
 2. Configure `config/database.php` with your credentials
