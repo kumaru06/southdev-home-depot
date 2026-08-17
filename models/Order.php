@@ -88,12 +88,13 @@ class Order {
         return $this->pdo->lastInsertId();
     }
 
-    public function addItem($orderId, $productId, $quantity, $price) {
+    public function addItem($orderId, $productId, $quantity, $price, $sizeLabel = null) {
         $subtotal = $quantity * $price;
         $stmt = $this->pdo->prepare(
-            "INSERT INTO order_items (order_id, product_id, quantity, price, subtotal) VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO order_items (order_id, product_id, size_label, quantity, price, subtotal)
+             VALUES (?, ?, ?, ?, ?, ?)"
         );
-        return $stmt->execute([$orderId, $productId, $quantity, $price, $subtotal]);
+        return $stmt->execute([$orderId, $productId, $sizeLabel, $quantity, $price, $subtotal]);
     }
 
     public function getItems($orderId) {

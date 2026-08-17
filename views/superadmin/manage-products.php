@@ -67,8 +67,58 @@ require_once INCLUDES_PATH . '/sidebar.php';
                     <label class="form-label">Description</label>
                     <textarea name="description" class="form-control" rows="3" placeholder="Product description..."></textarea>
                 </div>
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Size Label</label>
+                            <input type="text" name="size_label" class="form-control" placeholder="e.g. 60x60 cm">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Size Group</label>
+                            <input type="text" name="size_group" class="form-control" placeholder="e.g. porcelain-floor-tile">
+                            <small style="color:var(--text-muted);font-size:.75rem;">Same group = shown together under Choose Your Size</small>
+                        </div>
+                    </div>
+                </div>
                 <div class="form-group">
-                    <label class="form-label">Product Image</label>
+                    <label class="form-label">Specifications</label>
+                    <div id="addSpecRows" class="spec-rows">
+                        <div class="spec-row form-row" style="gap:.5rem;margin-bottom:.5rem;">
+                            <input type="text" name="spec_keys[]" class="form-control" placeholder="Label (e.g. Finish)">
+                            <input type="text" name="spec_values[]" class="form-control" placeholder="Value (e.g. Matte)">
+                            <button type="button" class="btn btn-outline btn-sm spec-remove" title="Remove">&times;</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" id="addSpecBtn" style="margin-top:.35rem;">+ Add specification</button>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Choose Your Size options</label>
+                    <div id="addSizeRows" class="size-opt-rows">
+                        <div class="size-opt-row">
+                            <div class="size-opt-fields">
+                                <div class="size-opt-field">
+                                    <label class="size-opt-label">Size</label>
+                                    <input type="text" name="size_opt_labels[]" class="form-control" placeholder="e.g. 60 x 60 cm">
+                                </div>
+                                <div class="size-opt-field">
+                                    <label class="size-opt-label">Price (₱)</label>
+                                    <input type="number" name="size_opt_prices[]" class="form-control" step="0.01" min="0" placeholder="0.00">
+                                </div>
+                                <div class="size-opt-field">
+                                    <label class="size-opt-label">Stock</label>
+                                    <input type="number" name="size_opt_stocks[]" class="form-control" min="0" placeholder="0">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline btn-sm size-opt-remove" title="Remove size">&times;</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" id="addSizeOptBtn" style="margin-top:.35rem;">+ Add size</button>
+                    <small style="display:block;color:var(--text-muted);font-size:.75rem;margin-top:.35rem;">Add multiple sizes with their own price and stock. Shown on the product page.</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cover Image</label>
                     <div style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap;">
                         <div id="add_image_preview_wrap" style="display:none; width:72px; height:72px; border:1px solid var(--border); border-radius:6px; overflow:hidden; background:var(--neutral);">
                             <img id="add_image_preview" src="" alt="Preview" style="width:100%;height:100%;object-fit:cover;">
@@ -79,6 +129,11 @@ require_once INCLUDES_PATH . '/sidebar.php';
                         <input type="file" id="add_product_image" name="image" accept="image/jpeg,image/png,image/webp,image/gif" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;">
                         <span id="add_image_filename" style="font-size:.8rem; color:var(--text-muted);">No file chosen</span>
                     </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Gallery Images</label>
+                    <input type="file" name="gallery_images[]" class="form-control" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+                    <small style="color:var(--text-muted);font-size:.75rem;">Optional. Upload extra angles / lifestyle shots (max 5 MB each).</small>
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-accent">
@@ -174,6 +229,19 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                                data-desc="<?= htmlspecialchars($product['description'] ?? '', ENT_QUOTES) ?>"
                                                data-category-id="<?= $product['category_id'] ?? '' ?>"
                                                data-stock="<?= $product['stock'] ?? 0 ?>"
+                                               data-size-label="<?= htmlspecialchars($product['size_label'] ?? '', ENT_QUOTES) ?>"
+                                               data-size-group="<?= htmlspecialchars($product['size_group'] ?? '', ENT_QUOTES) ?>"
+                                               data-specs="<?= htmlspecialchars(json_encode(Product::decodeSpecifications($product['specifications'] ?? null), JSON_UNESCAPED_UNICODE), ENT_QUOTES) ?>"
+                                               data-gallery="<?= htmlspecialchars(json_encode(array_map(function ($img) {
+                                                   return ['id' => (int)$img['id'], 'filename' => $img['filename']];
+                                               }, $galleryByProduct[$product['id']] ?? [])), ENT_QUOTES) ?>"
+                                               data-sizes="<?= htmlspecialchars(json_encode(array_map(function ($s) {
+                                                   return [
+                                                       'size_label' => $s['size_label'],
+                                                       'price' => $s['price'],
+                                                       'stock' => $s['stock'],
+                                                   ];
+                                               }, $sizesByProduct[$product['id']] ?? [])), ENT_QUOTES) ?>"
                                                data-image="<?= APP_URL ?>/assets/uploads/<?= $product['image'] ?: 'placeholder.svg' ?>">
                                                 <i data-lucide="edit-2" style="width:15px;height:15px;"></i> Edit
                                             </a>
@@ -209,6 +277,44 @@ require_once INCLUDES_PATH . '/sidebar.php';
 
 <!-- Product Edit Modal -->
 <style>
+/* Size option rows with clear labels */
+.size-opt-rows { display: flex; flex-direction: column; gap: 12px; }
+.size-opt-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 12px;
+    background: #f8fafc;
+}
+.size-opt-fields {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 0.8fr;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+.size-opt-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.size-opt-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--text-muted, #64748b);
+    margin: 0;
+}
+.size-opt-row .size-opt-remove {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    margin-bottom: 1px;
+}
+@media (max-width: 640px) {
+    .size-opt-fields { grid-template-columns: 1fr; }
+    .size-opt-row { align-items: stretch; }
+}
+
 /* ---------- Premium Edit Product modal ---------- */
 #productEditModal {
     background: rgba(15, 23, 42, .62);
@@ -455,12 +561,39 @@ require_once INCLUDES_PATH . '/sidebar.php';
                     <textarea name="description" id="pe_desc" class="form-control" rows="3"></textarea>
                 </div>
 
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Size Label</label>
+                            <input type="text" name="size_label" id="pe_size_label" class="form-control" placeholder="e.g. 60x60 cm">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Size Group</label>
+                            <input type="text" name="size_group" id="pe_size_group" class="form-control" placeholder="e.g. porcelain-floor-tile">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Specifications</label>
+                    <div id="peSpecRows" class="spec-rows"></div>
+                    <button type="button" class="btn btn-outline btn-sm" id="peAddSpecBtn" style="margin-top:.35rem;">+ Add specification</button>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Choose Your Size options</label>
+                    <div id="peSizeRows" class="size-opt-rows"></div>
+                    <button type="button" class="btn btn-outline btn-sm" id="peAddSizeBtn" style="margin-top:.35rem;">+ Add size</button>
+                </div>
+
                 <div class="pe-media-card">
                     <div class="pe-thumb">
                         <img id="pe_image_preview" src="<?= APP_URL ?>/assets/uploads/placeholder.svg" alt="">
                     </div>
                     <div style="flex:1; min-width:150px;">
-                        <label class="form-label">Product Image</label>
+                        <label class="form-label">Cover Image</label>
                         <label for="pe_image_input" class="pe-upload-btn">
                             <i data-lucide="upload" style="width:14px;height:14px;"></i> Replace Image
                         </label>
@@ -471,6 +604,13 @@ require_once INCLUDES_PATH . '/sidebar.php';
                         <label class="form-label">Quantity</label>
                         <input type="number" name="quantity" id="pe_quantity" class="form-control" min="0">
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Gallery</label>
+                    <div id="peGalleryExisting" class="pe-gallery-existing" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.5rem;"></div>
+                    <input type="file" name="gallery_images[]" id="pe_gallery_input" class="form-control" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+                    <small class="pe-upload-hint">Add more images. Tick Remove on existing thumbs to delete on save.</small>
                 </div>
 
                 <div class="form-group">
@@ -582,6 +722,131 @@ document.head.appendChild(cropperScript);
         });
     }
 
+    function makeSizeRow(label, price, stock) {
+        var row = document.createElement('div');
+        row.className = 'size-opt-row';
+        row.innerHTML =
+            '<div class="size-opt-fields">' +
+                '<div class="size-opt-field">' +
+                    '<label class="size-opt-label">Size</label>' +
+                    '<input type="text" name="size_opt_labels[]" class="form-control" placeholder="e.g. 60 x 60 cm">' +
+                '</div>' +
+                '<div class="size-opt-field">' +
+                    '<label class="size-opt-label">Price (₱)</label>' +
+                    '<input type="number" name="size_opt_prices[]" class="form-control" step="0.01" min="0" placeholder="0.00">' +
+                '</div>' +
+                '<div class="size-opt-field">' +
+                    '<label class="size-opt-label">Stock</label>' +
+                    '<input type="number" name="size_opt_stocks[]" class="form-control" min="0" placeholder="0">' +
+                '</div>' +
+            '</div>' +
+            '<button type="button" class="btn btn-outline btn-sm size-opt-remove" title="Remove size">&times;</button>';
+        var inputs = row.querySelectorAll('input');
+        inputs[0].value = label || '';
+        inputs[1].value = price != null && price !== '' ? price : '';
+        inputs[2].value = stock != null && stock !== '' ? stock : '';
+        return row;
+    }
+
+    function bindSizeRemove(container) {
+        container.addEventListener('click', function (e) {
+            var btn = e.target.closest('.size-opt-remove');
+            if (!btn) return;
+            var rows = container.querySelectorAll('.size-opt-row');
+            if (rows.length <= 1) {
+                rows[0].querySelectorAll('input').forEach(function (i) { i.value = ''; });
+                return;
+            }
+            btn.closest('.size-opt-row').remove();
+        });
+    }
+
+    var addSizeRows = document.getElementById('addSizeRows');
+    var addSizeOptBtn = document.getElementById('addSizeOptBtn');
+    if (addSizeRows) bindSizeRemove(addSizeRows);
+    if (addSizeOptBtn && addSizeRows) {
+        addSizeOptBtn.addEventListener('click', function () {
+            addSizeRows.appendChild(makeSizeRow('', '', ''));
+        });
+    }
+
+    var peSizeRows = document.getElementById('peSizeRows');
+    var peAddSizeBtn = document.getElementById('peAddSizeBtn');
+    if (peSizeRows) bindSizeRemove(peSizeRows);
+    if (peAddSizeBtn && peSizeRows) {
+        peAddSizeBtn.addEventListener('click', function () {
+            peSizeRows.appendChild(makeSizeRow('', '', ''));
+        });
+    }
+
+    // Spec row helpers
+    function makeSpecRow(key, val) {
+        var row = document.createElement('div');
+        row.className = 'spec-row form-row';
+        row.style.cssText = 'gap:.5rem;margin-bottom:.5rem;';
+        row.innerHTML =
+            '<input type="text" name="spec_keys[]" class="form-control" placeholder="Label" value="">' +
+            '<input type="text" name="spec_values[]" class="form-control" placeholder="Value" value="">' +
+            '<button type="button" class="btn btn-outline btn-sm spec-remove" title="Remove">&times;</button>';
+        row.querySelectorAll('input')[0].value = key || '';
+        row.querySelectorAll('input')[1].value = val || '';
+        return row;
+    }
+
+    function bindSpecRemove(container) {
+        container.addEventListener('click', function (e) {
+            var btn = e.target.closest('.spec-remove');
+            if (!btn) return;
+            var rows = container.querySelectorAll('.spec-row');
+            if (rows.length <= 1) {
+                rows[0].querySelectorAll('input').forEach(function (i) { i.value = ''; });
+                return;
+            }
+            btn.closest('.spec-row').remove();
+        });
+    }
+
+    var addSpecRows = document.getElementById('addSpecRows');
+    var addSpecBtn = document.getElementById('addSpecBtn');
+    if (addSpecRows) bindSpecRemove(addSpecRows);
+    if (addSpecBtn && addSpecRows) {
+        addSpecBtn.addEventListener('click', function () {
+            addSpecRows.appendChild(makeSpecRow('', ''));
+        });
+    }
+
+    var peSpecRows = document.getElementById('peSpecRows');
+    var peAddSpecBtn = document.getElementById('peAddSpecBtn');
+    if (peSpecRows) bindSpecRemove(peSpecRows);
+    if (peAddSpecBtn && peSpecRows) {
+        peAddSpecBtn.addEventListener('click', function () {
+            peSpecRows.appendChild(makeSpecRow('', ''));
+        });
+    }
+
+    function renderPeGallery(galleryJson) {
+        var wrap = document.getElementById('peGalleryExisting');
+        if (!wrap) return;
+        wrap.innerHTML = '';
+        var items = [];
+        try { items = JSON.parse(galleryJson || '[]'); } catch (e) { items = []; }
+        if (!items.length) {
+            wrap.innerHTML = '<span style="font-size:.8rem;color:var(--text-muted);">No gallery images yet.</span>';
+            return;
+        }
+        items.forEach(function (img) {
+            var card = document.createElement('label');
+            card.style.cssText = 'display:block;width:72px;text-align:center;font-size:.7rem;cursor:pointer;';
+            card.innerHTML =
+                '<div style="width:72px;height:72px;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--neutral);">' +
+                '<img src="' + appUrl + '/assets/uploads/' + img.filename + '" alt="" style="width:100%;height:100%;object-fit:cover;">' +
+                '</div>' +
+                '<span style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;">' +
+                '<input type="checkbox" name="delete_gallery_ids[]" value="' + img.id + '"> Remove</span>';
+            wrap.appendChild(card);
+        });
+    }
+
     // ── EDIT PRODUCT MODAL ─────────────────────────────────────────────────
     document.querySelectorAll('.product-edit-trigger').forEach(function(btn){
         btn.addEventListener('click', function(e){
@@ -597,8 +862,36 @@ document.head.appendChild(cropperScript);
             document.getElementById('pe_desc').value        = this.dataset.desc    || '';
             document.getElementById('pe_category').value    = this.dataset.categoryId || '';
             document.getElementById('pe_quantity').value    = this.dataset.stock   || 0;
+            document.getElementById('pe_size_label').value  = this.dataset.sizeLabel || '';
+            document.getElementById('pe_size_group').value  = this.dataset.sizeGroup || '';
             document.getElementById('pe_existing_image').value = image.replace(appUrl+'/assets/uploads/','');
             document.getElementById('pe_image_preview').src = image;
+
+            if (peSpecRows) {
+                peSpecRows.innerHTML = '';
+                var specs = {};
+                try { specs = JSON.parse(this.dataset.specs || '{}'); } catch (err) { specs = {}; }
+                var keys = Object.keys(specs || {});
+                if (!keys.length) {
+                    peSpecRows.appendChild(makeSpecRow('', ''));
+                } else {
+                    keys.forEach(function (k) { peSpecRows.appendChild(makeSpecRow(k, specs[k])); });
+                }
+            }
+            renderPeGallery(this.dataset.gallery || '[]');
+
+            if (peSizeRows) {
+                peSizeRows.innerHTML = '';
+                var sizes = [];
+                try { sizes = JSON.parse(this.dataset.sizes || '[]'); } catch (err) { sizes = []; }
+                if (!sizes.length) {
+                    peSizeRows.appendChild(makeSizeRow('', '', ''));
+                } else {
+                    sizes.forEach(function (s) {
+                        peSizeRows.appendChild(makeSizeRow(s.size_label || '', s.price, s.stock));
+                    });
+                }
+            }
 
             var form = document.getElementById('productEditForm');
             form.action = appUrl+'/index.php?url=admin/products/'+id+'/update';

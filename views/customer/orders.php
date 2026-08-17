@@ -254,8 +254,6 @@ $visibleOrderCount = is_array($orders ?? null) ? count($orders) : 0;
     inset: 0;
     z-index: 10000;
     background: rgba(0,0,0,.45);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
     align-items: center;
     justify-content: center;
     animation: cmFadeIn .2s ease;

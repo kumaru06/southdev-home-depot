@@ -4,8 +4,11 @@ These accounts are created in your local MySQL database (`southdev`) for testing
 
 > ⚠️ Security note: change these passwords before any public/production deployment.
 
-## Login URL
-- http://localhost/southdev-home-depot/index.php?url=login
+## Login URLs
+- **Customer**: http://localhost/southdev-home-depot/index.php?url=login
+- **Admin / Staff**: http://localhost/southdev-home-depot/index.php?url=admin-login
+
+> Staff and Super Admin **cannot** use the customer login modal — use the admin login page.
 
 ## Accounts
 ### Customer
@@ -17,16 +20,20 @@ These accounts are created in your local MySQL database (`southdev`) for testing
 - **Email**: `staff@southdev.com`
 - **Password**: `Staff@2026!`
 - **Role**: staff 
+- **Login page**: admin-login
 
 ### Super Admin
 - **Email**: `admin@southdev.com`
+- **Username**: `admin` (either email or username works)
 - **Password**: `SuperAdmin@2026!`
 - **Role**: super_admin
+- **Login page**: admin-login
 
 ### Inventory In-charge
 - **Email**: `inventory@demo.local`
 - **Password**: `Demo@1234`
 - **Role**: inventory in-charge
+- **Login page**: admin-login
 
 
 ## Reset a password (bcrypt)

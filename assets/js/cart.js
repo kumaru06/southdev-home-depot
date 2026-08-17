@@ -6,12 +6,16 @@
 (function () {
     'use strict';
 
-    function addToCart(productId, quantity) {
+    function addToCart(productId, quantity, sizeOptionId) {
         quantity = quantity || 1;
+        var body = 'product_id=' + productId + '&quantity=' + quantity;
+        if (sizeOptionId) {
+            body += '&size_option_id=' + sizeOptionId;
+        }
         fetch(APP_URL + '/index.php?url=cart/add', {
             method: 'POST',
             headers: csrfHeaders(),
-            body: csrfBody('product_id=' + productId + '&quantity=' + quantity)
+            body: csrfBody(body)
         })
         .then(function (r) { return r.json(); })
         .then(function (data) {

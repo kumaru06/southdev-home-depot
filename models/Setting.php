@@ -8,6 +8,7 @@ class Setting {
     private $pdo;
     private static $cache = [];
     private static $booted = false;
+    private static $tableReady = false;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
@@ -15,8 +16,20 @@ class Setting {
 
     /**
      * Ensure table exists (safe for local + production without manual migrate).
+     * Only runs DDL when missing — CREATE/ALTER causes MySQL implicit COMMIT
+     * and would break any open PDO transaction.
      */
     public function ensureTable(): void {
+        if (self::$tableReady) {
+            return;
+        }
+        try {
+            $this->pdo->query('SELECT 1 FROM system_settings LIMIT 1');
+            self::$tableReady = true;
+            return;
+        } catch (PDOException $e) {
+            // Table missing — create it
+        }
         $this->pdo->exec(
             "CREATE TABLE IF NOT EXISTS `system_settings` (
                 `setting_key` varchar(100) NOT NULL,
@@ -25,6 +38,7 @@ class Setting {
                 PRIMARY KEY (`setting_key`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         );
+        self::$tableReady = true;
     }
 
     public function boot(): void {

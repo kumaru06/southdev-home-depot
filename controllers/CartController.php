@@ -40,6 +40,7 @@ class CartController {
 
         $productId = intval($_POST['product_id'] ?? 0);
         $quantity  = max(1, intval($_POST['quantity'] ?? 1));
+        $sizeOptionId = intval($_POST['size_option_id'] ?? 0) ?: null;
 
         $product = $this->productModel->findById($productId);
         if (!$product) {
@@ -47,15 +48,34 @@ class CartController {
             return;
         }
 
-        $existingCartItem = $this->cartModel->getItemByUserAndProduct($_SESSION['user_id'], $productId);
-        $requestedTotalQty = $quantity + (int) ($existingCartItem['quantity'] ?? 0);
-
-        if ($product['stock'] !== null && (int) $product['stock'] < $requestedTotalQty) {
-            echo json_encode(['success' => false, 'message' => 'Insufficient stock']);
-            return;
+        $sizeOptions = $this->productModel->getSizeOptions($productId);
+        if (!empty($sizeOptions)) {
+            if (!$sizeOptionId) {
+                echo json_encode(['success' => false, 'message' => 'Please select a size']);
+                return;
+            }
+            $sizeOpt = $this->productModel->findSizeOption($sizeOptionId, $productId);
+            if (!$sizeOpt) {
+                echo json_encode(['success' => false, 'message' => 'Invalid size selected']);
+                return;
+            }
+            $existingCartItem = $this->cartModel->getItemByUserAndProduct($_SESSION['user_id'], $productId, $sizeOptionId);
+            $requestedTotalQty = $quantity + (int) ($existingCartItem['quantity'] ?? 0);
+            if ((int) $sizeOpt['stock'] < $requestedTotalQty) {
+                echo json_encode(['success' => false, 'message' => 'Insufficient stock for selected size']);
+                return;
+            }
+        } else {
+            $sizeOptionId = null;
+            $existingCartItem = $this->cartModel->getItemByUserAndProduct($_SESSION['user_id'], $productId, null);
+            $requestedTotalQty = $quantity + (int) ($existingCartItem['quantity'] ?? 0);
+            if ($product['stock'] !== null && (int) $product['stock'] < $requestedTotalQty) {
+                echo json_encode(['success' => false, 'message' => 'Insufficient stock']);
+                return;
+            }
         }
 
-        $this->cartModel->addItem($_SESSION['user_id'], $productId, $quantity);
+        $this->cartModel->addItem($_SESSION['user_id'], $productId, $quantity, $sizeOptionId);
         $count = $this->cartModel->getCartCount($_SESSION['user_id']);
 
         echo json_encode(['success' => true, 'cart_count' => $count]);

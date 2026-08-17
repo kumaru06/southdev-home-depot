@@ -8,6 +8,7 @@ require_once __DIR__ . '/../models/Order.php';
 require_once __DIR__ . '/../models/Cart.php';
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Inventory.php';
+require_once __DIR__ . '/../models/Product.php';
 require_once __DIR__ . '/../models/Log.php';
 require_once __DIR__ . '/../models/CancelRequest.php';
 require_once __DIR__ . '/../models/Payment.php';
@@ -19,6 +20,7 @@ class OrderController {
     private $orderModel;
     private $cartModel;
     private $inventoryModel;
+    private $productModel;
     private $logModel;
     private $cancelModel;
     private $pdo;
@@ -28,6 +30,7 @@ class OrderController {
         $this->orderModel     = new Order($pdo);
         $this->cartModel      = new Cart($pdo);
         $this->inventoryModel = new Inventory($pdo);
+        $this->productModel   = new Product($pdo);
         $this->logModel       = new Log($pdo);
         $this->cancelModel    = new CancelRequest($pdo);
     }
@@ -149,21 +152,25 @@ class OrderController {
             exit;
         }
 
+        // Validate payment settings BEFORE beginTransaction — Setting::boot() may
+        // run CREATE TABLE, and MySQL DDL implicitly commits any open transaction.
+        $paymentMethod = strtolower(trim($_POST['payment_method'] ?? 'cod'));
+        require_once MODELS_PATH . '/Setting.php';
+        $settingModel = new Setting($this->pdo);
+        $allowedMethods = $settingModel->getEnabledPayments();
+        if (empty($allowedMethods)) {
+            $allowedMethods = ['cod'];
+        }
+        if (!in_array($paymentMethod, $allowedMethods, true)) {
+            flash('error', 'Selected payment method is not available. Please choose another option.');
+            header('Location: ' . APP_URL . '/index.php?url=checkout');
+            exit;
+        }
+
         try {
             $this->pdo->beginTransaction();
 
             $totalAmount = $this->cartModel->getCartTotal($_SESSION['user_id']);
-            $paymentMethod = strtolower(trim($_POST['payment_method'] ?? 'cod'));
-
-            require_once MODELS_PATH . '/Setting.php';
-            $settingModel = new Setting($this->pdo);
-            $allowedMethods = $settingModel->getEnabledPayments();
-            if (empty($allowedMethods)) {
-                $allowedMethods = ['cod'];
-            }
-            if (!in_array($paymentMethod, $allowedMethods, true)) {
-                throw new Exception('Selected payment method is not available. Please choose another option.');
-            }
 
             $orderId = $this->orderModel->create([
                 'user_id'          => $_SESSION['user_id'],
@@ -176,13 +183,29 @@ class OrderController {
             ]);
 
             foreach ($cartItems as $item) {
-                $reserved = $this->inventoryModel->reserveQuantity($item['product_id'], (int) $item['quantity']);
-                if (!$reserved) {
-                    $inventoryRow = $this->inventoryModel->getByProductId($item['product_id']);
-                    throw new Exception('Insufficient stock for ' . ($inventoryRow['product_name'] ?? $item['product_name'] ?? 'one or more items') . '.');
+                $qty = (int) $item['quantity'];
+                $sizeOptionId = !empty($item['size_option_id']) ? (int) $item['size_option_id'] : null;
+
+                if ($sizeOptionId) {
+                    $reserved = $this->productModel->reserveSizeStock($sizeOptionId, $qty);
+                    if (!$reserved) {
+                        throw new Exception('Insufficient stock for ' . ($item['product_name'] ?? 'one or more items') . ' (' . ($item['size_label'] ?? 'selected size') . ').');
+                    }
+                } else {
+                    $reserved = $this->inventoryModel->reserveQuantity($item['product_id'], $qty);
+                    if (!$reserved) {
+                        $inventoryRow = $this->inventoryModel->getByProductId($item['product_id']);
+                        throw new Exception('Insufficient stock for ' . ($inventoryRow['product_name'] ?? $item['product_name'] ?? 'one or more items') . '.');
+                    }
                 }
 
-                $this->orderModel->addItem($orderId, $item['product_id'], $item['quantity'], $item['price']);
+                $this->orderModel->addItem(
+                    $orderId,
+                    $item['product_id'],
+                    $qty,
+                    $item['price'],
+                    $item['size_label'] ?? null
+                );
             }
 
             // Create payment record so payment method is tracked
@@ -195,7 +218,9 @@ class OrderController {
             ]);
 
             $this->cartModel->clearCart($_SESSION['user_id']);
-            $this->pdo->commit();
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->commit();
+            }
 
             $this->logModel->create(LOG_ORDER_CREATE, "Order #{$orderId} placed via {$paymentMethod}, total: ₱" . number_format($totalAmount, 2));
 
@@ -224,7 +249,10 @@ class OrderController {
                 header('Location: ' . APP_URL . '/index.php?url=orders/' . $orderId);
             }
         } catch (Exception $e) {
-            $this->pdo->rollBack();
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            error_log('Order create failed: ' . $e->getMessage());
             flash('error', $e->getMessage() ?: 'Failed to place order. Please try again.');
             header('Location: ' . APP_URL . '/index.php?url=checkout');
             exit;

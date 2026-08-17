@@ -89,8 +89,41 @@ class ProductController {
             require_once VIEWS_PATH . '/errors/404.php';
             return;
         }
+
+        $images = $this->productModel->getImages($id);
+        if (empty($images) && !empty($product['image'])) {
+            $images = [['id' => 0, 'filename' => $product['image'], 'sort_order' => 0]];
+        }
+
+        $specs = Product::decodeSpecifications($product['specifications'] ?? null);
+        $sizeOptions = $this->productModel->getSizeOptions($id);
+        // Fallback: sibling products via size_group (legacy linking)
+        if (empty($sizeOptions) && !empty($product['size_group'])) {
+            $siblings = $this->productModel->getSizeSiblings($product['size_group']);
+            if (count($siblings) > 1) {
+                $sizeOptions = array_map(function ($s) {
+                    return [
+                        'id' => null,
+                        'linked_product_id' => (int) $s['id'],
+                        'size_label' => $s['size_label'] ?: $s['name'],
+                        'price' => $s['price'],
+                        'stock' => $s['stock'],
+                        'is_current' => false,
+                    ];
+                }, $siblings);
+            }
+        }
+
+        $relatedProducts = $this->productModel->getRelated($product['category_id'], $id, 8);
+        $relatedRatings = [];
+        if (!empty($relatedProducts)) {
+            $reviewModel = new Review($this->pdo);
+            $relatedRatings = $reviewModel->getAvgRatingsByProductIds(array_column($relatedProducts, 'id'));
+        }
+
         $pageTitle = $product['name'];
         $extraCss  = ['customer.css'];
+        $extraJs   = ['cart.js', 'product-detail.js'];
         require_once VIEWS_PATH . '/customer/product-details.php';
     }
 
@@ -98,6 +131,15 @@ class ProductController {
         AuthMiddleware::adminOrStaff();
         $products   = $this->productModel->getAll();
         $categories = $this->categoryModel->getAll();
+        $galleryByProduct = [];
+        $sizesByProduct = [];
+        if (!empty($products)) {
+            $ids = array_column($products, 'id');
+            $galleryByProduct = $this->productModel->getImagesByProductIds($ids);
+            foreach ($ids as $pid) {
+                $sizesByProduct[(int) $pid] = $this->productModel->getSizeOptions($pid);
+            }
+        }
         $pageTitle  = 'Manage Products';
         $isAdmin    = true;
         $extraCss   = ['admin.css'];
@@ -111,38 +153,25 @@ class ProductController {
 
         $sku = trim($_POST['sku'] ?? '');
         $data = [
-            'category_id' => intval($_POST['category_id']),
-            'name'        => trim($_POST['name']),
-            'description' => trim($_POST['description'] ?? ''),
-            'price'       => floatval($_POST['price']),
-            'sku'         => $sku !== '' ? $sku : null,
-            'image'       => null
+            'category_id'     => intval($_POST['category_id']),
+            'name'            => trim($_POST['name']),
+            'description'     => trim($_POST['description'] ?? ''),
+            'specifications'  => $this->parseSpecificationsFromPost(),
+            'price'           => floatval($_POST['price']),
+            'sku'             => $sku !== '' ? $sku : null,
+            'size_label'      => $this->nullableTrim($_POST['size_label'] ?? ''),
+            'size_group'      => $this->nullableTrim($_POST['size_group'] ?? ''),
+            'image'           => null
         ];
 
-        if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
-            if ((int)($_FILES['image']['size'] ?? 0) > self::MAX_IMAGE_BYTES) {
-                flash('error', 'Image is too large. Maximum allowed size is 5 MB.');
-                header('Location: ' . APP_URL . '/index.php?url=admin/products');
-                exit;
-            }
-            // Validate using actual file contents, not client-provided MIME type
-            $imageInfo = @getimagesize($_FILES['image']['tmp_name']);
-            $allowed = ['image/jpeg','image/png','image/webp','image/gif'];
-            $extMap   = ['image/jpeg' => '.jpg', 'image/png' => '.png', 'image/webp' => '.webp', 'image/gif' => '.gif'];
-            if ($imageInfo && in_array($imageInfo['mime'], $allowed)) {
-                $ext        = $extMap[$imageInfo['mime']] ?? '.jpg';
-                $fileName   = time() . '_' . uniqid() . $ext;
-                $targetPath = UPLOADS_PATH . '/' . $fileName;
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
-                    $data['image'] = $fileName;
-                } else {
-                    flash('error', 'Failed to save the uploaded image. Please try again.');
-                }
-            } elseif ($imageInfo) {
-                flash('error', 'Unsupported image format. Please upload a JPG, PNG, WEBP, or GIF.');
-            }
-        } elseif (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
-            flash('error', 'Image upload error (code ' . $_FILES['image']['error'] . '). Max size: 5 MB.');
+        $cover = $this->storeUploadedImage($_FILES['image'] ?? null);
+        if (!empty($cover['error'])) {
+            flash('error', $cover['error']);
+            header('Location: ' . APP_URL . '/index.php?url=admin/products');
+            exit;
+        }
+        if (!empty($cover['filename'])) {
+            $data['image'] = $cover['filename'];
         }
 
         if ($data['sku'] && $this->productModel->skuExists($data['sku'])) {
@@ -153,6 +182,12 @@ class ProductController {
 
         $productId = $this->productModel->create($data);
         if ($productId) {
+            if (!empty($data['image'])) {
+                $this->productModel->addImage($productId, $data['image'], 0);
+            }
+            $this->storeGalleryUploads($productId, $_FILES['gallery_images'] ?? null);
+            $this->productModel->replaceSizeOptions($productId, $this->parseSizeOptionsFromPost());
+
             $initialQty = intval($_POST['quantity'] ?? 0);
             $inv = new Inventory($this->pdo);
             $inv->updateQuantity($productId, $initialQty);
@@ -180,6 +215,9 @@ class ProductController {
             return;
         }
         $categories = $this->categoryModel->getAll();
+        $galleryImages = $this->productModel->getImages($id);
+        $specPairs = Product::decodeSpecifications($product['specifications'] ?? null);
+        $sizeOptionRows = $this->productModel->getSizeOptions($id);
         $pageTitle  = 'Edit Product';
         $isAdmin    = true;
         $extraCss   = ['admin.css'];
@@ -195,49 +233,33 @@ class ProductController {
 
         $sku = trim($_POST['sku'] ?? '');
         $data = [
-            'category_id' => intval($_POST['category_id']),
-            'name'        => trim($_POST['name']),
-            'description' => trim($_POST['description'] ?? ''),
-            'price'       => floatval($_POST['price']),
-            'sku'         => $sku !== '' ? $sku : null,
-            'image'       => $_POST['existing_image'] ?? null
+            'category_id'    => intval($_POST['category_id']),
+            'name'           => trim($_POST['name']),
+            'description'    => trim($_POST['description'] ?? ''),
+            'specifications' => $this->parseSpecificationsFromPost(),
+            'price'          => floatval($_POST['price']),
+            'sku'            => $sku !== '' ? $sku : null,
+            'size_label'     => $this->nullableTrim($_POST['size_label'] ?? ''),
+            'size_group'     => $this->nullableTrim($_POST['size_group'] ?? ''),
+            'image'          => $_POST['existing_image'] ?? null
         ];
 
-        if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
-            if ((int)($_FILES['image']['size'] ?? 0) > self::MAX_IMAGE_BYTES) {
-                $msg = 'Image is too large. Maximum allowed size is 5 MB.';
-                if ($isAjax) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => $msg]); exit; }
-                flash('error', $msg);
-                header('Location: ' . APP_URL . '/index.php?url=admin/products/edit/' . $id);
-                exit;
-            }
-            // Validate using actual file contents, not client-provided MIME type
-            $imageInfo = @getimagesize($_FILES['image']['tmp_name']);
-            $allowed  = ['image/jpeg','image/png','image/webp','image/gif'];
-            $extMap   = ['image/jpeg' => '.jpg', 'image/png' => '.png', 'image/webp' => '.webp', 'image/gif' => '.gif'];
-            if ($imageInfo && in_array($imageInfo['mime'], $allowed)) {
-                $ext        = $extMap[$imageInfo['mime']] ?? '.jpg';
-                $fileName   = time() . '_' . uniqid() . $ext;
-                $targetPath = UPLOADS_PATH . '/' . $fileName;
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
-                    $data['image'] = $fileName;
-                } else {
-                    if ($isAjax) {
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'message' => 'Failed to save the uploaded image.']);
-                        exit;
-                    }
-                    flash('error', 'Failed to save the uploaded image. Please try again.');
-                }
-            } elseif ($imageInfo) {
-                $msg = 'Unsupported image format. Please upload a JPG, PNG, WEBP, or GIF.';
-                if ($isAjax) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => $msg]); exit; }
-                flash('error', $msg);
-            }
+        $cover = $this->storeUploadedImage($_FILES['image'] ?? null);
+        if (!empty($cover['error'])) {
+            if ($isAjax) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => $cover['error']]); exit; }
+            flash('error', $cover['error']);
+            header('Location: ' . APP_URL . '/index.php?url=admin/products/edit/' . $id);
+            exit;
+        }
+        if (!empty($cover['filename'])) {
+            $data['image'] = $cover['filename'];
+            $this->productModel->addImage($id, $cover['filename']);
         }
 
         if ($data['sku'] && $this->productModel->skuExists($data['sku'], $id)) {
-            flash('error', 'SKU "' . htmlspecialchars($data['sku']) . '" already exists. Please use a unique SKU.');
+            $msg = 'SKU "' . htmlspecialchars($data['sku']) . '" already exists. Please use a unique SKU.';
+            if ($isAjax) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => $msg]); exit; }
+            flash('error', $msg);
             header('Location: ' . APP_URL . '/index.php?url=admin/products/edit/' . $id);
             exit;
         }
@@ -247,7 +269,36 @@ class ProductController {
         $oldPrice = floatval($existingProduct['price'] ?? 0);
         $newPrice = $data['price'];
 
+        // Delete selected gallery images before syncing primary
+        $deleteIds = array_map('intval', $_POST['delete_gallery_ids'] ?? []);
+        foreach ($deleteIds as $imageId) {
+            if ($imageId <= 0) continue;
+            $removed = $this->productModel->deleteImage($imageId, $id);
+            if ($removed && !empty($removed['filename'])) {
+                $path = UPLOADS_PATH . '/' . $removed['filename'];
+                if (is_file($path)) {
+                    @unlink($path);
+                }
+            }
+        }
+
+        $this->storeGalleryUploads($id, $_FILES['gallery_images'] ?? null);
+
+        if (!empty($cover['filename'])) {
+            $data['image'] = $cover['filename'];
+        } else {
+            $syncedCover = $this->productModel->syncPrimaryImage($id);
+            if ($syncedCover !== null) {
+                $data['image'] = $syncedCover;
+            } elseif (empty($data['image'])) {
+                $data['image'] = $existingProduct['image'] ?? null;
+            }
+        }
+
         $this->productModel->update($id, $data);
+        if (isset($_POST['size_opt_labels']) && is_array($_POST['size_opt_labels'])) {
+            $this->productModel->replaceSizeOptions($id, $this->parseSizeOptionsFromPost());
+        }
 
         // Record price history if price changed
         if (abs($oldPrice - $newPrice) > 0.001) {
@@ -341,5 +392,101 @@ class ProductController {
     private function itemsPerPage(): int {
         require_once MODELS_PATH . '/Setting.php';
         return (new Setting($this->pdo))->itemsPerPage();
+    }
+
+    private function nullableTrim($value): ?string {
+        $value = trim((string) $value);
+        return $value === '' ? null : $value;
+    }
+
+    private function parseSpecificationsFromPost(): ?string {
+        $keys = $_POST['spec_keys'] ?? [];
+        $vals = $_POST['spec_values'] ?? [];
+        if (!is_array($keys) || !is_array($vals)) {
+            return null;
+        }
+        $pairs = [];
+        $count = max(count($keys), count($vals));
+        for ($i = 0; $i < $count; $i++) {
+            $k = trim((string) ($keys[$i] ?? ''));
+            $v = trim((string) ($vals[$i] ?? ''));
+            if ($k === '' || $v === '') {
+                continue;
+            }
+            $pairs[$k] = $v;
+        }
+        return Product::encodeSpecifications($pairs);
+    }
+
+    private function parseSizeOptionsFromPost(): array {
+        $labels = $_POST['size_opt_labels'] ?? [];
+        $prices = $_POST['size_opt_prices'] ?? [];
+        $stocks = $_POST['size_opt_stocks'] ?? [];
+        if (!is_array($labels)) {
+            return [];
+        }
+        $out = [];
+        $count = count($labels);
+        for ($i = 0; $i < $count; $i++) {
+            $label = trim((string) ($labels[$i] ?? ''));
+            if ($label === '') {
+                continue;
+            }
+            $out[] = [
+                'size_label' => $label,
+                'price'      => (float) ($prices[$i] ?? 0),
+                'stock'      => (int) ($stocks[$i] ?? 0),
+            ];
+        }
+        return $out;
+    }
+
+    /**
+     * @return array{filename:?string,error:?string}
+     */
+    private function storeUploadedImage($file): array {
+        if (!$file || !isset($file['error']) || $file['error'] === UPLOAD_ERR_NO_FILE) {
+            return ['filename' => null, 'error' => null];
+        }
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            return ['filename' => null, 'error' => 'Image upload error (code ' . $file['error'] . '). Max size: 5 MB.'];
+        }
+        if ((int) ($file['size'] ?? 0) > self::MAX_IMAGE_BYTES) {
+            return ['filename' => null, 'error' => 'Image is too large. Maximum allowed size is 5 MB.'];
+        }
+        $imageInfo = @getimagesize($file['tmp_name']);
+        $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        $extMap  = ['image/jpeg' => '.jpg', 'image/png' => '.png', 'image/webp' => '.webp', 'image/gif' => '.gif'];
+        if (!$imageInfo || !in_array($imageInfo['mime'], $allowed, true)) {
+            return ['filename' => null, 'error' => 'Unsupported image format. Please upload a JPG, PNG, WEBP, or GIF.'];
+        }
+        $ext = $extMap[$imageInfo['mime']] ?? '.jpg';
+        $fileName = time() . '_' . uniqid() . $ext;
+        $targetPath = UPLOADS_PATH . '/' . $fileName;
+        if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+            return ['filename' => null, 'error' => 'Failed to save the uploaded image. Please try again.'];
+        }
+        return ['filename' => $fileName, 'error' => null];
+    }
+
+    private function storeGalleryUploads($productId, $files): void {
+        if (!$files || !isset($files['name']) || !is_array($files['name'])) {
+            return;
+        }
+        $count = count($files['name']);
+        for ($i = 0; $i < $count; $i++) {
+            $single = [
+                'name'     => $files['name'][$i] ?? '',
+                'type'     => $files['type'][$i] ?? '',
+                'tmp_name' => $files['tmp_name'][$i] ?? '',
+                'error'    => $files['error'][$i] ?? UPLOAD_ERR_NO_FILE,
+                'size'     => $files['size'][$i] ?? 0,
+            ];
+            $saved = $this->storeUploadedImage($single);
+            if (!empty($saved['filename'])) {
+                $this->productModel->addImage($productId, $saved['filename']);
+            }
+        }
+        $this->productModel->syncPrimaryImage($productId);
     }
 }

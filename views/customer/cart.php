@@ -47,6 +47,9 @@ foreach (($cartItems ?? []) as $cartItemSummary) {
                                             <?php endif; ?>
                                             <div class="cart-product-info">
                                                 <span class="cart-product-name"><?= htmlspecialchars($item['product_name']) ?></span>
+                                                <?php if (!empty($item['size_label'])): ?>
+                                                    <span class="cart-product-unit">Size: <?= htmlspecialchars($item['size_label']) ?></span>
+                                                <?php endif; ?>
                                                 <span class="cart-product-unit">₱<?= number_format($item['price'], 2) ?> each</span>
                                             </div>
                                         </div>
