@@ -165,6 +165,8 @@ switch ($urlParts[0]) {
         if (isset($urlParts[1])) {
             if ($urlParts[1] === 'search') {
                 $controller->search();
+            } elseif (isset($urlParts[2]) && $urlParts[2] === 'reviews') {
+                $controller->reviews($urlParts[1]);
             } else {
                 $controller->show($urlParts[1]);
             }

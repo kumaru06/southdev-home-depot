@@ -101,36 +101,20 @@
         });
     }
 
-    function openReviewsTab(expandAll) {
+    function openReviewsTab() {
         var tabBtn = document.querySelector('[data-pd-tab="reviews"]');
         if (tabBtn) tabBtn.click();
-        if (expandAll) expandAllReviews();
         var tabs = document.querySelector('[data-pd-tabs]');
         if (tabs) tabs.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    function expandAllReviews() {
-        document.querySelectorAll('.pd-mini-review.is-extra').forEach(function (el) {
-            el.hidden = false;
-            el.classList.remove('is-extra');
-        });
-        var btn = document.querySelector('[data-pd-view-all-reviews]');
-        if (btn) btn.hidden = true;
     }
 
     function initReviews() {
         document.querySelectorAll('[data-pd-open-reviews]').forEach(function (el) {
             el.addEventListener('click', function (e) {
                 e.preventDefault();
-                openReviewsTab(true);
+                openReviewsTab();
             });
         });
-        var viewAll = document.querySelector('[data-pd-view-all-reviews]');
-        if (viewAll) {
-            viewAll.addEventListener('click', function () {
-                expandAllReviews();
-            });
-        }
     }
 
     function initTabs() {

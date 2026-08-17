@@ -121,7 +121,7 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
                 <div class="pd-info__header">
                     <h1 class="pd-info__title"><?= htmlspecialchars($product['name']) ?></h1>
                     <?php if ($reviewCount): ?>
-                        <a href="#pd-reviews-summary" class="pd-info__rating-link" data-pd-open-reviews>
+                        <a href="<?= APP_URL ?>/index.php?url=products/<?= (int)$product['id'] ?>/reviews" class="pd-info__rating-link">
                             <span class="pd-stars pd-stars--sm">
                                 <?php for ($i = 1; $i <= 5; $i++): ?>
                                     <span class="<?= $i <= round($avgRating) ? 'pd-star--filled' : 'pd-star--empty' ?>">★</span>
@@ -308,9 +308,10 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
                     <?php if (empty($reviews)): ?>
                         <p class="pd-muted">No reviews yet. Be the first to review this product!</p>
                     <?php else: ?>
-                        <div class="pd-tab-reviews" data-pd-review-list>
+                        <div class="pd-tab-reviews pd-reviews-scroll pd-reviews-scroll--preview" data-pd-review-list>
                             <?php foreach ($reviews as $idx => $rv): ?>
-                                <article class="pd-mini-review<?= $idx >= 3 ? ' is-extra' : '' ?>"<?= $idx >= 3 ? ' hidden' : '' ?>>
+                                <?php if ($idx >= 3) break; ?>
+                                <article class="pd-mini-review">
                                     <div class="pd-mini-review__top">
                                         <strong><?= htmlspecialchars(mask_name($rv['first_name'] ?? '', $rv['last_name'] ?? '')) ?></strong>
                                         <span class="pd-stars pd-stars--sm">
@@ -325,12 +326,12 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
                                     <?php endif; ?>
                                 </article>
                             <?php endforeach; ?>
-                            <?php if ($reviewCount > 3): ?>
-                                <button type="button" class="btn btn-outline btn-sm pd-reviews-viewall" data-pd-view-all-reviews>
-                                    View all <?= $reviewCount ?> reviews
-                                </button>
-                            <?php endif; ?>
                         </div>
+                        <?php if ($reviewCount > 3): ?>
+                            <a class="btn btn-outline btn-sm pd-reviews-viewall" href="<?= APP_URL ?>/index.php?url=products/<?= (int)$product['id'] ?>/reviews">
+                                View all <?= $reviewCount ?> reviews
+                            </a>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
             </div>
@@ -361,9 +362,9 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
                             </div>
                         <?php endfor; ?>
                     </div>
-                    <button type="button" class="btn btn-outline btn-sm pd-rating-cta" data-pd-open-reviews>
+                    <a class="btn btn-outline btn-sm pd-rating-cta" href="<?= APP_URL ?>/index.php?url=products/<?= (int)$product['id'] ?>/reviews">
                         View all reviews
-                    </button>
+                    </a>
                 <?php else: ?>
                     <p class="pd-muted">No ratings yet.</p>
                 <?php endif; ?>

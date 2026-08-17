@@ -127,6 +127,22 @@ class ProductController {
         require_once VIEWS_PATH . '/customer/product-details.php';
     }
 
+    /**
+     * Dedicated product reviews page: /index.php?url=products/{id}/reviews
+     * Scrollable locked list so the box does not stretch with many reviews.
+     */
+    public function reviews($id) {
+        $product = $this->productModel->findById($id);
+        if (!$product) {
+            require_once VIEWS_PATH . '/errors/404.php';
+            return;
+        }
+
+        $pageTitle = 'Reviews — ' . $product['name'];
+        $extraCss  = ['customer.css'];
+        require_once VIEWS_PATH . '/customer/product-reviews.php';
+    }
+
     public function manage() {
         AuthMiddleware::adminOrStaff();
         $products   = $this->productModel->getAll();

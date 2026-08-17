@@ -2137,6 +2137,96 @@ body:has(.pd-page) .site-header .main-nav {
     gap: 10px;
     margin-bottom: 6px;
 }
+
+/* Locked review list — fixed height + scroll (no stretch) */
+.pd-reviews-scroll {
+    max-height: 420px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    padding-right: 6px;
+    scrollbar-gutter: stable;
+}
+.pd-reviews-scroll--preview {
+    max-height: 280px;
+}
+.pd-reviews-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.pd-reviews-scroll::-webkit-scrollbar-track {
+    background: rgba(232,236,241,.6);
+    border-radius: 999px;
+}
+.pd-reviews-scroll::-webkit-scrollbar-thumb {
+    background: #c5ccd6;
+    border-radius: 999px;
+}
+.pd-reviews-scroll::-webkit-scrollbar-thumb:hover {
+    background: #a8b0bc;
+}
+
+/* Dedicated product reviews page */
+.pd-reviews-page__head {
+    margin-bottom: 22px;
+}
+.pd-reviews-page__back {
+    display: inline-block;
+    margin-bottom: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+}
+.pd-reviews-page__back:hover { opacity: .8; }
+.pd-reviews-page__product {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.pd-reviews-page__product img {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid rgba(232,236,241,.95);
+    background: #fff;
+}
+.pd-reviews-page__title {
+    margin: 0;
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--charcoal);
+    letter-spacing: -.02em;
+}
+.pd-reviews-page__product-name {
+    margin: 2px 0 0;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+.pd-reviews-page__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+}
+.pd-reviews-page__list-card {
+    min-width: 0;
+}
+.pd-reviews-page__list-head {
+    margin-bottom: 8px;
+}
+.pd-reviews-page__list-card .pd-reviews-scroll {
+    max-height: min(520px, 60vh);
+    border-top: 1px solid rgba(232,236,241,.9);
+    padding-top: 4px;
+}
+@media (max-width: 900px) {
+    .pd-reviews-page__layout {
+        grid-template-columns: 1fr;
+    }
+    .pd-reviews-page__list-card .pd-reviews-scroll {
+        max-height: min(420px, 55vh);
+    }
+}
 .pd-link {
     display: inline-block;
     margin-top: 10px;
