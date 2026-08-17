@@ -379,13 +379,22 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
             <?php endforeach; ?>
         </div>
         <div class="od-items-footer">
+            <?php
+            $shippingFee = isset($order['shipping_fee']) ? (float) $order['shipping_fee'] : 0.0;
+            $orderTotal = (float) $order['total_amount'];
+            $orderSubtotal = max(0, $orderTotal - $shippingFee);
+            ?>
             <div class="od-total-row">
                 <span>Subtotal</span>
-                <span>₱<?= number_format($order['total_amount'], 2) ?></span>
+                <span>₱<?= number_format($orderSubtotal, 2) ?></span>
+            </div>
+            <div class="od-total-row">
+                <span>Delivery</span>
+                <span><?= $shippingFee <= 0 ? 'FREE' : '₱' . number_format($shippingFee, 2) ?></span>
             </div>
             <div class="od-total-row od-total-row--grand">
                 <span>Total</span>
-                <span>₱<?= number_format($order['total_amount'], 2) ?></span>
+                <span>₱<?= number_format($orderTotal, 2) ?></span>
             </div>
         </div>
     </div>

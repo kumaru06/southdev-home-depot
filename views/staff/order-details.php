@@ -20,6 +20,11 @@ require_once INCLUDES_PATH . '/sidebar.php';
             <!-- Order Info -->
             <div class="card order-info-card">
                 <h3><i data-lucide="info"></i> Order Information</h3>
+                <?php
+                    $staffShippingFee = isset($order['shipping_fee']) ? (float) $order['shipping_fee'] : 0.0;
+                    $staffOrderTotal = (float) $order['total_amount'];
+                    $staffSubtotal = max(0, $staffOrderTotal - $staffShippingFee);
+                ?>
                 <div class="detail-row">
                     <span class="detail-label">Name:</span>
                     <span class="detail-value"><strong><?= htmlspecialchars($order['first_name'] . ' ' . $order['last_name']) ?></strong></span>
@@ -33,8 +38,16 @@ require_once INCLUDES_PATH . '/sidebar.php';
                     <span class="detail-value"><?= date('M d, Y h:i A', strtotime($order['created_at'])) ?></span>
                 </div>
                 <div class="detail-row">
+                    <span class="detail-label">Products:</span>
+                    <span class="detail-value">₱<?= number_format($staffSubtotal, 2) ?></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Delivery:</span>
+                    <span class="detail-value"><?= $staffShippingFee <= 0 ? 'FREE' : '₱' . number_format($staffShippingFee, 2) ?></span>
+                </div>
+                <div class="detail-row">
                     <span class="detail-label">Total:</span>
-                    <span class="detail-value"><strong>₱<?= number_format($order['total_amount'], 2) ?></strong></span>
+                    <span class="detail-value"><strong>₱<?= number_format($staffOrderTotal, 2) ?></strong></span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Status:</span>
@@ -160,8 +173,16 @@ require_once INCLUDES_PATH . '/sidebar.php';
                     </tbody>
                     <tfoot>
                         <tr>
+                            <td colspan="3" style="text-align: right;">Subtotal</td>
+                            <td>₱<?= number_format($staffSubtotal, 2) ?></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="text-align: right;">Delivery</td>
+                            <td><?= $staffShippingFee <= 0 ? 'FREE' : '₱' . number_format($staffShippingFee, 2) ?></td>
+                        </tr>
+                        <tr>
                             <td colspan="3" style="text-align: right;"><strong>Total</strong></td>
-                            <td><strong>₱<?= number_format($order['total_amount'], 2) ?></strong></td>
+                            <td><strong>₱<?= number_format($staffOrderTotal, 2) ?></strong></td>
                         </tr>
                     </tfoot>
                 </table>

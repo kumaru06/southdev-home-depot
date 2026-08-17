@@ -96,10 +96,20 @@ foreach (($cartItems ?? []) as $cartItemSummary) {
                     </div>
                     <div class="summary-row">
                         <span>Shipping</span>
-                        <span class="text-success">Free</span>
+                        <?php if ($cartTotal >= 10000): ?>
+                            <span class="text-success">Free</span>
+                        <?php else: ?>
+                            <span>From ₱300</span>
+                        <?php endif; ?>
                     </div>
+                    <?php if ($cartTotal < 10000): ?>
+                    <div class="summary-row" style="font-size:.78rem;color:var(--steel,#6c7a8d);">
+                        <span>Free delivery at ₱10,000+</span>
+                        <span>₱<?= number_format(max(0, 10000 - $cartTotal), 2) ?> to go</span>
+                    </div>
+                    <?php endif; ?>
                     <div class="summary-row summary-total">
-                        <span>Total</span>
+                        <span><?= $cartTotal >= 10000 ? 'Total' : 'Subtotal' ?></span>
                         <span>₱<?= number_format($cartTotal, 2) ?></span>
                     </div>
                 </div>

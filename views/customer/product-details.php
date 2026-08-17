@@ -140,14 +140,16 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
                         <span class="pd-price__unit">/ piece</span>
                     </div>
                     <?php
-                        $defaultSize = !empty($sizeOptions) ? $sizeOptions[0] : null;
-                        $displayStock = $defaultSize ? (int)$defaultSize['stock'] : (int)$product['stock'];
+                        $hasSizes = !empty($sizeOptions);
+                        $displayStock = $hasSizes
+                            ? (int) max(array_map(static function ($o) { return (int)($o['stock'] ?? 0); }, $sizeOptions))
+                            : (int)$product['stock'];
                         $displayInStock = $displayStock > 0;
                     ?>
                     <?php if ($displayInStock): ?>
                         <span class="pd-stock-badge pd-stock-badge--in" data-pd-stock-badge>
                             <span class="pd-stock-badge__dot" aria-hidden="true"></span>
-                            <span data-pd-stock-text><?= $displayStock ?> pcs</span>
+                            <span data-pd-stock-text><?= $hasSizes ? 'Select a size' : ($displayStock . ' pcs') ?></span>
                         </span>
                     <?php else: ?>
                         <span class="pd-stock-badge pd-stock-badge--out" data-pd-stock-badge>
@@ -157,14 +159,13 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
                     <?php endif; ?>
                 </div>
 
-                <?php if (!empty($sizeOptions)): ?>
+                <?php if ($hasSizes): ?>
                 <div class="pd-sizes" data-pd-sizes>
                     <h3 class="pd-section-label">Choose Your Size</h3>
                     <div class="pd-sizes__grid">
-                        <?php foreach ($sizeOptions as $idx => $opt): ?>
+                        <?php foreach ($sizeOptions as $opt): ?>
                             <?php
                                 $optStock = (int)($opt['stock'] ?? 0);
-                                $isCurrent = $idx === 0;
                                 $label = trim((string)($opt['size_label'] ?? '')) ?: 'Size';
                                 $linkedId = !empty($opt['linked_product_id']) ? (int)$opt['linked_product_id'] : null;
                                 $optId = !empty($opt['id']) ? (int)$opt['id'] : 0;
@@ -178,7 +179,7 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
                             </a>
                             <?php else: ?>
                             <button type="button"
-                               class="pd-size<?= $isCurrent ? ' is-selected' : '' ?><?= $optStock <= 0 ? ' is-oos' : '' ?>"
+                               class="pd-size<?= $optStock <= 0 ? ' is-oos' : '' ?>"
                                data-pd-size
                                data-size-id="<?= $optId ?>"
                                data-price="<?= htmlspecialchars(number_format((float)$opt['price'], 2, '.', '')) ?>"
@@ -196,21 +197,21 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
 
                 <?php
                     $canBuy = isset($_SESSION['user_id']) && $_SESSION['role_id'] == ROLE_CUSTOMER && $displayInStock;
-                    $initialMax = $defaultSize ? (int)$defaultSize['stock'] : (int)$product['stock'];
-                    $initialSizeId = $defaultSize && !empty($defaultSize['id']) ? (int)$defaultSize['id'] : 0;
+                    $initialMax = $hasSizes ? max(1, $displayStock) : max(1, (int)$product['stock']);
                 ?>
                 <?php if ($canBuy): ?>
                     <div class="pd-actions">
                         <div class="qty-stepper" aria-label="Quantity">
                             <button type="button" class="qty-btn" onclick="this.nextElementSibling.stepDown(); this.nextElementSibling.dispatchEvent(new Event('change'))" aria-label="Decrease quantity">−</button>
-                            <input type="number" id="quantity" value="1" min="1" max="<?= max(1, $initialMax) ?>" class="qty-input" aria-label="Quantity" data-pd-qty>
+                            <input type="number" id="quantity" value="1" min="1" max="<?= $initialMax ?>" class="qty-input" aria-label="Quantity" data-pd-qty>
                             <button type="button" class="qty-btn" onclick="this.previousElementSibling.stepUp(); this.previousElementSibling.dispatchEvent(new Event('change'))" aria-label="Increase quantity">+</button>
                         </div>
                         <button type="button"
                             class="btn btn-accent btn-lg pd-btn-cart"
                             data-pd-add-cart
                             data-product-id="<?= (int)$product['id'] ?>"
-                            data-size-id="<?= $initialSizeId ?>">
+                            data-size-id=""
+                            <?= $hasSizes ? 'data-requires-size="1"' : '' ?>>
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                             Add to Cart
                         </button>

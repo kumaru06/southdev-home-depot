@@ -1,6 +1,6 @@
 /**
  * SouthDev Home Depot – Checkout JavaScript
- * Davao City barangay selector, form validation, payment toggle
+ * Davao City barangay selector, delivery fee, form validation, payment toggle
  */
 
 (function () {
@@ -48,13 +48,139 @@
         'Waan', 'Wangan', 'Wines'
     ];
 
+    function getDeliveryConfig() {
+        return window.DELIVERY_FEE_CONFIG || {
+            subtotal: 0,
+            free_threshold: 10000,
+            fees: { near: 300, mid: 400, far: 500 },
+            zones: {}
+        };
+    }
+
+    function normalizeBarangay(name) {
+        return String(name || '')
+            .toLowerCase()
+            .replace(/^brgy\.?\s*/i, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function resolveZone(barangay) {
+        var cfg = getDeliveryConfig();
+        var key = normalizeBarangay(barangay);
+        if (!key) return 'mid';
+        if (cfg.zones && cfg.zones[key]) return cfg.zones[key];
+        var zones = cfg.zones || {};
+        for (var z in zones) {
+            if (!Object.prototype.hasOwnProperty.call(zones, z)) continue;
+            if (key.indexOf(z) !== -1 || z.indexOf(key) !== -1) return zones[z];
+        }
+        return 'mid';
+    }
+
+    function formatPeso(amount) {
+        return '₱' + Number(amount).toLocaleString('en-PH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function setProgress(percent) {
+        var bar = document.getElementById('co-delivery-progress');
+        if (!bar) return;
+        var pct = Math.max(0, Math.min(100, percent));
+        bar.style.width = pct + '%';
+    }
+
+    function updateDeliveryFee() {
+        var cfg = getDeliveryConfig();
+        var brgyEl = document.getElementById('shipping_barangay');
+        var feeEl = document.getElementById('co-delivery-fee');
+        var zoneEl = document.getElementById('co-delivery-zone');
+        var totalEl = document.getElementById('co-grand-total');
+        var banner = document.getElementById('co-delivery-hint');
+        var titleEl = document.getElementById('co-delivery-hint-title');
+        var amountEl = document.getElementById('co-delivery-hint-amount');
+        var textEl = document.getElementById('co-delivery-hint-text');
+        if (!feeEl || !totalEl) return;
+
+        var subtotal = Number(cfg.subtotal || 0);
+        var threshold = Number(cfg.free_threshold || 10000);
+        var remaining = Math.max(0, threshold - subtotal);
+        var progress = threshold > 0 ? (subtotal / threshold) * 100 : 0;
+        var barangay = brgyEl ? brgyEl.value : '';
+
+        function setBanner(state, title, amount, copy) {
+            if (banner) banner.setAttribute('data-state', state);
+            if (titleEl) titleEl.textContent = title;
+            if (amountEl) amountEl.textContent = amount;
+            if (textEl) textEl.textContent = copy;
+            setProgress(state === 'free' ? 100 : progress);
+        }
+
+        if (subtotal >= threshold) {
+            feeEl.textContent = 'FREE';
+            feeEl.className = 'co-free';
+            if (zoneEl) {
+                zoneEl.hidden = true;
+                zoneEl.textContent = '';
+                zoneEl.removeAttribute('data-zone');
+            }
+            totalEl.textContent = formatPeso(subtotal);
+            setBanner('free', 'Free delivery unlocked', formatPeso(threshold) + '+', 'Your order qualifies for free Davao delivery.');
+            return;
+        }
+
+        if (!barangay) {
+            feeEl.textContent = 'Select barangay';
+            feeEl.className = '';
+            if (zoneEl) {
+                zoneEl.hidden = true;
+                zoneEl.textContent = '';
+                zoneEl.removeAttribute('data-zone');
+            }
+            totalEl.textContent = formatPeso(subtotal);
+            setBanner(
+                'idle',
+                'Free delivery',
+                formatPeso(threshold) + '+',
+                'Add ' + formatPeso(remaining) + ' more for free delivery. Choose a barangay to see your fee.'
+            );
+            return;
+        }
+
+        var zone = resolveZone(barangay);
+        var fees = cfg.fees || { near: 300, mid: 400, far: 500 };
+        var fee = Number(fees[zone] != null ? fees[zone] : fees.mid);
+        var zoneLabel = zone.charAt(0).toUpperCase() + zone.slice(1);
+
+        feeEl.textContent = formatPeso(fee);
+        feeEl.className = '';
+        if (zoneEl) {
+            zoneEl.hidden = false;
+            zoneEl.textContent = zoneLabel;
+            zoneEl.setAttribute('data-zone', zone);
+        }
+        totalEl.textContent = formatPeso(subtotal + fee);
+        setBanner(
+            'zone',
+            zoneLabel + ' zone',
+            formatPeso(fee) + ' fee',
+            'Add ' + formatPeso(remaining) + ' more to unlock free delivery.'
+        );
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         var form = document.getElementById('checkout-form');
 
-        /* Populate barangay dropdown */
         initBarangays();
+        updateDeliveryFee();
 
-        /* ── Use Saved Address ── */
+        var brgySelect = document.getElementById('shipping_barangay');
+        if (brgySelect) {
+            brgySelect.addEventListener('change', updateDeliveryFee);
+        }
+
         var useSavedBtn = document.getElementById('useSavedAddr');
         if (useSavedBtn) {
             useSavedBtn.addEventListener('click', function () {
@@ -62,38 +188,35 @@
                 var zip     = this.dataset.zip     || '8000';
                 var phone   = this.dataset.phone   || '';
 
-                /* Fill street address */
                 var streetEl = document.getElementById('street_address');
                 if (streetEl && address) {
                     streetEl.value = address;
                     streetEl.classList.remove('is-invalid');
                 }
 
-                /* Fill zip */
                 var zipEl = document.getElementById('shipping_zip');
                 if (zipEl && zip) zipEl.value = zip;
 
-                /* Fill phone */
                 var phoneEl = document.getElementById('contact_phone');
                 if (phoneEl && phone) {
                     phoneEl.value = phone;
                     phoneEl.classList.remove('is-invalid');
                 }
 
-                /* Try to auto-select barangay if address contains a known one */
-                var brgySelect = document.getElementById('shipping_barangay');
-                if (brgySelect && address) {
+                var brgySelectEl = document.getElementById('shipping_barangay');
+                if (brgySelectEl && address) {
                     var normalized = address.toLowerCase();
                     for (var i = 0; i < DAVAO_BARANGAYS.length; i++) {
                         if (normalized.indexOf(DAVAO_BARANGAYS[i].toLowerCase()) !== -1) {
-                            brgySelect.value = DAVAO_BARANGAYS[i];
-                            brgySelect.classList.remove('is-invalid');
+                            brgySelectEl.value = DAVAO_BARANGAYS[i];
+                            brgySelectEl.classList.remove('is-invalid');
                             break;
                         }
                     }
                 }
 
-                /* Visual feedback – change button to "Applied" */
+                updateDeliveryFee();
+
                 this.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><polyline points="20 6 9 17 4 12"></polyline></svg> Applied';
                 this.disabled = true;
                 this.style.opacity = '0.7';
@@ -106,15 +229,12 @@
                     e.preventDefault();
                     return;
                 }
-                /* Combine street + barangay into hidden shipping_address */
                 combineAddress();
             });
         }
 
-        /* Payment Method Toggle */
         document.querySelectorAll('input[name="payment_method"]').forEach(function (radio) {
             radio.addEventListener('change', function () {
-                /* Toggle active class on options */
                 document.querySelectorAll('.co-pay-opt').forEach(function (opt) {
                     opt.classList.remove('active');
                 });
@@ -122,18 +242,14 @@
             });
         });
 
-        /* Auto-format phone number */
         var phoneInput = document.getElementById('contact_phone');
         if (phoneInput) {
             phoneInput.addEventListener('input', function () {
                 this.value = this.value.replace(/[^\d+\-() ]/g, '');
             });
         }
-
-        /* Card details are collected on the payment gateway page, not here */
     });
 
-    /* ── Barangay Dropdown ── */
     function initBarangays() {
         var select = document.getElementById('shipping_barangay');
         if (!select) return;
@@ -145,7 +261,6 @@
         select.innerHTML = html;
     }
 
-    /* ── Combine address fields before submit ── */
     function combineAddress() {
         var brgy   = (document.getElementById('shipping_barangay') || {}).value || '';
         var street = (document.getElementById('street_address') || {}).value || '';
@@ -160,7 +275,6 @@
         hidden.value = parts.join(', ');
     }
 
-    /* ── Validation helpers ── */
     function markInvalid(el, message) {
         if (!el) return;
         el.classList.add('is-invalid');
@@ -177,7 +291,6 @@
         var required = ['shipping_barangay', 'street_address', 'contact_phone'];
         var valid = true;
 
-        /* Clear previous errors */
         document.querySelectorAll('.form-control.is-invalid').forEach(function (el) {
             el.classList.remove('is-invalid');
         });
@@ -191,7 +304,6 @@
             }
         });
 
-        /* Phone format check */
         var phone = document.getElementById('contact_phone');
         if (phone && phone.value.trim()) {
             var digits = phone.value.replace(/\D/g, '');
@@ -201,14 +313,12 @@
             }
         }
 
-        /* Check payment method selected */
         var checkedPayment = document.querySelector('input[name="payment_method"]:checked');
         if (!checkedPayment) {
             if (typeof showNotification === 'function') showNotification('Please select a payment method', 'warning');
             valid = false;
         }
 
-        /* Card validation when Card is selected */
         if (checkedPayment && checkedPayment.value === 'card') {
             var cardNumber = document.getElementById('card_number');
             var cardName   = document.getElementById('card_name');
@@ -245,7 +355,7 @@
                     } else {
                         var now = new Date();
                         var year = 2000 + yy;
-                        var expDate = new Date(year, mm, 0); // last day of month
+                        var expDate = new Date(year, mm, 0);
                         if (expDate < now) {
                             markInvalid(cardExpiry, 'Card has expired');
                             valid = false;
@@ -273,5 +383,6 @@
     }
 
     window.validateCheckout = validateCheckout;
+    window.updateDeliveryFee = updateDeliveryFee;
 
 })();

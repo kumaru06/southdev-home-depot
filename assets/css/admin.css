@@ -464,6 +464,13 @@
     overflow-y: auto;
     flex: 1;
     transition: padding var(--sidebar-duration) var(--sidebar-ease);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.sidebar .nav-section::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
 }
 .sidebar .nav-label {
     padding: 0 22px 8px;
@@ -618,15 +625,6 @@
 }
 .sidebar.collapsed .nav-section {
     padding: 10px 0 4px;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,.12) transparent;
-}
-.sidebar.collapsed .nav-section::-webkit-scrollbar {
-    width: 4px;
-}
-.sidebar.collapsed .nav-section::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,.12);
-    border-radius: 4px;
 }
 .sidebar.collapsed .nav-menu a {
     justify-content: center;

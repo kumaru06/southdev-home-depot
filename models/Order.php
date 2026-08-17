@@ -7,6 +7,7 @@
 class Order {
     private $pdo;
     private $supportsCancelReason = null;
+    private $supportsShippingFee = null;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
@@ -30,6 +31,35 @@ class Order {
         try {
             $this->pdo->exec("ALTER TABLE orders ADD COLUMN cancel_reason TEXT NULL");
             $this->supportsCancelReason = true;
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    private function detectShippingFeeSupport() {
+        if ($this->supportsShippingFee !== null) {
+            return $this->supportsShippingFee;
+        }
+        try {
+            $stmt = $this->pdo->query("SHOW COLUMNS FROM orders LIKE 'shipping_fee'");
+            $this->supportsShippingFee = (bool) $stmt->fetch();
+        } catch (Exception $e) {
+            $this->supportsShippingFee = false;
+        }
+        return $this->supportsShippingFee;
+    }
+
+    /**
+     * Ensure shipping_fee exists. Call BEFORE beginTransaction — ALTER commits.
+     */
+    public function ensureShippingFeeColumn() {
+        if ($this->detectShippingFeeSupport()) return true;
+        try {
+            $this->pdo->exec(
+                "ALTER TABLE orders ADD COLUMN shipping_fee DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER total_amount"
+            );
+            $this->supportsShippingFee = true;
             return true;
         } catch (Exception $e) {
             return false;
@@ -75,16 +105,31 @@ class Order {
 
     public function create($data) {
         $orderNumber = 'SHD-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
-        $stmt = $this->pdo->prepare(
-            "INSERT INTO orders (user_id, order_number, total_amount, shipping_address, shipping_city, shipping_state, shipping_zip, notes)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-        );
-        $stmt->execute([
-            $data['user_id'], $orderNumber, $data['total_amount'],
-            $data['shipping_address'], $data['shipping_city'] ?? null,
-            $data['shipping_state'] ?? null, $data['shipping_zip'] ?? null,
-            $data['notes'] ?? null
-        ]);
+        $shippingFee = isset($data['shipping_fee']) ? (float) $data['shipping_fee'] : 0.0;
+
+        if ($this->detectShippingFeeSupport()) {
+            $stmt = $this->pdo->prepare(
+                "INSERT INTO orders (user_id, order_number, total_amount, shipping_fee, shipping_address, shipping_city, shipping_state, shipping_zip, notes)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            );
+            $stmt->execute([
+                $data['user_id'], $orderNumber, $data['total_amount'], $shippingFee,
+                $data['shipping_address'], $data['shipping_city'] ?? null,
+                $data['shipping_state'] ?? null, $data['shipping_zip'] ?? null,
+                $data['notes'] ?? null
+            ]);
+        } else {
+            $stmt = $this->pdo->prepare(
+                "INSERT INTO orders (user_id, order_number, total_amount, shipping_address, shipping_city, shipping_state, shipping_zip, notes)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            );
+            $stmt->execute([
+                $data['user_id'], $orderNumber, $data['total_amount'],
+                $data['shipping_address'], $data['shipping_city'] ?? null,
+                $data['shipping_state'] ?? null, $data['shipping_zip'] ?? null,
+                $data['notes'] ?? null
+            ]);
+        }
         return $this->pdo->lastInsertId();
     }
 

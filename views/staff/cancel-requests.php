@@ -21,7 +21,6 @@ require_once INCLUDES_PATH . '/sidebar.php';
                         <th>Order</th>
                         <th>Customer</th>
                         <th>Reason</th>
-                        <th>Status</th>
                         <th>Requested</th>
                         <th>Staff Reply</th>
                         <th>Actions</th>
@@ -35,7 +34,6 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                 <td><strong><?= htmlspecialchars($req['order_number'] ?? 'N/A') ?></strong></td>
                                 <td><?= htmlspecialchars(($req['first_name'] ?? '') . ' ' . ($req['last_name'] ?? '')) ?></td>
                                 <td title="<?= htmlspecialchars($req['reason']) ?>"><?= htmlspecialchars(substr($req['reason'], 0, 60)) ?><?= strlen($req['reason']) > 60 ? '…' : '' ?></td>
-                                <td><span class="badge badge-<?= $req['status'] ?>"><?= ucfirst($req['status']) ?></span></td>
                                 <td><?= date('M d, Y', strtotime($req['created_at'])) ?></td>
                                 <td>
                                     <?php if (!empty($req['admin_notes']) && $req['status'] !== 'pending'): ?>
@@ -72,13 +70,13 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                             </button>
                                         </div>
                                     <?php else: ?>
-                                        <span class="text-muted"><?= ucfirst($req['status']) ?></span>
+                                        <span class="badge badge-<?= htmlspecialchars($req['status']) ?>"><?= ucfirst($req['status']) ?></span>
                                     <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr><td colspan="8" class="text-center">No cancel requests found.</td></tr>
+                        <tr><td colspan="7" class="text-center">No cancel requests found.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>

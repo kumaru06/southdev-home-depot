@@ -167,14 +167,26 @@ class OrderController {
             exit;
         }
 
+        // DDL (ALTER) must run before beginTransaction — MySQL commits on ALTER.
+        $this->orderModel->ensureShippingFeeColumn();
+
+        require_once INCLUDES_PATH . '/DeliveryFee.php';
+        $subtotal = (float) $this->cartModel->getCartTotal($_SESSION['user_id']);
+        $barangay = trim((string) ($_POST['shipping_barangay'] ?? ''));
+        if ($barangay === '') {
+            $barangay = DeliveryFee::extractBarangayFromAddress(trim($_POST['shipping_address'] ?? '')) ?? '';
+        }
+        $delivery = DeliveryFee::calculate($barangay !== '' ? $barangay : null, $subtotal);
+        $shippingFee = (float) $delivery['fee'];
+        $totalAmount = round($subtotal + $shippingFee, 2);
+
         try {
             $this->pdo->beginTransaction();
-
-            $totalAmount = $this->cartModel->getCartTotal($_SESSION['user_id']);
 
             $orderId = $this->orderModel->create([
                 'user_id'          => $_SESSION['user_id'],
                 'total_amount'     => $totalAmount,
+                'shipping_fee'     => $shippingFee,
                 'shipping_address' => trim($_POST['shipping_address']),
                 'shipping_city'    => trim($_POST['shipping_city'] ?? ''),
                 'shipping_state'   => trim($_POST['shipping_state'] ?? ''),
@@ -644,6 +656,8 @@ class OrderController {
 
         $pageTitle = 'Checkout';
         $extraCss = ['customer.css'];
+        require_once INCLUDES_PATH . '/DeliveryFee.php';
+        $deliveryConfig = DeliveryFee::clientConfig((float) $cartTotal);
         require_once VIEWS_PATH . '/customer/checkout.php';
     }
 }

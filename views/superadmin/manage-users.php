@@ -131,7 +131,8 @@ require_once INCLUDES_PATH . '/sidebar.php';
                         <tr>
                             <th>ID</th>
                             <th>Name</th>
-                            <th>Username / Email</th>
+                            <th>Username</th>
+                            <th>Email</th>
                             <th>Role</th>
                             <th>Status</th>
                             <th>Joined</th>
@@ -142,14 +143,6 @@ require_once INCLUDES_PATH . '/sidebar.php';
                         <?php if (!empty($users)): ?>
                             <?php foreach ($users as $user): ?>
                                 <tr data-user-role="<?= htmlspecialchars($user['role_name'] ?? 'customer') ?>">
-                                    <?php
-                                    $roleName = (string) ($user['role_name'] ?? 'customer');
-                                    $usesUsernameLogin = in_array($roleName, ['super_admin', 'staff', 'inventory_incharge'], true);
-                                    $accountIdentifier = $usesUsernameLogin && !empty($user['username'])
-                                        ? $user['username']
-                                        : ($user['email'] ?? '');
-                                    $accountIdentifierLabel = $usesUsernameLogin && !empty($user['username']) ? 'Username' : 'Email';
-                                    ?>
                                     <td data-label="ID"><?= $user['id'] ?></td>
                                     <td data-label="Name">
                                         <div style="display:flex; align-items:center; gap:.5rem;">
@@ -159,11 +152,19 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                             <span class="user-name-text"><?= htmlspecialchars(trim($user['first_name'] . ' ' . $user['last_name'])) ?: '<em style="opacity:.4">No name</em>' ?></span>
                                         </div>
                                     </td>
-                                    <td data-label="<?= htmlspecialchars($accountIdentifierLabel) ?>">
-                                        <div class="user-account-meta">
-                                            <span class="user-email-text"><?= htmlspecialchars($accountIdentifier) ?></span>
-                                            <small class="user-account-type"><?= htmlspecialchars($accountIdentifierLabel) ?></small>
-                                        </div>
+                                    <td data-label="Username">
+                                        <?php if (!empty($user['username'])): ?>
+                                            <span class="user-email-text"><?= htmlspecialchars($user['username']) ?></span>
+                                        <?php else: ?>
+                                            <span style="opacity:.35;">—</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td data-label="Email">
+                                        <?php if (!empty($user['email'])): ?>
+                                            <span class="user-email-text"><?= htmlspecialchars($user['email']) ?></span>
+                                        <?php else: ?>
+                                            <span style="opacity:.35;">—</span>
+                                        <?php endif; ?>
                                     </td>
                                     <td data-label="Role">
                                         <?php
@@ -242,7 +243,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <tr><td colspan="7" class="empty-state" style="text-align:center; padding:2rem;">
+                            <tr><td colspan="8" class="empty-state" style="text-align:center; padding:2rem;">
                                 <i data-lucide="users" style="width:40px;height:40px;color:var(--steel);margin-bottom:.5rem;"></i>
                                 <p>No users found.</p>
                             </td></tr>
@@ -283,18 +284,6 @@ require_once INCLUDES_PATH . '/sidebar.php';
 .user-role-tab.active {
     color: var(--accent, #F97316);
     border-bottom-color: var(--accent, #F97316);
-}
-.user-account-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-.user-account-type {
-    color: var(--steel, #6c7a8d);
-    font-size: .72rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .04em;
 }
 .tab-count {
     display: inline-flex;

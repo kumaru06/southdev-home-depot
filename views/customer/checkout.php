@@ -102,7 +102,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                         <div class="co-location-tag">Davao City, Davao del Sur &bull; 8000</div>
                         <div class="form-group">
                             <label for="shipping_barangay">Barangay <span class="required">*</span></label>
-                            <select id="shipping_barangay" class="form-control" required>
+                            <select id="shipping_barangay" name="shipping_barangay" class="form-control" required>
                                 <option value="">Select Barangay</option>
                             </select>
                         </div>
@@ -232,16 +232,28 @@ require_once INCLUDES_PATH . '/navbar.php';
                     <div class="co-summary-totals">
                         <div class="co-sum-row">
                             <span>Subtotal</span>
-                            <span>₱<?= number_format($cartTotal, 2) ?></span>
+                            <span id="co-subtotal-display">₱<?= number_format($cartTotal, 2) ?></span>
                         </div>
                         <div class="co-sum-row">
-                            <span>Delivery</span>
-                            <span class="co-free">FREE</span>
+                            <span>Delivery <span class="co-zone-pill" id="co-delivery-zone" hidden></span></span>
+                            <span id="co-delivery-fee" class="co-free">Select barangay</span>
                         </div>
                         <div class="co-sum-grand">
                             <span>Total</span>
-                            <span>₱<?= number_format($cartTotal, 2) ?></span>
+                            <span id="co-grand-total">₱<?= number_format($cartTotal, 2) ?></span>
                         </div>
+                    </div>
+                    <div class="co-ship-banner" id="co-delivery-hint" data-state="idle">
+                        <div class="co-ship-banner__row">
+                            <span class="co-ship-banner__title" id="co-delivery-hint-title">Free delivery</span>
+                            <span class="co-ship-banner__amount" id="co-delivery-hint-amount">₱<?= number_format(DeliveryFee::FREE_THRESHOLD, 0) ?>+</span>
+                        </div>
+                        <div class="co-ship-progress" aria-hidden="true">
+                            <span class="co-ship-progress__bar" id="co-delivery-progress"></span>
+                        </div>
+                        <p class="co-ship-banner__copy" id="co-delivery-hint-text">
+                            Add ₱<?= number_format(max(0, DeliveryFee::FREE_THRESHOLD - $cartTotal), 0) ?> more, or choose a barangay to see your delivery fee.
+                        </p>
                     </div>
                     <div class="co-summary-actions">
                         <button type="submit" class="btn btn-accent btn-block btn-lg">Place Order</button>
@@ -258,5 +270,14 @@ require_once INCLUDES_PATH . '/navbar.php';
         </div>
     </form>
 </div>
+
+<script>
+window.DELIVERY_FEE_CONFIG = <?= json_encode($deliveryConfig ?? [
+    'subtotal' => (float) ($cartTotal ?? 0),
+    'free_threshold' => 10000,
+    'fees' => ['near' => 300, 'mid' => 400, 'far' => 500],
+    'zones' => [],
+], JSON_UNESCAPED_UNICODE) ?>;
+</script>
 
 <?php require_once INCLUDES_PATH . '/footer.php'; ?>

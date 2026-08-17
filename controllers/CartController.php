@@ -151,6 +151,8 @@ class CartController {
 
         $pageTitle = 'Checkout';
         $extraCss  = ['customer.css'];
+        require_once INCLUDES_PATH . '/DeliveryFee.php';
+        $deliveryConfig = DeliveryFee::clientConfig((float) $cartTotal);
         require_once VIEWS_PATH . '/customer/checkout.php';
     }
 }
