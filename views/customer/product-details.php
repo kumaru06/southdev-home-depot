@@ -3,12 +3,17 @@
 require_once INCLUDES_PATH . '/header.php';
 require_once INCLUDES_PATH . '/navbar.php';
 
-$inStock = ($product['stock'] ?? 0) > 0;
 $images = $images ?? [];
 $specs = $specs ?? [];
 $sizeOptions = $sizeOptions ?? [];
 $relatedProducts = $relatedProducts ?? [];
 $relatedRatings = $relatedRatings ?? [];
+
+$hasSizes = !empty($sizeOptions);
+$displayStock = $hasSizes
+    ? (int) max(array_map(static function ($o) { return (int)($o['stock'] ?? 0); }, $sizeOptions))
+    : (int)($product['stock'] ?? 0);
+$inStock = $displayStock > 0;
 
 // Load reviews for this product
 require_once __DIR__ . '/../../models/Review.php';
@@ -96,17 +101,29 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
                     <?php endif; ?>
                 </div>
                 <?php if (count($images) > 1): ?>
-                <div class="pd-thumbs" role="list">
-                    <?php foreach ($images as $idx => $img): ?>
-                        <button type="button"
-                            class="pd-thumb<?= $idx === 0 ? ' is-active' : '' ?>"
-                            data-pd-thumb
-                            data-src="<?= APP_URL ?>/assets/uploads/<?= htmlspecialchars($img['filename']) ?>"
-                            aria-label="View image <?= $idx + 1 ?>">
-                            <img src="<?= APP_URL ?>/assets/uploads/<?= htmlspecialchars($img['filename']) ?>" alt="">
-                            <span class="pd-thumb__num"><?= $idx + 1 ?></span>
-                        </button>
-                    <?php endforeach; ?>
+                <?php $thumbCount = count($images); ?>
+                <div class="pd-thumbs-wrap" data-pd-thumbs-wrap>
+                    <?php if ($thumbCount > 4): ?>
+                    <button type="button" class="pd-thumbs-nav" data-pd-thumbs-prev aria-label="Previous images" disabled>&lsaquo;</button>
+                    <?php endif; ?>
+                    <div class="pd-thumbs-viewport">
+                        <div class="pd-thumbs-track" data-pd-thumbs-track role="list">
+                            <?php foreach ($images as $idx => $img): ?>
+                                <button type="button"
+                                    class="pd-thumb<?= $idx === 0 ? ' is-active' : '' ?>"
+                                    data-pd-thumb
+                                    data-index="<?= $idx ?>"
+                                    data-src="<?= APP_URL ?>/assets/uploads/<?= htmlspecialchars($img['filename']) ?>"
+                                    aria-label="View image <?= $idx + 1 ?>">
+                                    <img src="<?= APP_URL ?>/assets/uploads/<?= htmlspecialchars($img['filename']) ?>" alt="">
+                                    <span class="pd-thumb__num"><?= $idx + 1 ?></span>
+                                </button>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php if ($thumbCount > 4): ?>
+                    <button type="button" class="pd-thumbs-nav" data-pd-thumbs-next aria-label="Next images">&rsaquo;</button>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
             </div>
@@ -135,20 +152,14 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
 
                 <div class="pd-price-row">
                     <div class="pd-price">
-                        <span class="pd-price__currency">₱</span><span class="pd-price__amount" data-pd-price><?= number_format(!empty($sizeOptions[0]['price']) ? $sizeOptions[0]['price'] : $product['price'], 2) ?></span>
+                        <span class="pd-price__currency">₱</span><span class="pd-price__amount" data-pd-price><?= number_format((float) $product['price'], 2) ?></span>
                         <span class="pd-price__unit">/ piece</span>
                     </div>
-                    <?php
-                        $hasSizes = !empty($sizeOptions);
-                        $displayStock = $hasSizes
-                            ? (int) max(array_map(static function ($o) { return (int)($o['stock'] ?? 0); }, $sizeOptions))
-                            : (int)$product['stock'];
-                        $displayInStock = $displayStock > 0;
-                    ?>
+                    <?php $displayInStock = $inStock; ?>
                     <?php if ($displayInStock): ?>
                         <span class="pd-stock-badge pd-stock-badge--in" data-pd-stock-badge>
                             <span class="pd-stock-badge__dot" aria-hidden="true"></span>
-                            <span data-pd-stock-text><?= $hasSizes ? 'Select a size' : ($displayStock . ' pcs') ?></span>
+                            <span data-pd-stock-text><?= $hasSizes ? 'Select a size to view stock' : ($displayStock . ' stock') ?></span>
                         </span>
                     <?php else: ?>
                         <span class="pd-stock-badge pd-stock-badge--out" data-pd-stock-badge>
@@ -174,7 +185,7 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
                                class="pd-size<?= $optStock <= 0 ? ' is-oos' : '' ?>">
                                 <span class="pd-size__label"><?= htmlspecialchars($label) ?></span>
                                 <span class="pd-size__price">₱<?= number_format((float)$opt['price'], 2) ?></span>
-                                <span class="pd-size__stock"><?= $optStock > 0 ? ($optStock . ' pcs') : 'Out of stock' ?></span>
+                                <span class="pd-size__stock"><?= $optStock > 0 ? ($optStock . ' stock') : 'Out of stock' ?></span>
                             </a>
                             <?php else: ?>
                             <button type="button"
@@ -186,7 +197,7 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
                                data-label="<?= htmlspecialchars($label, ENT_QUOTES) ?>">
                                 <span class="pd-size__label"><?= htmlspecialchars($label) ?></span>
                                 <span class="pd-size__price">₱<?= number_format((float)$opt['price'], 2) ?></span>
-                                <span class="pd-size__stock"><?= $optStock > 0 ? ($optStock . ' pcs') : 'Out of stock' ?></span>
+                                <span class="pd-size__stock"><?= $optStock > 0 ? ($optStock . ' stock') : 'Out of stock' ?></span>
                             </button>
                             <?php endif; ?>
                         <?php endforeach; ?>
@@ -196,7 +207,7 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
 
                 <?php
                     $canBuy = isset($_SESSION['user_id']) && $_SESSION['role_id'] == ROLE_CUSTOMER && $displayInStock;
-                    $initialMax = $hasSizes ? max(1, $displayStock) : max(1, (int)$product['stock']);
+                    $initialMax = $hasSizes ? 1 : max(1, (int)$product['stock']);
                 ?>
                 <?php if ($canBuy): ?>
                     <div class="pd-actions">
@@ -244,9 +255,7 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
             <div class="pd-card pd-card--specs">
                 <h3 class="pd-card__title">Product Specifications</h3>
                     <?php
-                      $specSizeLabel = !empty($sizeOptions[0]['size_label'])
-                          ? $sizeOptions[0]['size_label']
-                          : ($product['size_label'] ?? '');
+                      $specSizeLabel = $product['size_label'] ?? '';
                       if ($specSizeLabel !== '' && !isset($specsTable['Size'])) {
                           // show in fallback block below when specs empty; if specs exist, inject Size
                       }

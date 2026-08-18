@@ -80,6 +80,17 @@ class InventoryController {
         $productId = intval($_POST['product_id'] ?? 0);
         $quantity  = intval($_POST['quantity'] ?? 0);
         $reason    = trim($_POST['reason'] ?? 'Manual stock update');
+        $product = $this->productModel->findById($productId);
+        if (!$product) {
+            flash('error', 'Product not found.');
+            header('Location: ' . $this->inventoryUrl());
+            exit;
+        }
+        if ($this->productModel->hasSizeOptions($productId)) {
+            flash('error', 'This product uses per-size stock. Update its size rows from Manage Products instead.');
+            header('Location: ' . $this->inventoryUrl());
+            exit;
+        }
 
         // Get current quantity for movement tracking
         $currentInventory = $this->inventoryModel->getByProductId($productId);
@@ -93,7 +104,6 @@ class InventoryController {
             $this->stockMovementModel->record($productId, 'adjustment', $diff, null, $reason, $_SESSION['user_id']);
         }
 
-        $product = $this->productModel->findById($productId);
         $this->logModel->create(LOG_STOCK_MOVEMENT, "Inventory updated for {$product['name']} (ID #{$productId}): {$oldQty} → {$quantity}. Reason: {$reason}");
 
         flash('success', 'Inventory updated successfully.');
@@ -120,10 +130,21 @@ class InventoryController {
             exit;
         }
 
+        $product = $this->productModel->findById($productId);
+        if (!$product) {
+            flash('error', 'Product not found.');
+            header('Location: ' . ($supplierRequestId ? $this->supplierRequestsUrl() : $this->inventoryUrl()));
+            exit;
+        }
+        if ($this->productModel->hasSizeOptions($productId)) {
+            flash('error', 'This product uses per-size stock. Restock its size rows from Manage Products instead.');
+            header('Location: ' . ($supplierRequestId ? $this->supplierRequestsUrl() : $this->inventoryUrl()));
+            exit;
+        }
+
         $this->inventoryModel->adjustQuantity($productId, $addQty);
         $this->stockMovementModel->record($productId, 'purchase', $addQty, null, $reason, $_SESSION['user_id']);
 
-        $product = $this->productModel->findById($productId);
         $this->logModel->create(LOG_STOCK_ADD, "Added {$addQty} units to {$product['name']} (ID #{$productId}). Reason: {$reason}");
 
         if ($supplierRequestId > 0) {
@@ -160,6 +181,11 @@ class InventoryController {
 
         if ($productId <= 0 || !$this->productModel->findById($productId)) {
             flash('error', 'Product not found.');
+            header('Location: ' . $this->inventoryUrl());
+            exit;
+        }
+        if ($this->productModel->hasSizeOptions($productId)) {
+            flash('error', 'This product uses per-size stock. Supplier requests must be managed from its size options instead.');
             header('Location: ' . $this->inventoryUrl());
             exit;
         }
@@ -324,6 +350,11 @@ class InventoryController {
         }
 
         $productId = (int) $request['product_id'];
+        if ($this->productModel->hasSizeOptions($productId)) {
+            flash('error', 'This request belongs to a per-size product. Receive stock through Manage Products size options instead.');
+            header('Location: ' . $this->supplierRequestsUrl());
+            exit;
+        }
         $this->inventoryModel->adjustQuantity($productId, $addQty);
         $this->stockMovementModel->record($productId, 'purchase', $addQty, null, $reason, $_SESSION['user_id']);
         $this->supplierRequestModel->updateStatus($id, SupplierRequest::STATUS_RECEIVED);

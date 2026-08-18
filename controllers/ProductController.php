@@ -38,7 +38,7 @@ class ProductController {
         $perPage    = $this->itemsPerPage();
         $offset     = ($page - 1) * $perPage;
 
-        $products      = $this->productModel->getAll($categoryId, $perPage, $offset);
+        $products      = $this->attachDisplayStock($this->productModel->getAll($categoryId, $perPage, $offset));
         $categories    = $this->categoryModel->getAll();
         $totalProducts = $this->productModel->count($categoryId);
         $totalPages    = ceil($totalProducts / $perPage);
@@ -65,7 +65,7 @@ class ProductController {
         $perPage    = $this->itemsPerPage();
         $offset     = ($page - 1) * $perPage;
 
-        $products      = $this->productModel->getAll($categoryId, $perPage, $offset);
+        $products      = $this->attachDisplayStock($this->productModel->getAll($categoryId, $perPage, $offset));
         $categories    = $this->categoryModel->getAll();
         $totalProducts = $this->productModel->count($categoryId);
         $totalPages    = ceil($totalProducts / $perPage);
@@ -84,7 +84,7 @@ class ProductController {
     }
 
     public function show($id) {
-        $product = $this->productModel->findById($id);
+        $product = $this->productModel->findActiveById($id);
         if (!$product) {
             require_once VIEWS_PATH . '/errors/404.php';
             return;
@@ -97,22 +97,6 @@ class ProductController {
 
         $specs = Product::decodeSpecifications($product['specifications'] ?? null);
         $sizeOptions = $this->productModel->getSizeOptions($id);
-        // Fallback: sibling products via size_group (legacy linking)
-        if (empty($sizeOptions) && !empty($product['size_group'])) {
-            $siblings = $this->productModel->getSizeSiblings($product['size_group']);
-            if (count($siblings) > 1) {
-                $sizeOptions = array_map(function ($s) {
-                    return [
-                        'id' => null,
-                        'linked_product_id' => (int) $s['id'],
-                        'size_label' => $s['size_label'] ?: $s['name'],
-                        'price' => $s['price'],
-                        'stock' => $s['stock'],
-                        'is_current' => false,
-                    ];
-                }, $siblings);
-            }
-        }
 
         $relatedProducts = $this->productModel->getRelated($product['category_id'], $id, 8);
         $relatedRatings = [];
@@ -132,7 +116,7 @@ class ProductController {
      * Scrollable locked list so the box does not stretch with many reviews.
      */
     public function reviews($id) {
-        $product = $this->productModel->findById($id);
+        $product = $this->productModel->findActiveById($id);
         if (!$product) {
             require_once VIEWS_PATH . '/errors/404.php';
             return;
@@ -149,12 +133,12 @@ class ProductController {
         $categories = $this->categoryModel->getAll();
         $galleryByProduct = [];
         $sizesByProduct = [];
+        $sizeSummaryByProduct = [];
         if (!empty($products)) {
             $ids = array_column($products, 'id');
             $galleryByProduct = $this->productModel->getImagesByProductIds($ids);
-            foreach ($ids as $pid) {
-                $sizesByProduct[(int) $pid] = $this->productModel->getSizeOptions($pid);
-            }
+            $sizesByProduct = $this->productModel->getSizeOptionsByProductIds($ids);
+            $sizeSummaryByProduct = $this->productModel->getSizeStockSummaryByProductIds($ids);
         }
         $pageTitle  = 'Manage Products';
         $isAdmin    = true;
@@ -167,23 +151,32 @@ class ProductController {
         AuthMiddleware::csrf();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
 
+        $sellingType = $this->sellingTypeFromPost();
+        $sizeOptions = $this->sizeOptionsForSellingType($sellingType);
         $sku = trim($_POST['sku'] ?? '');
         $data = [
             'category_id'     => intval($_POST['category_id']),
             'name'            => trim($_POST['name']),
             'description'     => trim($_POST['description'] ?? ''),
             'specifications'  => $this->parseSpecificationsFromPost(),
-            'price'           => floatval($_POST['price']),
+            'price'           => $this->listingPriceForSellingType($sellingType, $sizeOptions, $_POST['price'] ?? 0),
             'sku'             => $sku !== '' ? $sku : null,
             'size_label'      => $this->nullableTrim($_POST['size_label'] ?? ''),
-            'size_group'      => $this->nullableTrim($_POST['size_group'] ?? ''),
+            'size_group'      => null,
             'image'           => null
         ];
+        $initialQty = $sellingType === 'sizes' ? 0 : intval($_POST['quantity'] ?? 0);
+        $validationError = $this->validateProductPayload($data, $sizeOptions, $initialQty, $sellingType);
+        if ($validationError !== null) {
+            flash('error', $validationError);
+            header('Location: ' . APP_URL . '/index.php?url=admin/products&add=1');
+            exit;
+        }
 
         $cover = $this->storeUploadedImage($_FILES['image'] ?? null);
         if (!empty($cover['error'])) {
             flash('error', $cover['error']);
-            header('Location: ' . APP_URL . '/index.php?url=admin/products');
+            header('Location: ' . APP_URL . '/index.php?url=admin/products&add=1');
             exit;
         }
         if (!empty($cover['filename'])) {
@@ -192,7 +185,7 @@ class ProductController {
 
         if ($data['sku'] && $this->productModel->skuExists($data['sku'])) {
             flash('error', 'SKU "' . htmlspecialchars($data['sku']) . '" already exists. Please use a unique SKU.');
-            header('Location: ' . APP_URL . '/index.php?url=admin/products');
+            header('Location: ' . APP_URL . '/index.php?url=admin/products&add=1');
             exit;
         }
 
@@ -202,10 +195,12 @@ class ProductController {
                 $this->productModel->addImage($productId, $data['image'], 0);
             }
             $this->storeGalleryUploads($productId, $_FILES['gallery_images'] ?? null);
-            $this->productModel->replaceSizeOptions($productId, $this->parseSizeOptionsFromPost());
+            $this->productModel->replaceSizeOptions($productId, $sizeOptions);
 
-            $initialQty = intval($_POST['quantity'] ?? 0);
             $inv = new Inventory($this->pdo);
+            if (!empty($sizeOptions)) {
+                $initialQty = 0;
+            }
             $inv->updateQuantity($productId, $initialQty);
 
             // Record initial stock movement
@@ -215,11 +210,12 @@ class ProductController {
 
             $this->logModel->create(LOG_PRODUCT_CREATE, "Product created: {$data['name']} (ID #{$productId})");
             flash('success', 'Product created successfully.');
-        } else {
-            flash('error', 'Failed to create product.');
+            header('Location: ' . APP_URL . '/index.php?url=admin/products');
+            exit;
         }
 
-        header('Location: ' . APP_URL . '/index.php?url=admin/products');
+        flash('error', 'Failed to create product.');
+        header('Location: ' . APP_URL . '/index.php?url=admin/products&add=1');
         exit;
     }
 
@@ -247,18 +243,27 @@ class ProductController {
 
         $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
+        list($sellingType, $sizeOptions) = $this->resolveUpdateSellingPayload($id);
         $sku = trim($_POST['sku'] ?? '');
         $data = [
             'category_id'    => intval($_POST['category_id']),
             'name'           => trim($_POST['name']),
             'description'    => trim($_POST['description'] ?? ''),
             'specifications' => $this->parseSpecificationsFromPost(),
-            'price'          => floatval($_POST['price']),
+            'price'          => $this->listingPriceForSellingType($sellingType, $sizeOptions, $_POST['price'] ?? 0),
             'sku'            => $sku !== '' ? $sku : null,
             'size_label'     => $this->nullableTrim($_POST['size_label'] ?? ''),
-            'size_group'     => $this->nullableTrim($_POST['size_group'] ?? ''),
+            'size_group'     => null,
             'image'          => $_POST['existing_image'] ?? null
         ];
+        $newQty = $sellingType === 'sizes' ? 0 : intval($_POST['quantity'] ?? 0);
+        $validationError = $this->validateProductPayload($data, $sizeOptions, $newQty, $sellingType);
+        if ($validationError !== null) {
+            if ($isAjax) { header('Content-Type: application/json'); echo json_encode(['success' => false, 'message' => $validationError]); exit; }
+            flash('error', $validationError);
+            header('Location: ' . APP_URL . '/index.php?url=admin/products/edit/' . $id);
+            exit;
+        }
 
         $cover = $this->storeUploadedImage($_FILES['image'] ?? null);
         if (!empty($cover['error'])) {
@@ -312,9 +317,7 @@ class ProductController {
         }
 
         $this->productModel->update($id, $data);
-        if (isset($_POST['size_opt_labels']) && is_array($_POST['size_opt_labels'])) {
-            $this->productModel->replaceSizeOptions($id, $this->parseSizeOptionsFromPost());
-        }
+        $this->productModel->replaceSizeOptions($id, $sizeOptions);
 
         // Record price history if price changed
         if (abs($oldPrice - $newPrice) > 0.001) {
@@ -326,7 +329,9 @@ class ProductController {
         if (isset($_POST['quantity'])) {
             $inv = new Inventory($this->pdo);
             $oldQty = intval($existingProduct['stock'] ?? 0);
-            $newQty = intval($_POST['quantity']);
+            if (!empty($sizeOptions)) {
+                $newQty = 0;
+            }
             $inv->updateQuantity($id, $newQty);
 
             // Record stock movement if quantity changed
@@ -347,6 +352,14 @@ class ProductController {
                 'message' => 'Product updated successfully.',
                 'image'   => $data['image'] ?? null,
                 'id'      => $id,
+                'stock'   => $newQty,
+                'sku'     => $data['sku'],
+                'category_id' => $data['category_id'],
+                'size_label'  => $data['size_label'],
+                'has_sizes'   => !empty($sizeOptions),
+                'size_total_stock' => array_sum(array_map(static function ($opt) { return (int) $opt['stock']; }, $sizeOptions)),
+                'sizes'       => $sizeOptions,
+                'specifications' => Product::decodeSpecifications($data['specifications'] ?? null),
             ]);
             exit;
         }
@@ -397,7 +410,7 @@ class ProductController {
 
     public function search() {
         $keyword    = trim($_GET['q'] ?? '');
-        $products   = $keyword ? $this->productModel->search($keyword) : [];
+        $products   = $keyword ? $this->attachDisplayStock($this->productModel->search($keyword)) : [];
         $categories = $this->categoryModel->getAll();
         $pageTitle  = 'Search: ' . htmlspecialchars($keyword);
         $extraCss   = ['customer.css'];
@@ -408,6 +421,28 @@ class ProductController {
     private function itemsPerPage(): int {
         require_once MODELS_PATH . '/Setting.php';
         return (new Setting($this->pdo))->itemsPerPage();
+    }
+
+    private function attachDisplayStock(array $products): array {
+        if (empty($products)) {
+            return $products;
+        }
+
+        $summaries = $this->productModel->getSizeStockSummaryByProductIds(array_column($products, 'id'));
+        $sizesByProduct = $this->productModel->getSizeOptionsByProductIds(array_column($products, 'id'));
+        foreach ($products as &$product) {
+            $productId = (int) $product['id'];
+            $summary = $summaries[$productId] ?? null;
+            $hasSizes = !empty($summary) && (int) ($summary['option_count'] ?? 0) > 0;
+            $product['has_sizes'] = $hasSizes;
+            $product['display_stock'] = $hasSizes
+                ? (int) ($summary['total_stock'] ?? 0)
+                : (int) ($product['stock'] ?? 0);
+            $product['size_options'] = $hasSizes ? ($sizesByProduct[$productId] ?? []) : [];
+        }
+        unset($product);
+
+        return $products;
     }
 
     private function nullableTrim($value): ?string {
@@ -434,6 +469,45 @@ class ProductController {
         return Product::encodeSpecifications($pairs);
     }
 
+    private function sellingTypeFromPost(): string {
+        return (($_POST['selling_type'] ?? 'simple') === 'sizes') ? 'sizes' : 'simple';
+    }
+
+    private function resolveUpdateSellingPayload(int $productId): array {
+        $postedSizes = $this->parseSizeOptionsFromPost();
+        $radio = (string) ($_POST['selling_type'] ?? '');
+
+        if (!empty($postedSizes)) {
+            return ['sizes', $postedSizes];
+        }
+        if ($radio === 'simple') {
+            return ['simple', []];
+        }
+        if ($radio === 'sizes') {
+            return ['sizes', []];
+        }
+
+        $existing = $this->productModel->getSizeOptions($productId);
+        if (!empty($existing)) {
+            return ['sizes', $existing];
+        }
+        return ['simple', []];
+    }
+
+    private function sizeOptionsForSellingType(string $sellingType): array {
+        return $sellingType === 'sizes' ? $this->parseSizeOptionsFromPost() : [];
+    }
+
+    private function listingPriceForSellingType(string $sellingType, array $sizeOptions, $postedPrice): float {
+        if ($sellingType === 'sizes' && !empty($sizeOptions)) {
+            $prices = array_map(static function ($opt) {
+                return (float) ($opt['price'] ?? 0);
+            }, $sizeOptions);
+            return (float) min($prices);
+        }
+        return (float) $postedPrice;
+    }
+
     private function parseSizeOptionsFromPost(): array {
         $labels = $_POST['size_opt_labels'] ?? [];
         $prices = $_POST['size_opt_prices'] ?? [];
@@ -455,6 +529,52 @@ class ProductController {
             ];
         }
         return $out;
+    }
+
+    private function validateProductPayload(array $data, array $sizeOptions, int $quantity, string $sellingType = 'simple'): ?string {
+        if (($data['category_id'] ?? 0) <= 0) {
+            return 'Please select a valid category.';
+        }
+        if (!$this->categoryModel->findById($data['category_id'])) {
+            return 'Selected category no longer exists.';
+        }
+
+        if (($data['name'] ?? '') === '') {
+            return 'Product name is required.';
+        }
+
+        if (!isset($data['price']) || !is_numeric($data['price']) || (float) $data['price'] < 0) {
+            return 'Price must be zero or greater.';
+        }
+
+        if ($quantity < 0) {
+            return 'Stock quantity must be zero or greater.';
+        }
+        if ($sellingType === 'sizes' && empty($sizeOptions)) {
+            return 'Add at least one size with a label, price, and stock.';
+        }
+
+        $seenLabels = [];
+        foreach ($sizeOptions as $option) {
+            $label = trim((string) ($option['size_label'] ?? ''));
+            if ($label === '') {
+                return 'Each size option must have a size label.';
+            }
+            $normalized = strtolower($label);
+            if (isset($seenLabels[$normalized])) {
+                return 'Duplicate size labels are not allowed for the same product.';
+            }
+            $seenLabels[$normalized] = true;
+
+            if (!isset($option['price']) || !is_numeric($option['price']) || (float) $option['price'] < 0) {
+                return 'Each size option must have a valid price.';
+            }
+            if (!isset($option['stock']) || !is_numeric($option['stock']) || (int) $option['stock'] < 0) {
+                return 'Each size option must have a valid stock quantity.';
+            }
+        }
+
+        return null;
     }
 
     /**

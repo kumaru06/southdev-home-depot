@@ -224,7 +224,12 @@ require_once INCLUDES_PATH . '/navbar.php';
                         <?php foreach ($cartItems as $item): ?>
                         <div class="co-sum-item">
                             <span class="co-sum-qty"><?= $item['quantity'] ?>×</span>
-                            <span class="co-sum-name"><?= htmlspecialchars($item['product_name']) ?></span>
+                            <span class="co-sum-name">
+                                <?= htmlspecialchars($item['product_name']) ?>
+                                <?php if (!empty($item['size_label'])): ?>
+                                    <small style="display:block;color:var(--text-muted,#64748b);font-weight:500;">Size: <?= htmlspecialchars($item['size_label']) ?></small>
+                                <?php endif; ?>
+                            </span>
                             <span class="co-sum-price">₱<?= number_format($item['price'] * $item['quantity'], 2) ?></span>
                         </div>
                         <?php endforeach; ?>

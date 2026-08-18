@@ -54,6 +54,9 @@ require_once INCLUDES_PATH . '/navbar.php';
                             </span>
                             <span class="return-item-info">
                                 <strong><?= htmlspecialchars($item['product_name']) ?></strong>
+                                <?php if (!empty($item['size_label'])): ?>
+                                    <small>Size: <?= htmlspecialchars($item['size_label']) ?></small>
+                                <?php endif; ?>
                                 <small>Qty: <?= (int) $item['quantity'] ?> • ₱<?= number_format($item['price'], 2) ?> each</small>
                             </span>
                             <span class="return-item-status">Select</span>

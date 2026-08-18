@@ -143,7 +143,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
                         <?php else: ?>
                         <div class="refund-returned-chip-placeholder"></div>
                         <?php endif; ?>
-                        <span><?= htmlspecialchars($ri['product_name']) ?></span>
+                        <span><?= htmlspecialchars($ri['product_name']) ?><?php if (!empty($ri['size_label'])): ?> · <?= htmlspecialchars($ri['size_label']) ?><?php endif; ?></span>
                         <span class="refund-returned-chip-qty">×<?= $ri['quantity'] ?></span>
                     </div>
                     <?php endforeach; ?>
@@ -359,6 +359,9 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
                     <?php endif; ?>
                     <div class="od-item-info">
                         <span class="od-item-name"><?= htmlspecialchars($item['product_name']) ?></span>
+                        <?php if (!empty($item['size_label'])): ?>
+                        <span class="od-item-size">Size: <?= htmlspecialchars($item['size_label']) ?></span>
+                        <?php endif; ?>
                         <span class="od-item-unit">₱<?= number_format($item['price'], 2) ?> × <?= $item['quantity'] ?></span>
                     </div>
                 </div>

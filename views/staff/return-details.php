@@ -125,6 +125,9 @@ $selectedLookup = array_flip(array_map('intval', $selectedItemIds ?? []));
                         </div>
                         <div class="return-product-body">
                             <h4><?= htmlspecialchars($item['product_name']) ?></h4>
+                            <?php if (!empty($item['size_label'])): ?>
+                                <p class="return-product-size">Size: <?= htmlspecialchars($item['size_label']) ?></p>
+                            <?php endif; ?>
                             <div class="return-product-meta">
                                 <span>Qty: <?= (int) $item['quantity'] ?></span>
                                 <span>₱<?= number_format((float) $item['price'], 2) ?> each</span>

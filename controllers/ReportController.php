@@ -562,13 +562,14 @@ HTML;
      *  4. CURRENT INVENTORY – snapshot of all products
      * ========================================================== */
     private function exportCurrentInventory() {
+        $effectiveReorder = Inventory::effectiveReorderLevelSqlExpr();
         $sql = "SELECT c.name as category, p.sku, p.name as product_name,
                        p.price as selling_price, p.cost as unit_cost,
                        COALESCE(i.quantity, 0) as current_stock,
-                       COALESCE(i.reorder_level, 10) as reorder_level,
+                       ({$effectiveReorder}) as reorder_level,
                        CASE
                            WHEN COALESCE(i.quantity, 0) <= 0 THEN 'Out of Stock'
-                           WHEN COALESCE(i.quantity, 0) <= COALESCE(i.reorder_level, 10) THEN 'Low Stock'
+                           WHEN COALESCE(i.quantity, 0) <= ({$effectiveReorder}) THEN 'Low Stock'
                            ELSE 'In Stock'
                        END as stock_status,
                        COALESCE(i.quantity, 0) * COALESCE(p.cost, p.price) as inventory_value

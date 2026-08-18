@@ -346,7 +346,7 @@ function filterLabel($preset, $dateFrom, $dateTo) {
                                 <td>
                                     <span class="badge badge-cancelled"><?= $item['quantity'] ?></span>
                                 </td>
-                                <td><?= $item['reorder_level'] ?? 10 ?></td>
+                                <td><?= (int) ($item['effective_reorder_level'] ?? 10) ?></td>
                                 <td>
                                     <?php if (intval($item['quantity']) <= 0): ?>
                                         <span class="badge badge-cancelled">Out of Stock</span>

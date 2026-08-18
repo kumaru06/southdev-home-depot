@@ -8,6 +8,7 @@ require_once __DIR__ . '/../models/Order.php';
 require_once __DIR__ . '/../models/OrderItem.php';
 require_once __DIR__ . '/../models/DamagedProduct.php';
 require_once __DIR__ . '/../models/Inventory.php';
+require_once __DIR__ . '/../models/Product.php';
 require_once __DIR__ . '/../models/StockMovement.php';
 require_once __DIR__ . '/../models/Payment.php';
 require_once __DIR__ . '/../models/Log.php';
@@ -21,6 +22,7 @@ class ReturnController {
     private $orderItemModel;
     private $damagedModel;
     private $inventoryModel;
+    private $productModel;
     private $stockMovementModel;
     private $logModel;
     private $pdo;
@@ -32,6 +34,7 @@ class ReturnController {
         $this->orderItemModel    = new OrderItem($pdo);
         $this->damagedModel      = new DamagedProduct($pdo);
         $this->inventoryModel    = new Inventory($pdo);
+        $this->productModel      = new Product($pdo);
         $this->stockMovementModel = new StockMovement($pdo);
         $this->logModel          = new Log($pdo);
     }
@@ -320,7 +323,12 @@ class ReturnController {
                     );
                 } elseif (!$isDamaged) {
                     // Non-damaged returns: restore inventory
-                    $this->inventoryModel->adjustQuantity($item['product_id'], $item['quantity']);
+                    $sizeOptionId = !empty($item['size_option_id']) ? (int) $item['size_option_id'] : null;
+                    if ($sizeOptionId) {
+                        $this->productModel->restoreSizeStock($sizeOptionId, $item['quantity']);
+                    } else {
+                        $this->inventoryModel->adjustQuantity($item['product_id'], $item['quantity']);
+                    }
                     $this->stockMovementModel->record(
                         $item['product_id'],
                         'return',

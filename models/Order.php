@@ -8,6 +8,7 @@ class Order {
     private $pdo;
     private $supportsCancelReason = null;
     private $supportsShippingFee = null;
+    private $supportsOrderItemSizeOption = null;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
@@ -75,6 +76,33 @@ class Order {
         return $stmt->fetch();
     }
 
+    private function detectOrderItemSizeOptionSupport() {
+        if ($this->supportsOrderItemSizeOption !== null) {
+            return $this->supportsOrderItemSizeOption;
+        }
+        try {
+            $stmt = $this->pdo->query("SHOW COLUMNS FROM order_items LIKE 'size_option_id'");
+            $this->supportsOrderItemSizeOption = (bool) $stmt->fetch();
+        } catch (Exception $e) {
+            $this->supportsOrderItemSizeOption = false;
+        }
+        return $this->supportsOrderItemSizeOption;
+    }
+
+    public function ensureOrderItemSizeOptionColumn() {
+        if ($this->detectOrderItemSizeOptionSupport()) return true;
+        try {
+            $this->pdo->exec(
+                "ALTER TABLE order_items
+                 ADD COLUMN size_option_id INT NULL DEFAULT NULL AFTER product_id"
+            );
+            $this->supportsOrderItemSizeOption = true;
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
     public function getByUserId($userId) {
         $stmt = $this->pdo->prepare(
             "SELECT o.*, p.payment_method
@@ -133,8 +161,16 @@ class Order {
         return $this->pdo->lastInsertId();
     }
 
-    public function addItem($orderId, $productId, $quantity, $price, $sizeLabel = null) {
+    public function addItem($orderId, $productId, $quantity, $price, $sizeLabel = null, $sizeOptionId = null) {
         $subtotal = $quantity * $price;
+        if ($this->detectOrderItemSizeOptionSupport()) {
+            $stmt = $this->pdo->prepare(
+                "INSERT INTO order_items (order_id, product_id, size_option_id, size_label, quantity, price, subtotal)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)"
+            );
+            return $stmt->execute([$orderId, $productId, $sizeOptionId, $sizeLabel, $quantity, $price, $subtotal]);
+        }
+
         $stmt = $this->pdo->prepare(
             "INSERT INTO order_items (order_id, product_id, size_label, quantity, price, subtotal)
              VALUES (?, ?, ?, ?, ?, ?)"
@@ -143,10 +179,21 @@ class Order {
     }
 
     public function getItems($orderId) {
-        $stmt = $this->pdo->prepare(
-            "SELECT oi.*, p.name as product_name, p.sku, p.image
-             FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?"
-        );
+        $sql = "SELECT oi.id, oi.order_id, oi.product_id, oi.size_option_id, oi.quantity, oi.price, oi.subtotal,
+                       p.name as product_name, p.sku, p.image";
+        if ($this->detectOrderItemSizeOptionSupport()) {
+            $sql .= ", s.stock as size_option_stock,
+                     COALESCE(NULLIF(TRIM(oi.size_label), ''), s.size_label) as size_label";
+        } else {
+            $sql .= ", oi.size_label";
+        }
+        $sql .= " FROM order_items oi
+                  JOIN products p ON oi.product_id = p.id";
+        if ($this->detectOrderItemSizeOptionSupport()) {
+            $sql .= " LEFT JOIN product_size_options s ON oi.size_option_id = s.id";
+        }
+        $sql .= " WHERE oi.order_id = ?";
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$orderId]);
         return $stmt->fetchAll();
     }
@@ -192,8 +239,19 @@ class Order {
             /* Restore stock for each order item */
             $items = $this->getItems($id);
             foreach ($items as $item) {
-                $restore = $this->pdo->prepare("UPDATE inventory SET quantity = quantity + ? WHERE product_id = ?");
-                $restore->execute([$item['quantity'], $item['product_id']]);
+                $sizeOptionId = !empty($item['size_option_id']) ? (int) $item['size_option_id'] : null;
+                if ($sizeOptionId) {
+                    $restore = $this->pdo->prepare(
+                        "UPDATE product_size_options SET stock = stock + ? WHERE id = ?"
+                    );
+                    $restore->execute([$item['quantity'], $sizeOptionId]);
+                } else {
+                    $restore = $this->pdo->prepare(
+                        "INSERT INTO inventory (product_id, quantity) VALUES (?, ?)
+                         ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)"
+                    );
+                    $restore->execute([$item['product_id'], $item['quantity']]);
+                }
             }
 
             /* Mark order as cancelled */

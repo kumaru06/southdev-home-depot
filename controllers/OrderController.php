@@ -145,9 +145,12 @@ class OrderController {
         $this->requirePost(APP_URL . '/index.php?url=checkout');
         AuthMiddleware::csrf();
 
+        $removed = $this->cartModel->removeInactiveItems($_SESSION['user_id']);
         $cartItems = $this->cartModel->getByUserId($_SESSION['user_id']);
-        if (empty($cartItems)) {
-            flash('error', 'Your cart is empty.');
+        if ($removed > 0 || empty($cartItems)) {
+            flash('error', $removed > 0
+                ? 'Some items in your cart are no longer available. Your order was not placed.'
+                : 'Your cart is empty.');
             header('Location: ' . APP_URL . '/index.php?url=cart');
             exit;
         }
@@ -169,6 +172,7 @@ class OrderController {
 
         // DDL (ALTER) must run before beginTransaction — MySQL commits on ALTER.
         $this->orderModel->ensureShippingFeeColumn();
+        $this->orderModel->ensureOrderItemSizeOptionColumn();
 
         require_once INCLUDES_PATH . '/DeliveryFee.php';
         $subtotal = (float) $this->cartModel->getCartTotal($_SESSION['user_id']);
@@ -197,6 +201,10 @@ class OrderController {
             foreach ($cartItems as $item) {
                 $qty = (int) $item['quantity'];
                 $sizeOptionId = !empty($item['size_option_id']) ? (int) $item['size_option_id'] : null;
+                $product = $this->productModel->findActiveById($item['product_id']);
+                if (!$product) {
+                    throw new Exception('One or more products in your cart are no longer available.');
+                }
 
                 if ($sizeOptionId) {
                     $reserved = $this->productModel->reserveSizeStock($sizeOptionId, $qty);
@@ -216,7 +224,8 @@ class OrderController {
                     $item['product_id'],
                     $qty,
                     $item['price'],
-                    $item['size_label'] ?? null
+                    $item['size_label'] ?? null,
+                    $sizeOptionId
                 );
             }
 
@@ -641,8 +650,15 @@ class OrderController {
     /* ===== Customer: Checkout Page ===== */
     public function checkout() {
         AuthMiddleware::handle();
+        $removed = $this->cartModel->removeInactiveItems($_SESSION['user_id']);
         $cartItems = $this->cartModel->getByUserId($_SESSION['user_id']);
         $cartTotal = $this->cartModel->getCartTotal($_SESSION['user_id']);
+
+        if ($removed > 0) {
+            flash('error', 'Some items in your cart are no longer available. Please review your cart before checkout.');
+            header('Location: ' . APP_URL . '/index.php?url=cart');
+            exit;
+        }
 
         if (empty($cartItems)) {
             flash('error', 'Your cart is empty.');

@@ -209,8 +209,12 @@ if ($receiptEmail && $order) {
         // Build items HTML rows
         $itemsHtml = '';
         foreach ($orderItems as $item) {
+            $productLine = htmlspecialchars($item['product_name']);
+            if (!empty($item['size_label'])) {
+                $productLine .= ' <span style="color:#6B7280;">(' . htmlspecialchars($item['size_label']) . ')</span>';
+            }
             $itemsHtml .= '<tr>';
-            $itemsHtml .= '<td style="padding:10px 0;border-bottom:1px solid #E5E7EB;font-size:13px;color:#1C1C1C;">' . htmlspecialchars($item['product_name']) . '</td>';
+            $itemsHtml .= '<td style="padding:10px 0;border-bottom:1px solid #E5E7EB;font-size:13px;color:#1C1C1C;">' . $productLine . '</td>';
             $itemsHtml .= '<td align="center" style="padding:10px 0;border-bottom:1px solid #E5E7EB;font-size:13px;color:#6B7280;">' . intval($item['quantity']) . '</td>';
             $itemsHtml .= '<td align="right" style="padding:10px 0;border-bottom:1px solid #E5E7EB;font-size:13px;color:#1C1C1C;font-weight:600;">₱' . number_format($item['subtotal'], 2) . '</td>';
             $itemsHtml .= '</tr>';

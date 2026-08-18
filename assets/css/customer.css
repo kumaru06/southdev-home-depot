@@ -1012,6 +1012,7 @@ body:not(.admin-layout) .form-control {
     position: relative;
     display: flex;
     flex-direction: column;
+    height: 100%;
 }
 
 .products-reveal-sync .product-card {
@@ -1148,6 +1149,7 @@ body:not(.admin-layout) .form-control {
 }
 
 .btn-add-cart {
+    display: inline-flex;
     width: calc(100% - 28px);
     margin: auto 14px 14px;
     justify-content: center;
@@ -1159,6 +1161,8 @@ body:not(.admin-layout) .form-control {
     letter-spacing: .5px;
     font-size: .78rem;
     transition: all .2s ease;
+    text-decoration: none;
+    box-sizing: border-box;
 }
 
 .products-reveal-sync .btn-add-cart {
@@ -1184,6 +1188,127 @@ body:not(.admin-layout) .form-control {
     transform: translateY(-2px);
     box-shadow: 0 18px 32px rgba(249,115,22,.28);
 }
+
+.product-cart-wrap {
+    position: relative;
+    z-index: 3;
+    margin: auto 14px 14px;
+}
+.products-reveal-sync .product-cart-wrap {
+    margin: 0 18px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.product-cart-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.product-qty-stepper {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    height: 42px;
+    border: 1.5px solid #e8ecf1;
+    border-radius: 999px;
+    background: #fff;
+    overflow: hidden;
+}
+.product-qty-stepper__btn {
+    flex: 1 1 0;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    color: #1B2A4A;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+}
+.product-qty-stepper__btn:hover {
+    background: #f8fafc;
+}
+.product-qty-stepper__input {
+    flex: 1 1 0;
+    width: 0;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    border-left: 1.5px solid #e8ecf1;
+    border-right: 1.5px solid #e8ecf1;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    color: #1B2A4A;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 800;
+    -moz-appearance: textfield;
+}
+.product-qty-stepper__input::-webkit-outer-spin-button,
+.product-qty-stepper__input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.product-cart-wrap .btn-add-cart,
+.products-reveal-sync .product-cart-wrap .btn-add-cart {
+    width: 100%;
+    margin: 0;
+}
+.product-size-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+}
+.product-size-menu[hidden] {
+    display: none;
+}
+.product-size-menu__opt {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border, #e2e8f0);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--charcoal, #1B2A4A);
+    font-size: .78rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+}
+.product-size-menu__label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.product-size-menu__stock {
+    color: var(--text-muted, #64748b);
+    font-weight: 700;
+    font-size: .72rem;
+    white-space: nowrap;
+}
+.product-size-menu__price {
+    color: var(--accent, #F97316);
+    white-space: nowrap;
+}
+.product-size-menu__opt:hover:not(:disabled) {
+    border-color: var(--accent, #F97316);
+}
+.product-size-menu__opt:hover:not(:disabled) .product-size-menu__stock {
+    color: var(--charcoal, #1B2A4A);
+}
+.product-size-menu__opt:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
 .btn-out-of-stock {
     background: var(--neutral) !important;
     color: var(--text-muted) !important;
@@ -1224,11 +1349,17 @@ body:not(.admin-layout) .form-control {
     color: var(--text-secondary);
     line-height: 1.4;
     margin: 4px 0 6px;
+    min-height: 2.3em;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+.product-desc-preview--empty {
+    visibility: hidden;
 }
 
 .products-reveal-sync .product-desc-preview {
@@ -1429,7 +1560,7 @@ body:not(.admin-layout) .form-control {
     display: inline-flex;
     align-items: center;
     width: fit-content;
-    margin-top: .6rem;
+    margin-top: auto;
     padding: .5rem .75rem;
     border-radius: 999px;
     background: rgba(249,115,22,.1);
@@ -1756,15 +1887,55 @@ body:has(.pd-page) .site-header .main-nav {
     box-shadow: 0 8px 24px rgba(15,23,42,.18);
 }
 
-/* Thumbnails */
-.pd-thumbs {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
-    gap: 12px;
+/* Thumbnails carousel */
+.pd-thumbs-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     margin-top: 18px;
+}
+.pd-thumbs-viewport {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+.pd-thumbs-track {
+    display: flex;
+    gap: 12px;
+    transition: transform .28s cubic-bezier(.22, 1, .36, 1);
+    will-change: transform;
+}
+.pd-thumbs-nav {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    border: 1.5px solid var(--border, #e2e8f0);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--charcoal, #1B2A4A);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color .2s ease, color .2s ease, box-shadow .2s ease;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, .06);
+}
+.pd-thumbs-nav:hover:not(:disabled) {
+    border-color: var(--accent, #F97316);
+    color: var(--accent, #F97316);
+    box-shadow: 0 4px 14px rgba(249, 115, 22, .18);
+}
+.pd-thumbs-nav:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 .pd-thumb {
     position: relative;
+    flex: 0 0 auto;
     border: 2.5px solid transparent;
     border-radius: 16px;
     overflow: hidden;
@@ -6324,6 +6495,11 @@ body:has(.pd-page) .site-header .main-nav {
 .od-item-unit {
     font-size: 12px;
     color: var(--text-muted);
+}
+.od-item-size {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent, #F97316);
 }
 .od-item-subtotal {
     font-size: 15px;

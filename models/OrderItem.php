@@ -11,7 +11,15 @@ class OrderItem {
     }
 
     public function getByOrderId($orderId) {
-        $stmt = $this->pdo->prepare("SELECT oi.*, p.name as product_name, p.image FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?");
+        $stmt = $this->pdo->prepare(
+            "SELECT oi.id, oi.order_id, oi.product_id, oi.size_option_id, oi.quantity, oi.price, oi.subtotal,
+                    p.name as product_name, p.image,
+                    COALESCE(NULLIF(TRIM(oi.size_label), ''), s.size_label) as size_label
+             FROM order_items oi
+             JOIN products p ON oi.product_id = p.id
+             LEFT JOIN product_size_options s ON oi.size_option_id = s.id
+             WHERE oi.order_id = ?"
+        );
         $stmt->execute([$orderId]);
         return $stmt->fetchAll();
     }

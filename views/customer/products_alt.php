@@ -31,7 +31,13 @@ require_once INCLUDES_PATH . '/navbar.php';
     <?php if (!empty($products)): ?>
     <div id="product-list" class="product-grid">
         <?php foreach ($products as $product): ?>
-            <?php $isOutOfStock = isset($product['stock']) && $product['stock'] <= 0; ?>
+            <?php
+                $displayStock = (int) ($product['display_stock'] ?? $product['stock'] ?? 0);
+                $hasSizes = !empty($product['has_sizes']);
+                $isOutOfStock = $displayStock <= 0;
+                $lowStockThreshold = Inventory::effectiveReorderLevel((float) ($product['price'] ?? 0));
+                $isLowStock = !$isOutOfStock && $displayStock <= $lowStockThreshold;
+            ?>
             <div class="product-card <?= $isOutOfStock ? 'product-card--unavailable' : '' ?>">
                 <a href="<?= APP_URL ?>/index.php?url=products/<?= $product['id'] ?>">
                     <div class="product-img-wrap">
@@ -50,7 +56,7 @@ require_once INCLUDES_PATH . '/navbar.php';
                                 <span>Not Available</span>
                             </div>
                             <span class="product-badge badge-danger">Out of Stock</span>
-                        <?php elseif (isset($product['stock']) && $product['stock'] <= 5): ?>
+                        <?php elseif ($isLowStock): ?>
                             <span class="product-badge badge-warning">Low Stock</span>
                         <?php endif; ?>
                     </div>
@@ -78,19 +84,17 @@ require_once INCLUDES_PATH . '/navbar.php';
                         </div>
                         <?php endif; ?>
                         <?php if (!empty($product['description'])): ?>
-                            <p class="product-desc-preview"><?= htmlspecialchars(mb_strimwidth($product['description'], 0, 80, '…')) ?></p>
+                            <p class="product-desc-preview"><?= htmlspecialchars($product['description']) ?></p>
+                        <?php else: ?>
+                            <p class="product-desc-preview product-desc-preview--empty">&nbsp;</p>
                         <?php endif; ?>
                         <div class="product-price">₱<?= number_format($product['price'], 2) ?></div>
                     </div>
                 </a>
-                <?php if (isset($_SESSION['user_id']) && $_SESSION['role_id'] == ROLE_CUSTOMER && !$isOutOfStock): ?>
-                    <button class="btn btn-accent btn-sm btn-add-cart" onclick="addToCart(<?= $product['id'] ?>, 1)">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> ADD TO CART
-                    </button>
-                <?php elseif ($isOutOfStock): ?>
-                    <button class="btn btn-sm btn-add-cart btn-out-of-stock" disabled>
-                        Not Available
-                    </button>
+                <?php if ($isOutOfStock): ?>
+                    <span class="btn btn-sm btn-add-cart btn-out-of-stock">Not Available</span>
+                <?php else: ?>
+                    <a href="<?= APP_URL ?>/index.php?url=products/<?= (int) $product['id'] ?>" class="btn btn-accent btn-sm btn-add-cart">View and Add</a>
                 <?php endif; ?>
             </div>
         <?php endforeach; ?>

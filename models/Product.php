@@ -16,6 +16,23 @@ class Product {
         return $stmt->fetch();
     }
 
+    /** Customer-facing lookups — excludes soft-deleted products. */
+    public function findActiveById($id) {
+        $stmt = $this->pdo->prepare(
+            "SELECT p.*, c.name as category_name, i.quantity as stock
+             FROM products p
+             JOIN categories c ON p.category_id = c.id
+             LEFT JOIN inventory i ON p.id = i.product_id
+             WHERE p.id = ? AND p.is_active = 1"
+        );
+        $stmt->execute([$id]);
+        return $stmt->fetch();
+    }
+
+    public static function isActive($product): bool {
+        return is_array($product) && (int) ($product['is_active'] ?? 0) === 1;
+    }
+
     public function getAll($categoryId = null, $limit = null, $offset = 0) {
         $sql = "SELECT p.*, c.name as category_name, i.quantity as stock FROM products p JOIN categories c ON p.category_id = c.id LEFT JOIN inventory i ON p.id = i.product_id WHERE p.is_active = 1";
 
@@ -94,7 +111,11 @@ class Product {
 
     public function delete($id) {
         $stmt = $this->pdo->prepare("UPDATE products SET is_active = 0 WHERE id = ?");
-        return $stmt->execute([$id]);
+        $ok = $stmt->execute([$id]);
+        if ($ok) {
+            $this->purgeCartRowsForProduct($id);
+        }
+        return $ok;
     }
 
     public function deleteMany(array $ids) {
@@ -102,11 +123,29 @@ class Product {
         if (empty($ids)) {
             return 0;
         }
-
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
         $stmt = $this->pdo->prepare("UPDATE products SET is_active = 0 WHERE id IN ($placeholders) AND is_active = 1");
         $stmt->execute($ids);
-        return $stmt->rowCount();
+        $deleted = $stmt->rowCount();
+        if ($deleted > 0) {
+            $this->purgeCartRowsForProducts($ids);
+        }
+        return $deleted;
+    }
+
+    private function purgeCartRowsForProduct($productId) {
+        $stmt = $this->pdo->prepare("DELETE FROM cart WHERE product_id = ?");
+        $stmt->execute([(int) $productId]);
+    }
+
+    private function purgeCartRowsForProducts(array $productIds) {
+        $productIds = array_values(array_unique(array_filter(array_map('intval', $productIds))));
+        if (empty($productIds)) {
+            return;
+        }
+        $placeholders = implode(',', array_fill(0, count($productIds), '?'));
+        $stmt = $this->pdo->prepare("DELETE FROM cart WHERE product_id IN ($placeholders)");
+        $stmt->execute($productIds);
     }
 
     public function search($keyword) {
@@ -153,6 +192,55 @@ class Product {
             $grouped[(int) $row['product_id']][] = $row;
         }
         return $grouped;
+    }
+
+    public function getSizeOptionsByProductIds(array $productIds): array {
+        $productIds = array_values(array_unique(array_filter(array_map('intval', $productIds))));
+        if (empty($productIds)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($productIds), '?'));
+        $stmt = $this->pdo->prepare(
+            "SELECT * FROM product_size_options
+             WHERE product_id IN ($placeholders)
+             ORDER BY product_id ASC, sort_order ASC, id ASC"
+        );
+        $stmt->execute($productIds);
+        $grouped = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $grouped[(int) $row['product_id']][] = $row;
+        }
+        return $grouped;
+    }
+
+    public function getSizeStockSummaryByProductIds(array $productIds): array {
+        $productIds = array_values(array_unique(array_filter(array_map('intval', $productIds))));
+        if (empty($productIds)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($productIds), '?'));
+        $stmt = $this->pdo->prepare(
+            "SELECT product_id,
+                    COUNT(*) AS option_count,
+                    COALESCE(SUM(stock), 0) AS total_stock,
+                    COALESCE(MAX(stock), 0) AS max_stock
+             FROM product_size_options
+             WHERE product_id IN ($placeholders)
+             GROUP BY product_id"
+        );
+        $stmt->execute($productIds);
+
+        $summary = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $summary[(int) $row['product_id']] = [
+                'option_count' => (int) $row['option_count'],
+                'total_stock'  => (int) $row['total_stock'],
+                'max_stock'    => (int) $row['max_stock'],
+            ];
+        }
+        return $summary;
     }
 
     public function addImage($productId, $filename, $sortOrder = null) {
@@ -295,6 +383,14 @@ class Product {
         );
         $stmt->execute([(int) $productId]);
         return $stmt->fetchAll();
+    }
+
+    public function hasSizeOptions($productId): bool {
+        $stmt = $this->pdo->prepare(
+            "SELECT 1 FROM product_size_options WHERE product_id = ? LIMIT 1"
+        );
+        $stmt->execute([(int) $productId]);
+        return (bool) $stmt->fetchColumn();
     }
 
     public function findSizeOption($sizeOptionId, $productId = null) {

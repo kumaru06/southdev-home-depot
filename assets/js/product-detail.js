@@ -23,6 +23,14 @@
 
         // Size picker is optional — products without sizes must still add to cart
         if (root) {
+            if (addBtn) {
+                addBtn.setAttribute('data-size-id', '');
+                addBtn.disabled = false;
+            }
+            if (qty) {
+                qty.max = 1;
+                qty.value = 1;
+            }
             var buttons = root.querySelectorAll('[data-pd-size]');
             buttons.forEach(function (btn) {
                 btn.addEventListener('click', function () {
@@ -35,7 +43,7 @@
                     var label = btn.getAttribute('data-label') || '';
 
                     if (priceEl) priceEl.textContent = Number(price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    if (stockText) stockText.textContent = stock > 0 ? (stock + ' pcs') : 'Out of stock';
+                    if (stockText) stockText.textContent = stock > 0 ? (stock + ' stock') : 'Out of stock';
                     if (stockBadge) {
                         stockBadge.classList.toggle('pd-stock-badge--in', stock > 0);
                         stockBadge.classList.toggle('pd-stock-badge--out', stock <= 0);
@@ -90,13 +98,75 @@
         if (!root) return;
         var main = root.querySelector('[data-pd-main-img]');
         var thumbs = root.querySelectorAll('[data-pd-thumb]');
-        thumbs.forEach(function (thumb) {
+        var track = root.querySelector('[data-pd-thumbs-track]');
+        var prevBtn = root.querySelector('[data-pd-thumbs-prev]');
+        var nextBtn = root.querySelector('[data-pd-thumbs-next]');
+        var viewport = root.querySelector('.pd-thumbs-viewport');
+        var perPage = 4;
+        var offset = 0;
+        var gap = 12;
+
+        function layoutThumbs() {
+            if (!viewport || !thumbs.length) return 0;
+            var vpWidth = viewport.getBoundingClientRect().width;
+            var visible = Math.min(perPage, thumbs.length);
+            var thumbW = (vpWidth - gap * (visible - 1)) / visible;
+            thumbs.forEach(function (t) {
+                t.style.flexBasis = thumbW + 'px';
+                t.style.width = thumbW + 'px';
+                t.style.maxWidth = thumbW + 'px';
+            });
+            return thumbW + gap;
+        }
+
+        function maxOffset() {
+            return Math.max(0, thumbs.length - perPage);
+        }
+
+        function applyCarousel() {
+            if (!track) return;
+            var step = layoutThumbs();
+            if (thumbs.length <= perPage) {
+                track.style.transform = '';
+                if (prevBtn) prevBtn.disabled = true;
+                if (nextBtn) nextBtn.disabled = true;
+                return;
+            }
+            track.style.transform = 'translateX(-' + (offset * step) + 'px)';
+            if (prevBtn) prevBtn.disabled = offset <= 0;
+            if (nextBtn) nextBtn.disabled = offset >= maxOffset();
+        }
+
+        function ensureVisible(index) {
+            if (thumbs.length <= perPage) return;
+            if (index < offset) offset = index;
+            else if (index > offset + perPage - 1) offset = index - (perPage - 1);
+            applyCarousel();
+        }
+
+        if (prevBtn && nextBtn) {
+            prevBtn.addEventListener('click', function () {
+                offset = Math.max(0, offset - 1);
+                applyCarousel();
+            });
+            nextBtn.addEventListener('click', function () {
+                offset = Math.min(maxOffset(), offset + 1);
+                applyCarousel();
+            });
+        }
+        if (track) {
+            window.addEventListener('resize', applyCarousel);
+            applyCarousel();
+        }
+
+        thumbs.forEach(function (thumb, index) {
             thumb.addEventListener('click', function () {
                 var src = thumb.getAttribute('data-src');
                 if (!src || !main) return;
                 main.src = src;
                 thumbs.forEach(function (t) { t.classList.remove('is-active'); });
                 thumb.classList.add('is-active');
+                ensureVisible(index);
             });
         });
     }

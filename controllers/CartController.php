@@ -20,6 +20,10 @@ class CartController {
 
     public function index() {
         AuthMiddleware::handle();
+        $removed = $this->cartModel->removeInactiveItems($_SESSION['user_id']);
+        if ($removed > 0) {
+            flash('warning', 'Some items were removed from your cart because they are no longer available.');
+        }
         $cartItems = $this->cartModel->getByUserId($_SESSION['user_id']);
         $cartTotal = $this->cartModel->getCartTotal($_SESSION['user_id']);
         $pageTitle = 'Shopping Cart';
@@ -42,9 +46,9 @@ class CartController {
         $quantity  = max(1, intval($_POST['quantity'] ?? 1));
         $sizeOptionId = intval($_POST['size_option_id'] ?? 0) ?: null;
 
-        $product = $this->productModel->findById($productId);
+        $product = $this->productModel->findActiveById($productId);
         if (!$product) {
-            echo json_encode(['success' => false, 'message' => 'Product not found']);
+            echo json_encode(['success' => false, 'message' => 'This product is no longer available']);
             return;
         }
 
@@ -129,8 +133,15 @@ class CartController {
 
     public function checkout() {
         AuthMiddleware::handle();
+        $removed = $this->cartModel->removeInactiveItems($_SESSION['user_id']);
         $cartItems = $this->cartModel->getByUserId($_SESSION['user_id']);
         $cartTotal = $this->cartModel->getCartTotal($_SESSION['user_id']);
+
+        if ($removed > 0) {
+            flash('error', 'Some items in your cart are no longer available. Please review your cart before checkout.');
+            header('Location: ' . APP_URL . '/index.php?url=cart');
+            exit;
+        }
 
         if (empty($cartItems)) {
             flash('error', 'Your cart is empty.');

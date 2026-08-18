@@ -12,6 +12,24 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
 } else {
     $invBase = APP_URL . '/index.php?url=staff/inventory';
 }
+$productsManageUrl = ((int) ($_SESSION['role_id'] ?? 0) === ROLE_SUPER_ADMIN)
+    ? APP_URL . '/index.php?url=admin/products'
+    : null;
+
+$invStats = ['total' => 0, 'in_stock' => 0, 'low_stock' => 0, 'out_of_stock' => 0];
+foreach ($inventory ?? [] as $invRow) {
+    $invStats['total']++;
+    $hasSizesRow = ((int) ($invRow['size_option_count'] ?? 0)) > 0;
+    $qtyRow = $hasSizesRow ? (int) ($invRow['size_option_stock'] ?? 0) : (int) ($invRow['quantity'] ?? 0);
+    $reorderRow = Inventory::effectiveReorderLevel((float) ($invRow['price'] ?? 0), (int) ($invRow['reorder_level'] ?? 10));
+    if ($qtyRow <= 0) {
+        $invStats['out_of_stock']++;
+    } elseif (!$hasSizesRow && $qtyRow <= $reorderRow) {
+        $invStats['low_stock']++;
+    } else {
+        $invStats['in_stock']++;
+    }
+}
 ?>
 
 <div class="main-content">
@@ -20,11 +38,11 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
             <button class="sidebar-toggle-btn" id="sidebarToggleTop"><i data-lucide="menu"></i></button>
             <h2><?= $pageTitle ?></h2>
         </div>
-        <div class="top-bar-right">
-            <a href="<?= $invBase ?>/supplier-requests" class="btn btn-outline btn-sm" style="color:#7C3AED;border-color:#7C3AED;">
+        <div class="top-bar-right inv-toolbar">
+            <a href="<?= $invBase ?>/supplier-requests" class="btn btn-outline btn-sm btn--supplier">
                 <i data-lucide="truck" style="width:15px;height:15px"></i> Supplier Requests
             </a>
-            <a href="<?= $invBase ?>/damaged" class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);">
+            <a href="<?= $invBase ?>/damaged" class="btn btn-outline btn-sm btn--damaged">
                 <i data-lucide="alert-octagon" style="width:15px;height:15px"></i> Damaged Products
             </a>
             <a href="<?= $invBase ?>/movements" class="btn btn-outline btn-sm">
@@ -37,15 +55,48 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
     </div>
 
     <div class="page-content page-content--table-locked">
+        <div class="inv-stats">
+            <div class="inv-stat inv-stat--total">
+                <div>
+                    <span class="inv-stat__label">Total Products</span>
+                    <span class="inv-stat__value"><?= $invStats['total'] ?></span>
+                </div>
+                <span class="inv-stat__icon"><i data-lucide="boxes"></i></span>
+            </div>
+            <div class="inv-stat inv-stat--ok">
+                <div>
+                    <span class="inv-stat__label">In Stock</span>
+                    <span class="inv-stat__value"><?= $invStats['in_stock'] ?></span>
+                </div>
+                <span class="inv-stat__icon"><i data-lucide="check-circle"></i></span>
+            </div>
+            <div class="inv-stat inv-stat--low">
+                <div>
+                    <span class="inv-stat__label">Low Stock</span>
+                    <span class="inv-stat__value"><?= $invStats['low_stock'] ?></span>
+                </div>
+                <span class="inv-stat__icon"><i data-lucide="alert-triangle"></i></span>
+            </div>
+            <div class="inv-stat inv-stat--out">
+                <div>
+                    <span class="inv-stat__label">Out of Stock</span>
+                    <span class="inv-stat__value"><?= $invStats['out_of_stock'] ?></span>
+                </div>
+                <span class="inv-stat__icon"><i data-lucide="x-circle"></i></span>
+            </div>
+        </div>
+
         <?php if (!empty($lowStock)): ?>
-            <div class="alert alert-warning" style="display:flex;align-items:flex-start;gap:12px;">
-                <i data-lucide="alert-triangle" style="flex-shrink:0;margin-top:2px;"></i>
+            <div class="inv-alert">
+                <span class="inv-alert__icon"><i data-lucide="alert-triangle"></i></span>
                 <div style="flex:1;">
-                    <strong>Low Stock Alert:</strong> <?= count($lowStock) ?> item(s) are below reorder level.
-                    <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
+                    <div class="inv-alert__title">Low stock needs attention</div>
+                    <p class="inv-alert__copy"><?= count($lowStock) ?> item<?= count($lowStock) !== 1 ? 's are' : ' is' ?> at or below the reorder level.</p>
+                    <div class="inv-alert__chips">
                         <?php foreach ($lowStock as $ls): ?>
-                            <span class="badge badge-cancelled" style="font-size:.78rem;">
-                                <?= htmlspecialchars($ls['product_name']) ?> (<?= $ls['quantity'] ?> left)
+                            <span class="inv-alert__chip">
+                                <?= htmlspecialchars($ls['product_name']) ?>
+                                <span style="opacity:.75;">· <?= (int) $ls['quantity'] ?> left</span>
                             </span>
                         <?php endforeach; ?>
                     </div>
@@ -53,12 +104,15 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
             </div>
         <?php endif; ?>
 
-        <!-- Category Filter -->
-        <div class="card filter-bar" style="margin-bottom:16px;">
-            <div class="inv-filter-row">
+        <div class="inv-panel">
+            <div class="inv-panel__row">
+                <div class="inv-search">
+                    <i data-lucide="search"></i>
+                    <input type="search" id="inventorySearch" placeholder="Search product or SKU..." autocomplete="off">
+                </div>
                 <div class="inv-filter-group">
-                    <label for="categoryFilter" class="inv-filter-label"><i data-lucide="layers" style="width:15px;height:15px;"></i> Category</label>
-                    <select id="categoryFilter" class="form-control inv-filter-select">
+                    <label for="categoryFilter" class="inv-filter-label"><i data-lucide="layers" style="width:14px;height:14px;"></i> Category</label>
+                    <select id="categoryFilter" class="inv-filter-select">
                         <option value="">All Categories</option>
                         <?php if (!empty($categories)): ?>
                             <?php foreach ($categories as $cat): ?>
@@ -68,12 +122,13 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
                     </select>
                 </div>
                 <div class="inv-filter-group">
-                    <label for="stockFilter" class="inv-filter-label"><i data-lucide="bar-chart-2" style="width:15px;height:15px;"></i> Stock Status</label>
-                    <select id="stockFilter" class="form-control inv-filter-select">
+                    <label for="stockFilter" class="inv-filter-label"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> Stock Status</label>
+                    <select id="stockFilter" class="inv-filter-select">
                         <option value="">All Statuses</option>
                         <option value="in-stock">In Stock</option>
                         <option value="low-stock">Low Stock</option>
                         <option value="out-of-stock">Out of Stock</option>
+                        <option value="sized">Managed by Sizes</option>
                     </select>
                 </div>
                 <div class="inv-filter-count">
@@ -82,16 +137,14 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
             </div>
         </div>
 
-        <div class="data-table-wrap data-table-wrap--locked">
+        <div class="data-table-wrap data-table-wrap--locked inv-table-wrap">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>SKU</th>
-                        <th>Image</th>
                         <th>Product</th>
                         <th>Price</th>
-                        <th>Current Stock</th>
-                        <th title="Triggers Low Stock warning when stock falls to this level">Reorder Level</th>
+                        <th>Stock</th>
+                        <th title="Auto-adjusts for high-value items — expensive products use a lower threshold">Reorder</th>
                         <th>Status</th>
                         <?php if ($canManageStock): ?>
                         <th>Actions</th>
@@ -102,76 +155,116 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
                     <?php if (!empty($inventory)): ?>
                         <?php foreach ($inventory as $item): ?>
                             <?php
-                                $qty = intval($item['quantity']);
-                                $reorder = intval($item['reorder_level'] ?? 10);
-                                $isLow = $qty <= $reorder && $qty > 0;
+                                $hasSizes = ((int) ($item['size_option_count'] ?? 0)) > 0;
+                                $qty = $hasSizes ? (int) ($item['size_option_stock'] ?? 0) : (int) ($item['quantity']);
+                                $reorder = Inventory::effectiveReorderLevel(
+                                    (float) ($item['price'] ?? 0),
+                                    (int) ($item['reorder_level'] ?? 10)
+                                );
+                                $isLow = !$hasSizes && $qty <= $reorder && $qty > 0;
                                 $isOut = $qty <= 0;
+                                $stockCap = max($reorder * 3, 1);
+                                $stockPct = min(100, (int) round(($qty / $stockCap) * 100));
+                                $meterClass = $hasSizes ? 'inv-stock-meter__fill--sized' : ($isOut ? 'inv-stock-meter__fill--out' : ($isLow ? 'inv-stock-meter__fill--low' : 'inv-stock-meter__fill--ok'));
+                                $stockState = $hasSizes ? 'sized' : ($isOut ? 'out-of-stock' : ($isLow ? 'low-stock' : 'in-stock'));
+                                $sku = trim((string) ($item['sku'] ?? ''));
                             ?>
-                            <tr class="<?= $isOut ? 'row-danger' : ($isLow ? 'row-warning' : '') ?>" data-category="<?= $item['category_id'] ?? '' ?>" data-stock="<?= $isOut ? 'out-of-stock' : ($isLow ? 'low-stock' : 'in-stock') ?>">
-                                <td><code><?= htmlspecialchars($item['sku'] ?? 'N/A') ?></code></td>
+                            <tr class="<?= $isOut ? 'row-danger' : ($isLow ? 'row-warning' : '') ?>"
+                                data-category="<?= $item['category_id'] ?? '' ?>"
+                                data-stock="<?= $stockState ?>"
+                                data-product-name="<?= htmlspecialchars(strtolower($item['product_name']), ENT_QUOTES) ?>"
+                                data-product-sku="<?= htmlspecialchars(strtolower($sku !== '' ? $sku : 'n/a'), ENT_QUOTES) ?>">
                                 <td>
-                                    <?php if (!empty($item['image'])): ?>
-                                        <img src="<?= APP_URL ?>/assets/uploads/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['product_name']) ?>" style="width:48px;height:48px;object-fit:cover;border-radius:6px;">
-                                    <?php else: ?>
-                                        <div style="width:48px;height:48px;background:#f1f5f9;border-radius:6px;display:flex;align-items:center;justify-content:center;"><i data-lucide="image" style="width:20px;height:20px;color:#94a3b8;"></i></div>
+                                    <div class="inv-product">
+                                        <?php if (!empty($item['image'])): ?>
+                                            <img src="<?= APP_URL ?>/assets/uploads/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['product_name']) ?>" class="inv-product__thumb">
+                                        <?php else: ?>
+                                            <span class="inv-product__thumb-placeholder"><i data-lucide="image" style="width:20px;height:20px;"></i></span>
+                                        <?php endif; ?>
+                                        <div class="inv-product__body">
+                                            <span class="inv-product__name"><?= htmlspecialchars($item['product_name']) ?></span>
+                                            <div class="inv-product__meta">
+                                                <?php if (!empty($item['category_name'])): ?>
+                                                    <span class="inv-product__tag"><?= htmlspecialchars($item['category_name']) ?></span>
+                                                <?php endif; ?>
+                                                <span class="inv-product__tag inv-product__tag--sku"><?= htmlspecialchars($sku !== '' ? $sku : 'N/A') ?></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="inv-price">₱<?= number_format((float) $item['price'], 2) ?></span>
+                                    <?php if ((float) $item['price'] >= 10000): ?>
+                                        <small>High-value item</small>
                                     <?php endif; ?>
                                 </td>
-                                <td><?= htmlspecialchars($item['product_name']) ?></td>
-                                <td>₱<?= number_format($item['price'], 2) ?></td>
-                                <td>
-                                    <?php if ($isOut): ?>
-                                        <span class="badge badge-cancelled">0 — Out of Stock</span>
+                                <td class="inv-stock-cell">
+                                    <div class="inv-stock-qty">
+                                        <strong><?= number_format($qty) ?></strong>
+                                        <span><?= $hasSizes ? 'across ' . (int) $item['size_option_count'] . ' sizes' : 'units' ?></span>
+                                    </div>
+                                    <div class="inv-stock-meter" aria-hidden="true">
+                                        <div class="inv-stock-meter__fill <?= $meterClass ?>" style="width: <?= $stockPct ?>%;"></div>
+                                    </div>
+                                    <?php if ($hasSizes): ?>
+                                        <div class="inv-stock-note">Per-size stock managed in Products</div>
                                     <?php elseif ($isLow): ?>
-                                        <span class="badge badge-cancelled"><?= $qty ?> — Low</span>
-                                    <?php else: ?>
-                                        <span class="badge badge-delivered"><?= $qty ?></span>
+                                        <div class="inv-stock-note">At or below reorder level (<?= $reorder ?>)</div>
                                     <?php endif; ?>
                                 </td>
-                                <td><?= $reorder ?></td>
+                                <td><span class="inv-reorder"><?= $reorder ?></span></td>
                                 <td>
-                                    <?php if ($isOut): ?>
-                                        <span class="badge badge-cancelled"><i data-lucide="x-circle" style="width:11px;height:11px"></i> Out of Stock</span>
+                                    <?php if ($hasSizes): ?>
+                                        <span class="inv-status inv-status--sizes"><i data-lucide="layers"></i> By Sizes</span>
+                                    <?php elseif ($isOut): ?>
+                                        <span class="inv-status inv-status--out"><i data-lucide="x-circle"></i> Out</span>
                                     <?php elseif ($isLow): ?>
-                                        <span class="badge badge-pending"><i data-lucide="alert-triangle" style="width:11px;height:11px"></i> Low Stock</span>
+                                        <span class="inv-status inv-status--low"><i data-lucide="alert-triangle"></i> Low</span>
                                     <?php else: ?>
-                                        <span class="badge badge-delivered"><i data-lucide="check-circle" style="width:11px;height:11px"></i> In Stock</span>
+                                        <span class="inv-status inv-status--in"><i data-lucide="check-circle"></i> In Stock</span>
                                     <?php endif; ?>
                                 </td>
                                 <?php if ($canManageStock): ?>
                                 <td>
-                                    <div class="action-btn-group" style="flex-wrap:wrap;gap:4px;">
-                                        <!-- Update Stock -->
+                                    <?php if ($hasSizes): ?>
+                                        <?php if ($productsManageUrl): ?>
+                                            <a href="<?= $productsManageUrl ?>" class="inv-actions__hint">
+                                                <i data-lucide="external-link" style="width:13px;height:13px"></i>
+                                                Manage in Products
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="inv-actions__hint">Manage size stock from Products</span>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                    <div class="inv-actions">
                                         <button type="button" class="action-btn edit" data-id="<?= $item['product_id'] ?>" data-name="<?= htmlspecialchars($item['product_name'], ENT_QUOTES) ?>" data-qty="<?= $qty ?>" data-mode="update" title="Set Stock">
                                             <i data-lucide="edit-3" style="width:13px;height:13px"></i> Update
                                         </button>
-                                        <!-- Add Stock -->
                                         <button type="button" class="action-btn approve" data-id="<?= $item['product_id'] ?>" data-name="<?= htmlspecialchars($item['product_name'], ENT_QUOTES) ?>" data-qty="<?= $qty ?>" data-mode="add" title="Add Stock">
-                                            <i data-lucide="plus-circle" style="width:13px;height:13px"></i> Add Stock
+                                            <i data-lucide="plus-circle" style="width:13px;height:13px"></i> Add
                                         </button>
-                                        <!-- Request Supplier -->
                                         <?php if ($isLow || $isOut): ?>
-                                            <?php
-                                            $openReqId = $openSupplierByProduct[(int)$item['product_id']] ?? null;
-                                            ?>
+                                            <?php $openReqId = $openSupplierByProduct[(int)$item['product_id']] ?? null; ?>
                                             <?php if ($openReqId): ?>
-                                        <a href="<?= $invBase ?>/supplier-requests" class="action-btn" style="background:#7C3AED;color:#fff;text-decoration:none;" title="Open supplier request #<?= (int)$openReqId ?>">
-                                            <i data-lucide="truck" style="width:13px;height:13px"></i> View Request
+                                        <a href="<?= $invBase ?>/supplier-requests" class="action-btn action-btn--supplier" title="Open supplier request #<?= (int)$openReqId ?>">
+                                            <i data-lucide="truck" style="width:13px;height:13px"></i> Request
                                         </a>
                                             <?php else: ?>
-                                        <button type="button" class="action-btn" style="background:#7C3AED;color:#fff;" data-id="<?= $item['product_id'] ?>" data-name="<?= htmlspecialchars($item['product_name'], ENT_QUOTES) ?>" data-qty="<?= $qty ?>" data-mode="supplier" title="Request Supplier">
-                                            <i data-lucide="truck" style="width:13px;height:13px"></i> Request Supplier
+                                        <button type="button" class="action-btn action-btn--supplier" data-id="<?= $item['product_id'] ?>" data-name="<?= htmlspecialchars($item['product_name'], ENT_QUOTES) ?>" data-qty="<?= $qty ?>" data-mode="supplier" title="Request Supplier">
+                                            <i data-lucide="truck" style="width:13px;height:13px"></i> Request
                                         </button>
                                             <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
+                                    <?php endif; ?>
                                 </td>
                                 <?php endif; ?>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr><td colspan="<?= $canManageStock ? 8 : 7 ?>" class="text-center">No inventory records found.</td></tr>
+                        <tr><td colspan="<?= $canManageStock ? 6 : 5 ?>" class="text-center">No inventory records found.</td></tr>
                     <?php endif; ?>
-                    <tr id="noFilterResults" style="display:none;"><td colspan="<?= $canManageStock ? 8 : 7 ?>" class="text-center" style="padding:2rem;color:var(--text-secondary);"><i data-lucide="search-x" style="width:24px;height:24px;margin-bottom:6px;"></i><br>No products match the selected filters.</td></tr>
+                    <tr id="noFilterResults" style="display:none;"><td colspan="<?= $canManageStock ? 6 : 5 ?>" class="text-center" style="padding:2rem;color:var(--text-secondary);"><i data-lucide="search-x" style="width:24px;height:24px;margin-bottom:6px;"></i><br>No products match the selected filters.</td></tr>
                 </tbody>
             </table>
         </div>
@@ -401,61 +494,7 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
 }
 .row-danger { background: var(--danger-bg) !important; }
 
-/* ====== Inventory Filter Bar ====== */
-.inv-filter-row {
-    display: flex;
-    align-items: flex-end;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-.inv-filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    min-width: 180px;
-}
-.inv-filter-label {
-    font-size: .78rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    text-transform: uppercase;
-    letter-spacing: .4px;
-}
-.inv-filter-select {
-    padding: 8px 12px;
-    font-size: .88rem;
-    border-radius: 8px;
-    border: 1.5px solid #e2e8f0;
-    background: #fff;
-    transition: border-color .2s, box-shadow .2s;
-    cursor: pointer;
-    min-width: 200px;
-}
-.inv-filter-select:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(249,115,22,.15);
-    outline: none;
-}
-.inv-filter-count {
-    margin-left: auto;
-    font-size: .82rem;
-    color: var(--text-secondary);
-    align-self: flex-end;
-    padding-bottom: 10px;
-}
-.inv-filter-count span {
-    background: #f1f5f9;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-weight: 600;
-}
 @media (max-width: 640px) {
-    .inv-filter-row { flex-direction: column; align-items: stretch; }
-    .inv-filter-select { min-width: 100%; }
-    .inv-filter-count { margin-left: 0; text-align: center; }
     #stockModal .modal-box { border-radius: 16px; }
 }
 </style>
@@ -569,18 +608,24 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
     'use strict';
     var catFilter   = document.getElementById('categoryFilter');
     var stockFilter = document.getElementById('stockFilter');
+    var searchInput = document.getElementById('inventorySearch');
     var countEl     = document.getElementById('filterCount');
     var noResults   = document.getElementById('noFilterResults');
 
     function applyFilters() {
-        var cat   = catFilter ? catFilter.value : '';
-        var stock = stockFilter ? stockFilter.value : '';
-        var rows  = document.querySelectorAll('.data-table tbody tr[data-category]');
-        var shown = 0;
+        var cat    = catFilter ? catFilter.value : '';
+        var stock  = stockFilter ? stockFilter.value : '';
+        var query  = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        var rows   = document.querySelectorAll('.data-table tbody tr[data-category]');
+        var shown  = 0;
         rows.forEach(function(row) {
-            var matchCat   = !cat   || row.getAttribute('data-category') === cat;
-            var matchStock = !stock || row.getAttribute('data-stock') === stock;
-            if (matchCat && matchStock) {
+            var matchCat = !cat || row.getAttribute('data-category') === cat;
+            var rowStock = row.getAttribute('data-stock') || '';
+            var matchStock = !stock || rowStock === stock;
+            var name = row.getAttribute('data-product-name') || '';
+            var sku  = row.getAttribute('data-product-sku') || '';
+            var matchQuery = !query || name.indexOf(query) !== -1 || sku.indexOf(query) !== -1;
+            if (matchCat && matchStock && matchQuery) {
                 row.style.display = '';
                 shown++;
             } else {
@@ -591,8 +636,9 @@ if ($_SESSION['role_id'] == ROLE_INVENTORY) {
         if (countEl) countEl.textContent = shown + ' of ' + rows.length + ' products';
     }
 
-    if (catFilter)   catFilter.addEventListener('change', applyFilters);
+    if (catFilter) catFilter.addEventListener('change', applyFilters);
     if (stockFilter) stockFilter.addEventListener('change', applyFilters);
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
     applyFilters();
 })();
 </script>

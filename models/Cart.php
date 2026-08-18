@@ -18,7 +18,7 @@ class Cart {
                     s.id as size_option_id,
                     COALESCE(s.stock, i.quantity) as stock
              FROM cart c
-             JOIN products p ON c.product_id = p.id
+             JOIN products p ON c.product_id = p.id AND p.is_active = 1
              LEFT JOIN product_size_options s ON c.size_option_id = s.id
              LEFT JOIN inventory i ON p.id = i.product_id
              WHERE c.user_id = ?
@@ -94,7 +94,7 @@ class Cart {
                        s.size_label,
                        COALESCE(s.stock, i.quantity) as stock
                 FROM cart c
-                JOIN products p ON c.product_id = p.id
+                JOIN products p ON c.product_id = p.id AND p.is_active = 1
                 LEFT JOIN product_size_options s ON c.size_option_id = s.id
                 LEFT JOIN inventory i ON i.product_id = p.id
                 WHERE c.id = ?";
@@ -119,7 +119,7 @@ class Cart {
         $stmt = $this->pdo->prepare(
             "SELECT SUM(c.quantity * COALESCE(s.price, p.price)) as total
              FROM cart c
-             JOIN products p ON c.product_id = p.id
+             JOIN products p ON c.product_id = p.id AND p.is_active = 1
              LEFT JOIN product_size_options s ON c.size_option_id = s.id
              WHERE c.user_id = ?"
         );
@@ -129,8 +129,23 @@ class Cart {
     }
 
     public function getCartCount($userId) {
-        $stmt = $this->pdo->prepare("SELECT SUM(quantity) FROM cart WHERE user_id = ?");
+        $stmt = $this->pdo->prepare(
+            "SELECT COALESCE(SUM(c.quantity), 0)
+             FROM cart c
+             JOIN products p ON c.product_id = p.id AND p.is_active = 1
+             WHERE c.user_id = ?"
+        );
         $stmt->execute([$userId]);
-        return $stmt->fetchColumn() ?? 0;
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function removeInactiveItems($userId) {
+        $stmt = $this->pdo->prepare(
+            "DELETE c FROM cart c
+             JOIN products p ON c.product_id = p.id
+             WHERE c.user_id = ? AND p.is_active = 0"
+        );
+        $stmt->execute([(int) $userId]);
+        return $stmt->rowCount();
     }
 }

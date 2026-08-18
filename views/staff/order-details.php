@@ -39,6 +39,26 @@ require_once INCLUDES_PATH . '/sidebar.php';
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Products:</span>
+                    <span class="detail-value">
+                        <?php if (!empty($orderItems)): ?>
+                            <ul class="order-info-products">
+                                <?php foreach ($orderItems as $item): ?>
+                                    <li>
+                                        <?= htmlspecialchars($item['product_name']) ?>
+                                        <?php if (!empty($item['size_label'])): ?>
+                                            <span class="order-info-products__size">(<?= htmlspecialchars($item['size_label']) ?>)</span>
+                                        <?php endif; ?>
+                                        <span class="order-info-products__qty">× <?= (int) $item['quantity'] ?></span>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php else: ?>
+                            —
+                        <?php endif; ?>
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Subtotal:</span>
                     <span class="detail-value">₱<?= number_format($staffSubtotal, 2) ?></span>
                 </div>
                 <div class="detail-row">
@@ -164,7 +184,12 @@ require_once INCLUDES_PATH . '/sidebar.php';
                     <tbody>
                         <?php foreach ($orderItems as $item): ?>
                             <tr>
-                                <td><?= htmlspecialchars($item['product_name']) ?></td>
+                                <td>
+                                    <?= htmlspecialchars($item['product_name']) ?>
+                                    <?php if (!empty($item['size_label'])): ?>
+                                        <br><small style="color:var(--text-muted,#64748b);">Size: <?= htmlspecialchars($item['size_label']) ?></small>
+                                    <?php endif; ?>
+                                </td>
                                 <td>₱<?= number_format($item['price'], 2) ?></td>
                                 <td><?= $item['quantity'] ?></td>
                                 <td><strong>₱<?= number_format($item['subtotal'], 2) ?></strong></td>
