@@ -63,21 +63,20 @@ if ($skuValue !== '' && !isset($specsTable['SKU'])) {
 ?>
 <style>
 body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
+/* Ensure text-fill inherits properly on non-webkit */
+@supports not (-webkit-background-clip: text) {
+    .pd-info__title { background: none; color: var(--charcoal); }
+}
 </style>
 
 <div class="pd-page">
     <div class="container">
-        <nav class="pd-breadcrumb" aria-label="Breadcrumb">
-            <a href="<?= APP_URL ?>/index.php">Home</a>
-            <span class="pd-breadcrumb__sep" aria-hidden="true">/</span>
-            <a href="<?= APP_URL ?>/index.php?url=products">Products</a>
-            <?php if ($categoryName !== ''): ?>
-                <span class="pd-breadcrumb__sep" aria-hidden="true">/</span>
-                <a href="<?= APP_URL ?>/index.php?url=products&category=<?= (int)$product['category_id'] ?>"><?= htmlspecialchars($categoryName) ?></a>
-            <?php endif; ?>
-            <span class="pd-breadcrumb__sep" aria-hidden="true">/</span>
-            <span class="pd-breadcrumb__current" aria-current="page"><?= htmlspecialchars($product['name']) ?></span>
-        </nav>
+        <div class="pd-topbar">
+            <a href="<?= APP_URL ?>/index.php?url=products" class="pd-back-link pd-back-link--breadcrumb">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+                Back to Products
+            </a>
+        </div>
 
         <div class="pd-grid">
             <!-- Gallery -->
@@ -237,10 +236,6 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
                     </div>
                 </div>
 
-                <a href="<?= APP_URL ?>/index.php?url=products" class="pd-back-link">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-                    Back to Products
-                </a>
             </div>
         </div>
 
@@ -283,7 +278,6 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
             <div class="pd-card pd-card--tabs" data-pd-tabs>
                 <div class="pd-tabs" role="tablist">
                     <button type="button" class="pd-tabs__btn is-active" role="tab" aria-selected="true" data-pd-tab="description">Description</button>
-                    <button type="button" class="pd-tabs__btn" role="tab" aria-selected="false" data-pd-tab="specifications">Specifications</button>
                     <button type="button" class="pd-tabs__btn" role="tab" aria-selected="false" data-pd-tab="reviews">Reviews (<?= $reviewCount ?>)</button>
                 </div>
                 <div class="pd-tab-panel is-active" data-pd-panel="description">
@@ -291,17 +285,6 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
                         <p><?= nl2br(htmlspecialchars($product['description'])) ?></p>
                     <?php else: ?>
                         <p class="pd-muted">No description provided for this product yet.</p>
-                    <?php endif; ?>
-                </div>
-                <div class="pd-tab-panel" data-pd-panel="specifications" hidden>
-                    <?php if (!empty($specsTable)): ?>
-                    <ul class="pd-spec-list">
-                        <?php foreach ($specsTable as $label => $value): ?>
-                            <li><strong><?= htmlspecialchars($label) ?>:</strong> <?= htmlspecialchars($value) ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                    <?php else: ?>
-                        <p class="pd-muted">No detailed specifications yet.</p>
                     <?php endif; ?>
                 </div>
                 <div class="pd-tab-panel" data-pd-panel="reviews" hidden>
