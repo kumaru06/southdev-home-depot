@@ -173,7 +173,7 @@ try {
                             <a href="<?= APP_URL ?>/index.php?url=profile">PROFILE <span class="caret">▾</span></a>
                             <div class="submenu">
                                 <ul>
-                                    <li><a href="<?= APP_URL ?>/index.php?url=profile">Account</a></li>
+                                    <li><a href="<?= APP_URL ?>/index.php?url=profile">My Profile</a></li>
                                     <li><a href="<?= APP_URL ?>/index.php?url=orders">My Orders</a></li>
                                     <li><a href="<?= APP_URL ?>/index.php?url=logout">Logout</a></li>
                                 </ul>
