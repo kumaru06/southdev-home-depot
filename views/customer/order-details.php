@@ -78,15 +78,19 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
             <div class="od-timeline-track">
                 <div class="od-timeline-fill" style="width: <?= $currentIdx !== false ? ($currentIdx / (count($steps)-1) * 100) : 0 ?>%"></div>
             </div>
+            <div class="od-timeline-steps">
             <?php foreach ($steps as $i => $step):
                 $done    = $currentIdx !== false && $i <= $currentIdx;
                 $active  = $i === $currentIdx;
             ?>
-            <div class="od-timeline-step <?= $done ? 'done' : '' ?> <?= $active ? 'active' : '' ?>" style="left: <?= ($i / (count($steps)-1)) * 100 ?>%">
-                <div class="od-step-dot"></div>
+            <div class="od-timeline-step <?= $done ? 'done' : '' ?> <?= $active ? 'active' : '' ?>">
+                <div class="od-step-dot">
+                    <svg class="od-step-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                </div>
                 <span class="od-step-label"><?= ucfirst($step) ?></span>
             </div>
             <?php endforeach; ?>
+            </div>
         </div>
         <?php else: ?>
         <div class="od-cancelled-banner">
