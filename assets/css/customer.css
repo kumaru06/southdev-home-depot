@@ -1124,7 +1124,37 @@ body:not(.admin-layout) .form-control {
 .badge-danger { background: rgba(229,57,53,.92); color: var(--white); }
 .badge-warning { background: rgba(245,158,11,.92); color: var(--white); }
 
-/* Category tag overlay on product image (like live site) */
+/* Category tag overlay on product image — "New" badge (first 7 days) */
+.product-new-tag {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--accent);
+    color: #fff;
+    z-index: 2;
+    letter-spacing: .2px;
+    box-shadow: 0 2px 6px rgba(249,115,22,.3);
+}
+
+.products-reveal-sync .product-new-tag {
+    top: 12px;
+    left: 12px;
+    padding: 4px 9px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    background: #f97316;
+    box-shadow: 0 6px 14px rgba(249,115,22,.28);
+    backdrop-filter: none;
+}
+
+/* Legacy — kept for any cached markup */
 .product-category-tag {
     position: absolute;
     top: 12px;
@@ -1489,6 +1519,28 @@ body:not(.admin-layout) .form-control {
     padding: 14px 14px 8px;
     border-top: 0;
     gap: 6px;
+}
+
+.product-card .product-category-pill {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    padding: 4px 12px;
+    margin-bottom: 6px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: linear-gradient(135deg, rgba(249,115,22,.10), rgba(249,115,22,.06));
+    border: 1px solid rgba(249,115,22,.22);
+    box-shadow: 0 2px 8px rgba(249,115,22,.08);
+    line-height: 1.2;
+}
+
+.products-reveal-sync .product-card .product-category-pill {
+    margin-bottom: 4px;
 }
 
 .product-card .product-category {
@@ -8200,6 +8252,12 @@ body:has(.pd-page) .site-header .main-nav {
         padding: 10px 10px 6px !important;
         gap: 4px;
     }
+    .product-card .product-category-pill {
+        font-size: 8px;
+        padding: 3px 8px;
+        margin-bottom: 3px;
+        letter-spacing: .08em;
+    }
     .product-card .product-category {
         font-size: 9px;
         letter-spacing: .5px;
@@ -8231,7 +8289,14 @@ body:has(.pd-page) .site-header .main-nav {
         font-size: 10px;
     }
     
-    /* Category tag on card */
+    /* New badge on card */
+    .product-new-tag {
+        font-size: 9px;
+        padding: 3px 8px;
+        top: 8px;
+        left: 8px;
+        border-radius: 4px;
+    }
     .product-category-tag {
         font-size: 9px;
         padding: 3px 8px;

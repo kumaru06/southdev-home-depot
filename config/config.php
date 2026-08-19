@@ -43,6 +43,22 @@ function format_sold_count(int $count): string {
     return $formatted . $label;
 }
 
+/**
+ * Product is "new" for the first N days after created_at.
+ */
+function is_new_product(?string $createdAt, int $days = 7): bool {
+    if ($createdAt === null || $createdAt === '') {
+        return false;
+    }
+    try {
+        $created = new DateTimeImmutable($createdAt);
+    } catch (Exception $e) {
+        return false;
+    }
+    $cutoff = (new DateTimeImmutable('now'))->modify('-' . max(1, $days) . ' days');
+    return $created >= $cutoff;
+}
+
 // Set timezone to Philippine Time (UTC+8)
 date_default_timezone_set(env('TIMEZONE', 'Asia/Manila'));
 

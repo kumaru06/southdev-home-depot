@@ -169,6 +169,7 @@ if (!file_exists($display2Full)) {
                     $isOutOfStock = $displayStock <= 0;
                     $lowStockThreshold = Inventory::effectiveReorderLevel((float) ($product['price'] ?? 0));
                     $isLowStock = !$isOutOfStock && $displayStock <= $lowStockThreshold;
+                    $isNewProduct = is_new_product($product['created_at'] ?? null);
                 ?>
                 <?php $col = $index % 4; $delay = [0, 100, 200, 300][$col]; ?>
                 <div class="product-card <?= $isOutOfStock ? 'product-card--unavailable' : '' ?> reveal-on-scroll <?= $col < 2 ? 'reveal-left' : 'reveal-right' ?>" data-reveal-delay="<?= $delay ?>">
@@ -181,8 +182,8 @@ if (!file_exists($display2Full)) {
                                     <span>No Image</span>
                                 </div>
                             <?php endif; ?>
-                            <?php if (!empty($product['category_name'])): ?>
-                                <span class="product-category-tag"><?= htmlspecialchars($product['category_name']) ?></span>
+                            <?php if ($isNewProduct): ?>
+                                <span class="product-new-tag">New</span>
                             <?php endif; ?>
                             <?php if ($isOutOfStock): ?>
                                 <div class="product-unavailable-overlay">
@@ -194,6 +195,9 @@ if (!file_exists($display2Full)) {
                             <?php endif; ?>
                         </div>
                         <div class="product-info">
+                            <?php if (!empty($product['category_name'])): ?>
+                                <span class="product-category-pill"><?= htmlspecialchars($product['category_name']) ?></span>
+                            <?php endif; ?>
                             <h3 class="product-name" title="<?= htmlspecialchars($product['name']) ?>">
                                 <span class="product-name-viewport">
                                     <span class="product-name-track">
