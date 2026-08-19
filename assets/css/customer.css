@@ -50,7 +50,7 @@ body:not(.admin-layout) .form-control {
 }
 .products-hero {
     position: relative;
-    border-radius: 20px;
+    border-radius: 4px;
     overflow: hidden;
     align-items: center;
     color: #fff;
@@ -71,7 +71,7 @@ body:not(.admin-layout) .form-control {
     gap: 10px;
 }
 .hero-left .hero-thumb {
-    border-radius: 10px;
+    border-radius: 4px;
     display: block;
     height: 140px;
     width: 100%;
@@ -80,7 +80,7 @@ body:not(.admin-layout) .form-control {
 .hero-right {
     flex: 1 1 0;
     min-height: 360px;
-    border-radius: 10px;
+    border-radius: 4px;
     background-size: cover;
     background-position: center;
     box-shadow: 0 12px 36px rgba(2,6,23,.08);
@@ -278,7 +278,7 @@ body:not(.admin-layout) .form-control {
 .storefront-sidebar .sidebar-card {
     background: var(--white);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: 4px;
     padding: 20px;
     box-shadow: var(--shadow-sm);
 }
@@ -303,7 +303,7 @@ body:not(.admin-layout) .form-control {
     align-items: center;
     justify-content: space-between;
     padding: 10px 12px;
-    border-radius: 10px;
+    border-radius: 4px;
     color: var(--text-secondary);
     font-weight: 600;
     font-size: 13px;
@@ -327,7 +327,7 @@ body:not(.admin-layout) .form-control {
     background: var(--neutral);
     color: var(--text-muted);
     padding: 2px 8px;
-    border-radius: 12px;
+    border-radius: 4px;
     min-width: 24px;
     text-align: center;
 }
@@ -384,7 +384,7 @@ body:not(.admin-layout) .form-control {
 }
 .storefront-search.search-form {
     box-shadow: var(--shadow-sm);
-    border-radius: var(--radius-lg);
+    border-radius: 4px;
     padding: 6px;
     align-items: center;
     border: 1.5px solid var(--border);
@@ -406,7 +406,7 @@ body:not(.admin-layout) .form-control {
     gap: 8px;
     height: 52px;
     padding: 0 14px;
-    border-radius: var(--radius-lg);
+    border-radius: 4px;
     background: var(--white);
     border: 1px solid var(--border);
     box-shadow: var(--shadow-sm);
@@ -426,7 +426,7 @@ body:not(.admin-layout) .form-control {
     min-width: 18px;
     height: 18px;
     padding: 0 6px;
-    border-radius: 999px;
+    border-radius: 4px;
     background: var(--accent);
     color: var(--white);
     font-size: 11px;
@@ -437,8 +437,8 @@ body:not(.admin-layout) .form-control {
 }
 
 /* Match toolbar control heights */
-.storefront-search.search-form .form-control { height: 40px; }
-.storefront-search.search-form .btn { height: 40px; padding: 0 18px; }
+.storefront-search.search-form .form-control { height: 40px; border-radius: 4px; }
+.storefront-search.search-form .btn { height: 40px; padding: 0 18px; border-radius: 4px; }
 
 /* ---------- Breadcrumb ---------- */
 .breadcrumb {
@@ -450,7 +450,7 @@ body:not(.admin-layout) .form-control {
     margin: 10px 0 18px;
     background: var(--neutral);
     border: 1px solid var(--border);
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     color: var(--text-secondary);
     font-size: 13px;
     justify-content: center;
@@ -490,7 +490,7 @@ body:not(.admin-layout) .form-control {
     align-items: stretch;
     background: var(--white);
     border: 1.5px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: 4px;
     padding: 6px 6px 6px 10px;
     box-shadow: 0 2px 8px rgba(0,0,0,.04);
     transition: border-color .25s ease, box-shadow .25s ease;
@@ -520,7 +520,7 @@ body:not(.admin-layout) .form-control {
     margin: 18px 0 16px;
     padding: 1.55rem 1.65rem;
     border: 1px solid rgba(148,163,184,.18);
-    border-radius: 28px;
+    border-radius: 4px;
     background:
         radial-gradient(circle at top right, rgba(249,115,22,.16), transparent 34%),
         radial-gradient(circle at bottom left, rgba(27,42,74,.08), transparent 36%),
@@ -575,7 +575,7 @@ body:not(.admin-layout) .form-control {
     min-height: 38px;
     padding: .55rem .9rem;
     border: 1px solid rgba(148,163,184,.18);
-    border-radius: 999px;
+    border-radius: 4px;
     background: rgba(255,255,255,.74);
     color: #334155;
     font-size: .78rem;
@@ -599,7 +599,7 @@ body:not(.admin-layout) .form-control {
     margin: 0 0 22px;
     padding: .75rem;
     border: 1px solid rgba(148,163,184,.16);
-    border-radius: 22px;
+    border-radius: 4px;
     background: rgba(255,255,255,.86);
     backdrop-filter: blur(16px);
     box-shadow: 0 14px 32px rgba(15,23,42,.07);
@@ -625,7 +625,7 @@ body:not(.admin-layout) .form-control {
 
 .products-reveal-sync .category-select .form-control {
     min-height: 44px;
-    border-radius: 999px !important;
+    border-radius: 4px !important;
     border-color: rgba(148,163,184,.24) !important;
     background: rgba(248,250,252,.92) !important;
     font-weight: 700;
@@ -636,7 +636,7 @@ body:not(.admin-layout) .form-control {
     align-items: center;
     gap: 8px;
     padding: 8px 20px;
-    border-radius: 999px;
+    border-radius: 4px;
     border: 1.5px solid rgba(249,115,22,.25);
     background: rgba(249,115,22,.06);
     color: var(--accent);
@@ -687,7 +687,7 @@ body:not(.admin-layout) .form-control {
         align-items: stretch;
         flex-direction: column;
         padding: 1.25rem;
-        border-radius: 24px;
+        border-radius: 4px;
     }
 
     .products-header-meta {
@@ -727,7 +727,7 @@ body:not(.admin-layout) .form-control {
     }
 
     .products-reveal-sync .storefront-chips.category-bar {
-        border-radius: 18px;
+        border-radius: 4px;
         padding: .55rem;
     }
 
@@ -740,12 +740,12 @@ body:not(.admin-layout) .form-control {
     }
 
     .products-reveal-sync .product-card {
-        border-radius: 20px;
+        border-radius: 4px;
     }
 
     .products-reveal-sync .product-card .product-img-wrap {
         margin: .55rem .55rem 0;
-        border-radius: 15px;
+        border-radius: 4px;
     }
 
     .products-reveal-sync .product-card .product-img-wrap img {
@@ -789,8 +789,8 @@ body:not(.admin-layout) .form-control {
     .storefront-actions { justify-content: flex-end; }
 }
 .search-form .input-icon-wrap { flex: 1; }
-.search-form .form-control { height: 42px; }
-.search-form .btn { height: 42px; padding: 0 18px; }
+.search-form .form-control { height: 42px; border-radius: 4px; }
+.search-form .btn { height: 42px; padding: 0 18px; border-radius: 4px; }
 
 /* ---------- Hero Banner ---------- */
 .hero {
@@ -951,7 +951,7 @@ body:not(.admin-layout) .form-control {
     justify-content: center;
     padding: 1rem 1.15rem;
     border: 1px solid rgba(148,163,184,.16);
-    border-radius: 22px;
+    border-radius: 4px;
     background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.9));
     box-shadow: 0 16px 32px rgba(15,23,42,.06);
 }
@@ -1005,7 +1005,7 @@ body:not(.admin-layout) .form-control {
 
 .product-card {
     background: var(--white);
-    border-radius: var(--radius-lg);
+    border-radius: 4px;
     overflow: hidden;
     border: 1px solid var(--border);
     transition: all .3s cubic-bezier(.4,0,.2,1);
@@ -1018,7 +1018,7 @@ body:not(.admin-layout) .form-control {
 .products-reveal-sync .product-card {
     overflow: hidden;
     border: 1px solid rgba(148,163,184,.18);
-    border-radius: 24px;
+    border-radius: 4px;
     background: linear-gradient(180deg, #fff 0%, #fbfdff 100%);
     box-shadow: 0 16px 36px rgba(15,23,42,.07);
     isolation: isolate;
@@ -1049,7 +1049,7 @@ body:not(.admin-layout) .form-control {
 
 .products-reveal-sync .product-card .product-img-wrap {
     margin: .75rem .75rem 0;
-    border-radius: 18px;
+    border-radius: 4px;
     background:
         linear-gradient(135deg, rgba(255,255,255,.7), rgba(255,255,255,0)),
         #eef2f7;
@@ -1063,7 +1063,7 @@ body:not(.admin-layout) .form-control {
     transform: translate(-50%, 12px);
     opacity: 0;
     padding: .55rem .9rem;
-    border-radius: 999px;
+    border-radius: 4px;
     background: rgba(15,23,42,.78);
     color: #fff;
     font-size: .72rem;
@@ -1101,7 +1101,7 @@ body:not(.admin-layout) .form-control {
     top: 12px;
     right: 12px;
     padding: 5px 12px;
-    border-radius: 6px;
+    border-radius: 4px;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: .3px;
@@ -1115,7 +1115,7 @@ body:not(.admin-layout) .form-control {
 .products-reveal-sync .product-badge {
     top: 16px;
     right: 16px;
-    border-radius: 999px;
+    border-radius: 4px;
     padding: .45rem .72rem;
     box-shadow: 0 10px 22px rgba(15,23,42,.18);
 }
@@ -1128,7 +1128,7 @@ body:not(.admin-layout) .form-control {
     top: 12px;
     left: 12px;
     padding: 4px 10px;
-    border-radius: 6px;
+    border-radius: 4px;
     font-size: 11px;
     font-weight: 700;
     background: var(--accent);
@@ -1142,7 +1142,7 @@ body:not(.admin-layout) .form-control {
     top: 16px;
     left: 16px;
     padding: .45rem .75rem;
-    border-radius: 999px;
+    border-radius: 4px;
     background: rgba(249,115,22,.95);
     box-shadow: 0 10px 22px rgba(249,115,22,.26);
     backdrop-filter: blur(10px);
@@ -1161,7 +1161,7 @@ body:not(.admin-layout) .form-control {
     min-height: 36px;
     max-height: 36px;
     padding: 0 12px !important;
-    border-radius: 10px;
+    border-radius: 4px;
     font-weight: 700;
     gap: 6px;
     text-transform: none;
@@ -1185,7 +1185,7 @@ body:not(.admin-layout) .form-control {
     margin-top: auto;
     width: calc(100% - 32px);
     padding: 0 12px !important;
-    border-radius: 10px;
+    border-radius: 4px;
     font-size: .78rem !important;
     text-transform: none;
     letter-spacing: .02em;
@@ -1228,7 +1228,7 @@ body:not(.admin-layout) .form-control {
     width: 100%;
     height: 42px;
     border: 1.5px solid #e8ecf1;
-    border-radius: 999px;
+    border-radius: 4px;
     background: #fff;
     overflow: hidden;
 }
@@ -1291,7 +1291,7 @@ body:not(.admin-layout) .form-control {
     width: 100%;
     padding: 9px 12px;
     border: 1.5px solid var(--border, #e2e8f0);
-    border-radius: 10px;
+    border-radius: 4px;
     background: #fff;
     color: var(--charcoal, #1B2A4A);
     font-size: .78rem;
@@ -1345,7 +1345,7 @@ body:not(.admin-layout) .form-control {
     background: var(--neutral) !important;
     color: var(--text-muted) !important;
     border: 1.5px solid var(--border) !important;
-    border-radius: 10px;
+    border-radius: 4px;
     cursor: not-allowed;
     opacity: .7;
     box-shadow: none;
@@ -1602,7 +1602,7 @@ body:not(.admin-layout) .form-control {
     width: fit-content;
     margin-top: auto;
     padding: .5rem .75rem;
-    border-radius: 999px;
+    border-radius: 4px;
     background: rgba(249,115,22,.1);
     color: #ea580c;
     font-size: 1.05rem;
@@ -7729,7 +7729,7 @@ body:has(.pd-page) .site-header .main-nav {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 999px;
+    border-radius: 4px;
     border: 1.5px solid var(--border);
     font-size: 13px;
     font-weight: 600;
@@ -7751,7 +7751,7 @@ body:has(.pd-page) .site-header .main-nav {
     padding: 80px 24px;
     background: var(--white);
     border: 1.5px dashed var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: 4px;
     margin-top: 12px;
 }
 .empty-state .empty-icon {
@@ -8052,7 +8052,7 @@ body:has(.pd-page) .site-header .main-nav {
     .product-grid { gap: 10px !important; padding: 4px 0 20px; }
     
     .product-card {
-        border-radius: 12px;
+        border-radius: 4px;
         border: 1px solid rgba(0,0,0,.06);
         box-shadow: 0 1px 4px rgba(0,0,0,.04);
     }
@@ -8104,7 +8104,7 @@ body:has(.pd-page) .site-header .main-nav {
         padding: 3px 8px;
         top: 8px;
         left: 8px;
-        border-radius: 5px;
+        border-radius: 4px;
     }
     .product-badge {
         font-size: 9px;
@@ -8419,7 +8419,7 @@ body:has(.pd-page) .site-header .main-nav {
         height: 36px; 
         padding: 0 12px !important;
         font-size: 12px; 
-        border-radius: 999px;
+        border-radius: 4px;
         flex: none !important;
     }
     .pagination .btn {
