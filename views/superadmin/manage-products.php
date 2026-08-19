@@ -188,7 +188,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
         <?php endif; ?>
 
         <!-- Products Table -->
-        <div class="card card--table-locked">
+        <div class="card card--table-locked card--products-table">
             <div class="products-table-toolbar">
                 <div class="products-table-toolbar__title">
                     <i data-lucide="package" style="width:20px;height:20px;color:var(--accent);"></i>
@@ -228,18 +228,18 @@ require_once INCLUDES_PATH . '/sidebar.php';
                     <thead>
                         <tr>
                             <?php if ($canEditProducts): ?>
-                            <th style="width:42px;">
+                            <th class="col-check">
                                 <input type="checkbox" id="selectAllProducts" class="product-select-all" title="Select all" aria-label="Select all products">
                             </th>
                             <?php endif; ?>
-                            <th>ID</th>
-                            <th>Image</th>
-                            <th>Name</th>
-                            <th>Category</th>
-                            <th>Price</th>
-                            <th>Stock</th>
+                            <th class="col-id">ID</th>
+                            <th class="col-image">Image</th>
+                            <th class="col-name">Name</th>
+                            <th class="col-category">Category</th>
+                            <th class="col-price">Price</th>
+                            <th class="col-stock">Stock</th>
                             <?php if ($canEditProducts): ?>
-                            <th>Actions</th>
+                            <th class="col-actions">Actions</th>
                             <?php endif; ?>
                         </tr>
                     </thead>

@@ -137,17 +137,19 @@ foreach ($inventory ?? [] as $invRow) {
             </div>
         </div>
 
-        <div class="data-table-wrap data-table-wrap--locked inv-table-wrap">
+        <div class="inv-table-wrap">
+            <div class="inv-table-scroll">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Product</th>
-                        <th>Price</th>
-                        <th>Stock</th>
-                        <th title="Auto-adjusts for high-value items — expensive products use a lower threshold">Reorder</th>
-                        <th>Status</th>
+                        <th class="inv-col-product">Product</th>
+                        <th class="inv-col-category">Category</th>
+                        <th class="inv-col-price">Price</th>
+                        <th class="inv-col-stock">Stock</th>
+                        <th class="inv-col-reorder" title="Auto-adjusts for high-value items — expensive products use a lower threshold">Reorder</th>
+                        <th class="inv-col-status">Status</th>
                         <?php if ($canManageStock): ?>
-                        <th>Actions</th>
+                        <th class="inv-col-actions">Actions</th>
                         <?php endif; ?>
                     </tr>
                 </thead>
@@ -182,18 +184,24 @@ foreach ($inventory ?? [] as $invRow) {
                                             <span class="inv-product__thumb-placeholder"><i data-lucide="image" style="width:20px;height:20px;"></i></span>
                                         <?php endif; ?>
                                         <div class="inv-product__body">
-                                            <span class="inv-product__name"><?= htmlspecialchars($item['product_name']) ?></span>
+                                            <span class="inv-product__name-scroll" title="<?= htmlspecialchars($item['product_name'], ENT_QUOTES) ?>">
+                                                <span class="inv-product__name"><?= htmlspecialchars($item['product_name']) ?></span>
+                                            </span>
                                             <div class="inv-product__meta">
-                                                <?php if (!empty($item['category_name'])): ?>
-                                                    <span class="inv-product__tag"><?= htmlspecialchars($item['category_name']) ?></span>
-                                                <?php endif; ?>
                                                 <span class="inv-product__tag inv-product__tag--sku"><?= htmlspecialchars($sku !== '' ? $sku : 'N/A') ?></span>
                                             </div>
                                         </div>
                                     </div>
                                 </td>
-                                <td>
-                                    <span class="inv-price">₱<?= number_format((float) $item['price'], 2) ?></span>
+                                <td class="inv-category-cell">
+                                    <?php if (!empty($item['category_name'])): ?>
+                                        <span class="inv-category" title="<?= htmlspecialchars($item['category_name'], ENT_QUOTES) ?>"><?= htmlspecialchars($item['category_name']) ?></span>
+                                    <?php else: ?>
+                                        <span class="inv-category inv-category--empty">N/A</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="inv-price-cell">
+                                    <span class="inv-price" title="₱<?= number_format((float) $item['price'], 2) ?>">₱<?= number_format((float) $item['price'], 2) ?></span>
                                     <?php if ((float) $item['price'] >= 10000): ?>
                                         <small>High-value item</small>
                                     <?php endif; ?>
@@ -225,36 +233,55 @@ foreach ($inventory ?? [] as $invRow) {
                                     <?php endif; ?>
                                 </td>
                                 <?php if ($canManageStock): ?>
-                                <td>
+                                <td class="inv-actions-cell">
                                     <?php if ($hasSizes): ?>
                                         <?php if ($productsManageUrl): ?>
                                             <a href="<?= $productsManageUrl ?>" class="inv-actions__hint">
                                                 <i data-lucide="external-link" style="width:13px;height:13px"></i>
-                                                Manage in Products
+                                                Products
                                             </a>
                                         <?php else: ?>
-                                            <span class="inv-actions__hint">Manage size stock from Products</span>
+                                            <span class="inv-actions__hint">Manage in Products</span>
                                         <?php endif; ?>
                                     <?php else: ?>
-                                    <div class="inv-actions">
-                                        <button type="button" class="action-btn edit" data-id="<?= $item['product_id'] ?>" data-name="<?= htmlspecialchars($item['product_name'], ENT_QUOTES) ?>" data-qty="<?= $qty ?>" data-mode="update" title="Set Stock">
-                                            <i data-lucide="edit-3" style="width:13px;height:13px"></i> Update
+                                    <div class="action-dropdown">
+                                        <button type="button" class="action-dropdown-btn" onclick="toggleActionMenu(this, event)">
+                                            <i data-lucide="more-horizontal" style="width:16px;height:16px;"></i>
+                                            Actions
+                                            <i data-lucide="chevron-down" style="width:13px;height:13px;opacity:.6;"></i>
                                         </button>
-                                        <button type="button" class="action-btn approve" data-id="<?= $item['product_id'] ?>" data-name="<?= htmlspecialchars($item['product_name'], ENT_QUOTES) ?>" data-qty="<?= $qty ?>" data-mode="add" title="Add Stock">
-                                            <i data-lucide="plus-circle" style="width:13px;height:13px"></i> Add
-                                        </button>
-                                        <?php if ($isLow || $isOut): ?>
-                                            <?php $openReqId = $openSupplierByProduct[(int)$item['product_id']] ?? null; ?>
-                                            <?php if ($openReqId): ?>
-                                        <a href="<?= $invBase ?>/supplier-requests" class="action-btn action-btn--supplier" title="Open supplier request #<?= (int)$openReqId ?>">
-                                            <i data-lucide="truck" style="width:13px;height:13px"></i> Request
-                                        </a>
-                                            <?php else: ?>
-                                        <button type="button" class="action-btn action-btn--supplier" data-id="<?= $item['product_id'] ?>" data-name="<?= htmlspecialchars($item['product_name'], ENT_QUOTES) ?>" data-qty="<?= $qty ?>" data-mode="supplier" title="Request Supplier">
-                                            <i data-lucide="truck" style="width:13px;height:13px"></i> Request
-                                        </button>
+                                        <div class="action-dropdown-menu">
+                                            <button type="button" class="action-menu-item"
+                                                    data-id="<?= $item['product_id'] ?>"
+                                                    data-name="<?= htmlspecialchars($item['product_name'], ENT_QUOTES) ?>"
+                                                    data-qty="<?= $qty ?>"
+                                                    data-mode="update">
+                                                <i data-lucide="edit-3" style="width:14px;height:14px;"></i> Update Stock
+                                            </button>
+                                            <button type="button" class="action-menu-item"
+                                                    data-id="<?= $item['product_id'] ?>"
+                                                    data-name="<?= htmlspecialchars($item['product_name'], ENT_QUOTES) ?>"
+                                                    data-qty="<?= $qty ?>"
+                                                    data-mode="add">
+                                                <i data-lucide="plus-circle" style="width:14px;height:14px;"></i> Add Stock
+                                            </button>
+                                            <?php if ($isLow || $isOut): ?>
+                                                <?php $openReqId = $openSupplierByProduct[(int)$item['product_id']] ?? null; ?>
+                                                <?php if ($openReqId): ?>
+                                            <a href="<?= $invBase ?>/supplier-requests" class="action-menu-item">
+                                                <i data-lucide="truck" style="width:14px;height:14px;"></i> View Request
+                                            </a>
+                                                <?php else: ?>
+                                            <button type="button" class="action-menu-item"
+                                                    data-id="<?= $item['product_id'] ?>"
+                                                    data-name="<?= htmlspecialchars($item['product_name'], ENT_QUOTES) ?>"
+                                                    data-qty="<?= $qty ?>"
+                                                    data-mode="supplier">
+                                                <i data-lucide="truck" style="width:14px;height:14px;"></i> Request Supplier
+                                            </button>
+                                                <?php endif; ?>
                                             <?php endif; ?>
-                                        <?php endif; ?>
+                                        </div>
                                     </div>
                                     <?php endif; ?>
                                 </td>
@@ -262,12 +289,13 @@ foreach ($inventory ?? [] as $invRow) {
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr><td colspan="<?= $canManageStock ? 6 : 5 ?>" class="text-center">No inventory records found.</td></tr>
+                        <tr><td colspan="<?= $canManageStock ? 7 : 6 ?>" class="text-center">No inventory records found.</td></tr>
                     <?php endif; ?>
-                    <tr id="noFilterResults" style="display:none;"><td colspan="<?= $canManageStock ? 6 : 5 ?>" class="text-center" style="padding:2rem;color:var(--text-secondary);"><i data-lucide="search-x" style="width:24px;height:24px;margin-bottom:6px;"></i><br>No products match the selected filters.</td></tr>
+                    <tr id="noFilterResults" style="display:none;"><td colspan="<?= $canManageStock ? 7 : 6 ?>" class="text-center" style="padding:2rem;color:var(--text-secondary);"><i data-lucide="search-x" style="width:24px;height:24px;margin-bottom:6px;"></i><br>No products match the selected filters.</td></tr>
                 </tbody>
             </table>
-        </div>
+            </div><!-- end inv-table-scroll -->
+        </div><!-- end inv-table-wrap -->
     </div>
 </div>
 
@@ -603,6 +631,66 @@ foreach ($inventory ?? [] as $invRow) {
 </div>
 
 <script>
+function closeAllActionMenus() {
+    document.querySelectorAll('.action-dropdown.open').forEach(function (dropdown) {
+        dropdown.classList.remove('open');
+    });
+}
+
+function positionActionMenu(dropdown) {
+    var btn = dropdown.querySelector('.action-dropdown-btn');
+    var menu = dropdown.querySelector('.action-dropdown-menu');
+    if (!btn || !menu) return;
+
+    menu.style.visibility = 'hidden';
+    menu.style.display = 'block';
+
+    var btnRect = btn.getBoundingClientRect();
+    var menuRect = menu.getBoundingClientRect();
+    var viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+    var viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+
+    var top = btnRect.bottom + 6;
+    var left = btnRect.right - menuRect.width;
+
+    if (left < 8) left = 8;
+    if (left + menuRect.width > viewportWidth - 8) {
+        left = viewportWidth - menuRect.width - 8;
+    }
+    if (top + menuRect.height > viewportHeight - 8) {
+        top = Math.max(8, btnRect.top - menuRect.height - 6);
+    }
+
+    menu.style.left = left + 'px';
+    menu.style.top = top + 'px';
+    menu.style.visibility = 'visible';
+    menu.style.display = '';
+}
+
+function toggleActionMenu(btn, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    var dropdown = btn.closest('.action-dropdown');
+    var wasOpen = dropdown.classList.contains('open');
+    closeAllActionMenus();
+    if (!wasOpen) {
+        dropdown.classList.add('open');
+        positionActionMenu(dropdown);
+    }
+}
+
+document.addEventListener('click', function (e) {
+    if (!e.target.closest('.action-dropdown')) {
+        closeAllActionMenus();
+    }
+});
+window.addEventListener('resize', closeAllActionMenus);
+window.addEventListener('scroll', closeAllActionMenus, true);
+</script>
+
+<script>
 /* ====== Inventory Filter ====== */
 (function() {
     'use strict';
@@ -744,6 +832,7 @@ foreach ($inventory ?? [] as $invRow) {
         var actionBtn = e.target.closest('button[data-mode]');
         if (actionBtn) {
             e.preventDefault();
+            closeAllActionMenus();
             openStockModal(actionBtn);
             return;
         }
@@ -758,6 +847,7 @@ foreach ($inventory ?? [] as $invRow) {
         if (e.target.id === 'stockModal') {
             closeStockModal();
         }
+
     });
 
     document.addEventListener('keydown', function (e) {
