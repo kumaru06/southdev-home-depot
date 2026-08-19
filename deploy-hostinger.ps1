@@ -3,7 +3,8 @@ param(
     [int]$Minutes = 30,
     [string[]]$Files = @(),
     [switch]$All,
-    [switch]$UploadZip
+    [switch]$UploadZip,
+    [switch]$UploadEnv
 )
 
 $localRoot  = "C:\xampp\htdocs\southdev-home-depot"
@@ -97,11 +98,15 @@ if ($UploadZip) {
     exit
 }
 
-# Always upload production .env
-$envProd = Join-Path $localRoot ".env.production"
-if (Test-Path $envProd) {
-    Write-Host "Uploading .env ..." -ForegroundColor White
-    Upload-File $envProd "$remoteRoot/.env" | Out-Null
+# Only overwrite live .env when explicitly requested
+if ($UploadEnv) {
+    $envProd = Join-Path $localRoot ".env.production"
+    if (Test-Path $envProd) {
+        Write-Host "Uploading .env ..." -ForegroundColor White
+        Upload-File $envProd "$remoteRoot/.env" | Out-Null
+    } else {
+        Write-Host "Missing .env.production - skipped .env upload." -ForegroundColor Yellow
+    }
 }
 
 if ($Files.Count -gt 0) {

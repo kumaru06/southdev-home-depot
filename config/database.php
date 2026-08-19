@@ -17,15 +17,22 @@ $db_user = env('DB_USER', $db_is_local ? 'root' : '');
 $db_pass = env('DB_PASSWORD', $db_is_local ? '' : '');
 
 try {
+    $pdoOptions = [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ];
+    // Hostinger rate-limits new MySQL connections (20/sec). Persistent
+    // connections reuse the existing one and avoid SQLSTATE[HY000] [2002]
+    // "Operation not permitted" on the live site.
+    if (!$db_is_local) {
+        $pdoOptions[PDO::ATTR_PERSISTENT] = true;
+    }
     $pdo = new PDO(
         "mysql:host={$db_host};dbname={$db_name};charset=utf8mb4",
         $db_user,
         $db_pass,
-        [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false
-        ]
+        $pdoOptions
     );
     // Align MySQL session timezone with PHP (Asia/Manila = UTC+8)
     $pdo->exec("SET time_zone = '+08:00'");
