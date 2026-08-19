@@ -38,4 +38,25 @@ class OrderItem {
         $stmt->execute([$limit]);
         return $stmt->fetchAll();
     }
+
+    public function getSoldCountsByProductIds(array $productIds) {
+        if (empty($productIds)) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($productIds), '?'));
+        $stmt = $this->pdo->prepare(
+            "SELECT oi.product_id, SUM(oi.quantity) AS total_sold
+             FROM order_items oi
+             JOIN orders o ON o.id = oi.order_id
+             WHERE oi.product_id IN ($placeholders)
+               AND o.status IN ('processing', 'shipped', 'delivered')
+             GROUP BY oi.product_id"
+        );
+        $stmt->execute(array_values($productIds));
+        $result = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $result[(int) $row['product_id']] = (int) $row['total_sold'];
+        }
+        return $result;
+    }
 }

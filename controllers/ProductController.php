@@ -12,6 +12,7 @@ require_once __DIR__ . '/../models/StockMovement.php';
 require_once __DIR__ . '/../models/PriceHistory.php';
 require_once __DIR__ . '/../models/StockMovement.php';
 require_once __DIR__ . '/../models/Review.php';
+require_once __DIR__ . '/../models/OrderItem.php';
 
 class ProductController {
     private const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -43,12 +44,15 @@ class ProductController {
         $totalProducts = $this->productModel->count($categoryId);
         $totalPages    = ceil($totalProducts / $perPage);
 
-        // Load average ratings for the listed products
+        // Load average ratings and sold counts for the listed products
         $productRatings = [];
+        $productSold = [];
         if (!empty($products)) {
             $reviewModel = new Review($this->pdo);
+            $orderItemModel = new OrderItem($this->pdo);
             $productIds = array_column($products, 'id');
             $productRatings = $reviewModel->getAvgRatingsByProductIds($productIds);
+            $productSold = $orderItemModel->getSoldCountsByProductIds($productIds);
         }
 
         $pageTitle = 'Products';
@@ -70,12 +74,15 @@ class ProductController {
         $totalProducts = $this->productModel->count($categoryId);
         $totalPages    = ceil($totalProducts / $perPage);
 
-        // Load average ratings for the listed products
+        // Load average ratings and sold counts for the listed products
         $productRatings = [];
+        $productSold = [];
         if (!empty($products)) {
             $reviewModel = new Review($this->pdo);
+            $orderItemModel = new OrderItem($this->pdo);
             $productIds = array_column($products, 'id');
             $productRatings = $reviewModel->getAvgRatingsByProductIds($productIds);
+            $productSold = $orderItemModel->getSoldCountsByProductIds($productIds);
         }
 
         $pageTitle = 'Products';
@@ -104,6 +111,7 @@ class ProductController {
             $reviewModel = new Review($this->pdo);
             $relatedRatings = $reviewModel->getAvgRatingsByProductIds(array_column($relatedProducts, 'id'));
         }
+        $productSoldCount = (int) ((new OrderItem($this->pdo))->getSoldCountsByProductIds([(int) $id])[(int) $id] ?? 0);
 
         $pageTitle = $product['name'];
         $extraCss  = ['customer.css'];

@@ -22,6 +22,27 @@ function env(string $key, $default = null) {
     return $val;
 }
 
+/**
+ * Compact sold count: 52, 999, 1k, 1.1k, 10k, 1M.
+ */
+function format_sold_count(int $count): string {
+    $count = max(0, $count);
+    if ($count < 1000) {
+        return (string) $count;
+    }
+
+    if ($count < 1000000) {
+        $value = floor($count / 100) / 10;
+        $label = 'k';
+    } else {
+        $value = floor($count / 100000) / 10;
+        $label = 'M';
+    }
+
+    $formatted = rtrim(rtrim(number_format($value, 1, '.', ''), '0'), '.');
+    return $formatted . $label;
+}
+
 // Set timezone to Philippine Time (UTC+8)
 date_default_timezone_set(env('TIMEZONE', 'Asia/Manila'));
 

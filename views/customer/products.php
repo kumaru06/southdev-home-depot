@@ -194,28 +194,38 @@ if (!file_exists($display2Full)) {
                             <?php endif; ?>
                         </div>
                         <div class="product-info">
-                            <span class="product-category"><?= htmlspecialchars($product['category_name'] ?? '') ?></span>
-                            <h3 class="product-name"><?= htmlspecialchars($product['name']) ?></h3>
+                            <h3 class="product-name" title="<?= htmlspecialchars($product['name']) ?>">
+                                <span class="product-name-viewport">
+                                    <span class="product-name-track">
+                                        <span class="product-name-text"><?= htmlspecialchars($product['name']) ?></span>
+                                    </span>
+                                </span>
+                            </h3>
                             <?php
                                 $rating = $productRatings[$product['id']] ?? null;
-                                if ($rating && $rating['review_count'] > 0):
-                                    $avg = round($rating['avg_rating'], 1);
+                                $soldCount = (int) ($productSold[$product['id']] ?? 0);
+                                $avg = round((float) ($rating['avg_rating'] ?? 0), 1);
+                                $reviewCount = (int) ($rating['review_count'] ?? 0);
                             ?>
-                            <div class="product-rating">
-                                <span class="product-stars">
-                                    <?php for ($s = 1; $s <= 5; $s++): ?>
-                                        <?php if ($s <= floor($avg)): ?>
-                                            <i data-lucide="star" class="star-filled"></i>
-                                        <?php elseif ($s - $avg < 1 && $s - $avg > 0): ?>
-                                            <i data-lucide="star-half" class="star-filled"></i>
-                                        <?php else: ?>
-                                            <i data-lucide="star" class="star-empty"></i>
-                                        <?php endif; ?>
-                                    <?php endfor; ?>
-                                </span>
-                                <span class="rating-text"><?= $avg ?> (<?= $rating['review_count'] ?>)</span>
+                            <div class="product-card-meta">
+                                <div class="product-rating">
+                                    <span class="product-stars" aria-label="<?= $avg ?> out of 5">
+                                        <?php for ($s = 1; $s <= 5; $s++): ?>
+                                            <?php
+                                                $fill = 0;
+                                                if ($avg >= $s) {
+                                                    $fill = 1;
+                                                } elseif ($avg > $s - 1) {
+                                                    $fill = $avg - ($s - 1);
+                                                }
+                                            ?>
+                                            <span class="product-star<?= $fill >= 1 ? ' is-filled' : ($fill > 0 ? ' is-half' : '') ?>">★</span>
+                                        <?php endfor; ?>
+                                    </span>
+                                    <span class="rating-text"><?= $reviewCount > 0 ? number_format($avg, 1) : 'New' ?></span>
+                                </div>
+                                <span class="product-sold" title="<?= (int) $soldCount ?> sold"><?= htmlspecialchars(format_sold_count($soldCount)) ?> sold</span>
                             </div>
-                            <?php endif; ?>
                             <?php if (!empty($product['description'])): ?>
                                 <p class="product-desc-preview"><?= htmlspecialchars($product['description']) ?></p>
                             <?php else: ?>
@@ -227,7 +237,10 @@ if (!file_exists($display2Full)) {
                     <?php if ($isOutOfStock): ?>
                         <span class="btn btn-sm btn-add-cart btn-out-of-stock">Not Available</span>
                     <?php else: ?>
-                        <a href="<?= APP_URL ?>/index.php?url=products/<?= (int) $product['id'] ?>" class="btn btn-accent btn-sm btn-add-cart">View and Add</a>
+                        <a href="<?= APP_URL ?>/index.php?url=products/<?= (int) $product['id'] ?>" class="btn btn-accent btn-sm btn-add-cart">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                            View and Add
+                        </a>
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
@@ -261,7 +274,7 @@ if (!file_exists($display2Full)) {
     </div>
 </div>
 
-<?php $extraJs = ['cart.js']; ?>
+<?php $extraJs = ['cart.js', 'product-name-marquee.js']; ?>
 <script>
 // Smooth scroll when clicking Explore Products buttons
 document.addEventListener('DOMContentLoaded', function(){

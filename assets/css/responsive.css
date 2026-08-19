@@ -162,7 +162,7 @@
     .pd-reviews__list { grid-template-columns: 1fr; }
     .pd-reviews__avg-num { font-size: 36px; }
     .pd-actions { flex-direction: column; }
-    .pd-btn-cart { width: 100%; }
+    .pd-btn-cart { width: auto; }
 
     .quick-actions { flex-wrap: wrap; }
     .quick-actions .btn { flex: 1; min-width: 120px; }
