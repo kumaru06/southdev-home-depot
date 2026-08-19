@@ -179,23 +179,36 @@ class Order {
     }
 
     public function getItems($orderId) {
-        $sql = "SELECT oi.id, oi.order_id, oi.product_id, oi.size_option_id, oi.quantity, oi.price, oi.subtotal,
-                       p.name as product_name, p.sku, p.image";
-        if ($this->detectOrderItemSizeOptionSupport()) {
-            $sql .= ", s.stock as size_option_stock,
-                     COALESCE(NULLIF(TRIM(oi.size_label), ''), s.size_label) as size_label";
-        } else {
-            $sql .= ", oi.size_label";
+        try {
+            $sql = "SELECT oi.id, oi.order_id, oi.product_id, oi.size_option_id, oi.quantity, oi.price, oi.subtotal,
+                           p.name as product_name, p.sku, p.image";
+            if ($this->detectOrderItemSizeOptionSupport()) {
+                $sql .= ", s.stock as size_option_stock,
+                         COALESCE(NULLIF(TRIM(oi.size_label), ''), s.size_label) as size_label";
+            } else {
+                $sql .= ", oi.size_label";
+            }
+            $sql .= " FROM order_items oi
+                      JOIN products p ON oi.product_id = p.id";
+            if ($this->detectOrderItemSizeOptionSupport()) {
+                $sql .= " LEFT JOIN product_size_options s ON oi.size_option_id = s.id";
+            }
+            $sql .= " WHERE oi.order_id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$orderId]);
+            return $stmt->fetchAll();
+        } catch (Throwable $e) {
+            error_log('Order::getItems fallback for order #' . (int) $orderId . ': ' . $e->getMessage());
+            $stmt = $this->pdo->prepare(
+                "SELECT oi.id, oi.order_id, oi.product_id, oi.quantity, oi.price, oi.subtotal,
+                        p.name as product_name, p.sku, p.image, oi.size_label
+                 FROM order_items oi
+                 JOIN products p ON oi.product_id = p.id
+                 WHERE oi.order_id = ?"
+            );
+            $stmt->execute([$orderId]);
+            return $stmt->fetchAll();
         }
-        $sql .= " FROM order_items oi
-                  JOIN products p ON oi.product_id = p.id";
-        if ($this->detectOrderItemSizeOptionSupport()) {
-            $sql .= " LEFT JOIN product_size_options s ON oi.size_option_id = s.id";
-        }
-        $sql .= " WHERE oi.order_id = ?";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$orderId]);
-        return $stmt->fetchAll();
     }
 
     public function updateStatus($id, $status) {
@@ -218,8 +231,12 @@ class Order {
             }
         }
 
-        $this->pdo->beginTransaction();
         try {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            $this->pdo->beginTransaction();
+
             /* Verify order is cancellable */
             $sql = "SELECT id, status FROM orders WHERE id = ? AND status IN ('pending', 'processing')";
             $params = [$id];
@@ -255,7 +272,7 @@ class Order {
             }
 
             /* Mark order as cancelled */
-            if ($reason !== null) {
+            if ($reason !== null && $this->detectCancelReasonSupport()) {
                 $upd = $this->pdo->prepare("UPDATE orders SET status = 'cancelled', cancel_reason = ? WHERE id = ?");
                 $upd->execute([$reason, $id]);
             } else {
@@ -265,8 +282,14 @@ class Order {
 
             $this->pdo->commit();
             return true;
-        } catch (Exception $e) {
-            $this->pdo->rollBack();
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                try {
+                    $this->pdo->rollBack();
+                } catch (Throwable $ignored) {
+                }
+            }
+            error_log('cancelOrder failed for order #' . (int) $id . ': ' . $e->getMessage());
             return false;
         }
     }

@@ -128,6 +128,7 @@ class OrderController {
         $returnRequest = $returnModel->getByOrderId($id);
         $cancelRequest = $this->cancelModel->getByOrderId($id);
         $pageTitle = 'Order ' . $order['order_number'];
+        $pdo = $GLOBALS['pdo'] ?? $this->pdo;
 
         if ($_SESSION['role_id'] == ROLE_CUSTOMER) {
             $extraCss = ['customer.css'];
@@ -306,24 +307,29 @@ class OrderController {
             exit;
         }
 
-        if ($this->orderModel->cancelOrder($id, $_SESSION['user_id'], $reason)) {
-            $this->logModel->create(LOG_ORDER_CANCEL, "Order #{$id} ({$order['order_number']}) cancelled by customer. Stock restored.");
+        try {
+            if ($this->orderModel->cancelOrder($id, $_SESSION['user_id'], $reason)) {
+                $this->logModel->create(LOG_ORDER_CANCEL, "Order #{$id} ({$order['order_number']}) cancelled by customer. Stock restored.");
 
-            // Notify customer: order cancelled
-            try {
-                $notifModel = new Notification($this->pdo);
-                $notifModel->create(
-                    $_SESSION['user_id'],
-                    'Order Cancelled',
-                    "Your order #{$order['order_number']} has been cancelled." . ($reason ? " Reason: {$reason}" : ''),
-                    'order_cancelled',
-                    APP_URL . '/index.php?url=orders/' . $id
-                );
-            } catch (Throwable $e) { /* silent */ }
+                // Notify customer: order cancelled
+                try {
+                    $notifModel = new Notification($this->pdo);
+                    $notifModel->create(
+                        $_SESSION['user_id'],
+                        'Order Cancelled',
+                        "Your order #{$order['order_number']} has been cancelled." . ($reason ? " Reason: {$reason}" : ''),
+                        'order_cancelled',
+                        APP_URL . '/index.php?url=orders/' . $id
+                    );
+                } catch (Throwable $e) { /* silent */ }
 
-            flash('success', 'Order cancelled. Stock has been restored.');
-        } else {
-            flash('error', 'Unable to cancel this order.');
+                flash('success', 'Order cancelled. Stock has been restored.');
+            } else {
+                flash('error', 'Unable to cancel this order.');
+            }
+        } catch (Throwable $e) {
+            error_log('OrderController::cancel failed for order #' . (int) $id . ': ' . $e->getMessage());
+            flash('error', 'Something went wrong while cancelling your order. Please try again.');
         }
         header('Location: ' . APP_URL . '/index.php?url=orders/' . $id);
         exit;

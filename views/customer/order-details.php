@@ -7,7 +7,8 @@ require_once INCLUDES_PATH . '/navbar.php';
 $reviewedItemIds = [];
 if ($order['status'] === 'delivered' && isset($_SESSION['user_id'])) {
     require_once __DIR__ . '/../../models/Review.php';
-    $reviewModel = new Review($pdo);
+    $reviewPdo = $GLOBALS['pdo'] ?? ($pdo ?? null);
+    $reviewModel = new Review($reviewPdo);
     $reviewedItemIds = $reviewModel->getReviewedOrderItemIds($_SESSION['user_id'], $order['id']);
 }
 
@@ -27,22 +28,29 @@ $statusColors = [
 $statusColor = $statusColors[$order['status']] ?? '#6b7280';
 ?>
 
-<div class="container">
+<div class="container order-details-page">
     <!-- Breadcrumb -->
-    <nav class="breadcrumb">
-        <a href="<?= APP_URL ?>/index.php?url=orders">Profile</a>
+    <nav class="breadcrumb od-breadcrumb">
+        <a href="<?= APP_URL ?>/index.php?url=orders">My Orders</a>
         <span>/</span>
         <span><?= htmlspecialchars($order['order_number']) ?></span>
     </nav>
 
     <!-- Hero card with order header -->
-    <div class="od-hero" style="--status-clr: <?= $statusColor ?>">
+    <div class="od-hero od-hero--<?= htmlspecialchars($order['status']) ?>" style="--status-clr: <?= $statusColor ?>">
         <div class="od-hero-top">
             <div class="od-hero-info">
+                <span class="od-hero-eyebrow">Order Details</span>
                 <span class="od-order-number"><?= htmlspecialchars($order['order_number']) ?></span>
                 <div class="od-hero-meta">
-                    <span><?= date('M d, Y \a\t h:i A', strtotime($order['created_at'])) ?></span>
-                    <span><?= count($orderItems) ?> item<?= count($orderItems) !== 1 ? 's' : '' ?></span>
+                    <span class="od-meta-chip">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <?= date('M d, Y \a\t h:i A', strtotime($order['created_at'])) ?>
+                    </span>
+                    <span class="od-meta-chip">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        <?= count($orderItems) ?> item<?= count($orderItems) !== 1 ? 's' : '' ?>
+                    </span>
                 </div>
             </div>
             <div class="od-hero-status">
@@ -82,7 +90,13 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
         </div>
         <?php else: ?>
         <div class="od-cancelled-banner">
-            <span>This order has been cancelled</span>
+            <span class="od-cancelled-banner__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            </span>
+            <div class="od-cancelled-banner__text">
+                <strong>Order Cancelled</strong>
+                <span>This order is no longer active. Stock has been restored if applicable.</span>
+            </div>
         </div>
         <?php endif; ?>
     </div>
@@ -169,10 +183,12 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
         <!-- Order Info -->
         <div class="od-card od-card--info">
             <div class="od-card-header">
-                <div class="od-card-icon"></div>
+                <span class="od-card-icon od-card-icon--info" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+                </span>
                 <div>
                     <h3>Order Information</h3>
-                    <p>Details about this order</p>
+                    <p>Status, payment, and totals</p>
                 </div>
             </div>
             <div class="od-card-body">
@@ -209,7 +225,7 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
                                 }
                             }
                         ?>
-                        <span style="display:inline-flex;align-items:center;gap:5px;">
+                        <span class="od-payment-pill">
                             <img src="<?= $pmLogo ?>" alt="<?= htmlspecialchars($pmLabel) ?>" class="payment-logo-icon">
                             <?= htmlspecialchars($pmLabel) ?>
                         </span>
@@ -318,7 +334,9 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
         <!-- Shipping Address -->
         <div class="od-card od-card--shipping">
             <div class="od-card-header">
-                <div class="od-card-icon od-card-icon--purple"></div>
+                <span class="od-card-icon od-card-icon--shipping" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                </span>
                 <div>
                     <h3>Shipping Address</h3>
                     <p>Delivery destination</p>
@@ -342,7 +360,9 @@ $statusColor = $statusColors[$order['status']] ?? '#6b7280';
     <!-- Order Items -->
     <div class="od-card od-card--items">
         <div class="od-card-header">
-            <div class="od-card-icon od-card-icon--green"></div>
+            <span class="od-card-icon od-card-icon--items" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            </span>
             <div>
                 <h3>Order Items</h3>
                 <p><?= count($orderItems) ?> product<?= count($orderItems) !== 1 ? 's' : '' ?> in this order</p>
@@ -547,11 +567,11 @@ document.addEventListener('DOMContentLoaded', function(){
 @keyframes cmFadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes cmSlideUp { from { opacity: 0; transform: translateY(24px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
 .cancel-modal {
-    background: #fff; border-radius: 16px; padding: 36px 32px 28px; max-width: 400px; width: 90%;
+    background: #fff; border-radius: 4px; padding: 36px 32px 28px; max-width: 400px; width: 90%;
     text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.2); animation: cmSlideUp .25s ease forwards;
 }
 .cancel-modal-icon {
-    width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 50%;
+    width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 4px;
     background: #FEE2E2; display: flex; align-items: center; justify-content: center;
 }
 .cancel-modal-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: #1a1a2e; margin: 0 0 8px; }
@@ -559,7 +579,7 @@ document.addEventListener('DOMContentLoaded', function(){
 .cancel-modal-text strong { color: #1a1a2e; font-weight: 600; }
 .cancel-modal-actions { display: flex; gap: 12px; }
 .cancel-modal-btn {
-    flex: 1; padding: 12px 20px; border: none; border-radius: 10px; font-size: .9rem;
+    flex: 1; padding: 12px 20px; border: none; border-radius: 4px; font-size: .9rem;
     font-weight: 600; cursor: pointer; transition: all .2s ease; font-family: 'Plus Jakarta Sans', sans-serif;
 }
 .cancel-modal-btn--no { background: #f1f5f9; color: #475569; }

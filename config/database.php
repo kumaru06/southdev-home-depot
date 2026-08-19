@@ -36,6 +36,15 @@ try {
     );
     // Align MySQL session timezone with PHP (Asia/Manila = UTC+8)
     $pdo->exec("SET time_zone = '+08:00'");
+    // Persistent connections can inherit a stale open transaction from a prior request.
+    if ($pdo->inTransaction()) {
+        try {
+            $pdo->rollBack();
+        } catch (Throwable $e) {
+            error_log('PDO rollback on connect: ' . $e->getMessage());
+        }
+    }
+    $GLOBALS['pdo'] = $pdo;
 } catch (PDOException $e) {
     // Log actual error, show generic message to user
     error_log('Database connection failed: ' . $e->getMessage());

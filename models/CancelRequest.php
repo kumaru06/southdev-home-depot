@@ -77,17 +77,21 @@ class CancelRequest {
     }
 
     public function getByOrderId($orderId) {
-        $stmt = $this->pdo->prepare(
-            "SELECT cr.*, u.first_name as staff_first_name, u.last_name as staff_last_name
-             FROM cancel_requests cr
-             JOIN orders o ON cr.order_id = o.id AND cr.user_id = o.user_id
-             LEFT JOIN users u ON u.id = (SELECT user_id FROM logs WHERE action LIKE '%cancel%' AND description LIKE CONCAT('%#', cr.id, '%') LIMIT 1)
-             WHERE cr.order_id = ?
-               AND cr.created_at >= o.created_at
-             ORDER BY cr.created_at DESC LIMIT 1"
-        );
-        $stmt->execute([$orderId]);
-        return $stmt->fetch();
+        try {
+            $stmt = $this->pdo->prepare(
+                "SELECT cr.*
+                 FROM cancel_requests cr
+                 JOIN orders o ON cr.order_id = o.id AND cr.user_id = o.user_id
+                 WHERE cr.order_id = ?
+                   AND cr.created_at >= o.created_at
+                 ORDER BY cr.created_at DESC LIMIT 1"
+            );
+            $stmt->execute([$orderId]);
+            return $stmt->fetch();
+        } catch (Throwable $e) {
+            error_log('CancelRequest::getByOrderId failed for order #' . (int) $orderId . ': ' . $e->getMessage());
+            return false;
+        }
     }
 
     public function hasExistingRequest($orderId) {

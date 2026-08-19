@@ -39,21 +39,41 @@ $visibleOrderCount = is_array($orders ?? null) ? count($orders) : 0;
 
         <?php if ($orderCount > 0): ?>
             <div class="orders-hero-stats" aria-label="Order overview">
-                <div class="orders-stat-card">
-                    <strong><?= $orderCount ?></strong>
-                    <span>Total orders</span>
+                <div class="orders-stat-card orders-stat-card--total">
+                    <div class="orders-stat-top">
+                        <span class="orders-stat-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        </span>
+                        <strong><?= $orderCount ?></strong>
+                    </div>
+                    <span class="orders-stat-label">Total</span>
                 </div>
-                <div class="orders-stat-card">
-                    <strong><?= $activeOrderCount ?></strong>
-                    <span>Active</span>
+                <div class="orders-stat-card orders-stat-card--active">
+                    <div class="orders-stat-top">
+                        <span class="orders-stat-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="m16.2 7.8 2.9-2.9"/><path d="M18 12h4"/><path d="m16.2 16.2 2.9 2.9"/><path d="M12 18v4"/><path d="m4.9 19.1 2.9-2.9"/><path d="M2 12h4"/><path d="m4.9 4.9 2.9 2.9"/><circle cx="12" cy="12" r="3"/></svg>
+                        </span>
+                        <strong><?= $activeOrderCount ?></strong>
+                    </div>
+                    <span class="orders-stat-label">Active</span>
                 </div>
-                <div class="orders-stat-card">
-                    <strong><?= $deliveredOrderCount ?></strong>
-                    <span>Delivered</span>
+                <div class="orders-stat-card orders-stat-card--delivered">
+                    <div class="orders-stat-top">
+                        <span class="orders-stat-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        </span>
+                        <strong><?= $deliveredOrderCount ?></strong>
+                    </div>
+                    <span class="orders-stat-label">Delivered</span>
                 </div>
-                <div class="orders-stat-card">
-                    <strong><?= $cancelledOrderCount ?></strong>
-                    <span>Cancelled</span>
+                <div class="orders-stat-card orders-stat-card--cancelled">
+                    <div class="orders-stat-top">
+                        <span class="orders-stat-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </span>
+                        <strong><?= $cancelledOrderCount ?></strong>
+                    </div>
+                    <span class="orders-stat-label">Cancelled</span>
                 </div>
             </div>
         <?php endif; ?>
@@ -62,12 +82,19 @@ $visibleOrderCount = is_array($orders ?? null) ? count($orders) : 0;
     <section class="orders-toolbar" aria-label="Order filters">
         <form method="GET" action="<?= APP_URL ?>/index.php" class="orders-filter-form">
             <input type="hidden" name="url" value="orders">
-            <label for="orderDate" class="orders-filter-label">Find by date</label>
-            <input type="date" id="orderDate" name="order_date" class="form-control orders-filter-input" value="<?= htmlspecialchars($selectedOrderDate ?? '') ?>">
-            <button type="submit" class="btn btn-accent btn-sm">Apply</button>
-            <?php if (!empty($hasOrderDateFilter)): ?>
-                <a href="<?= APP_URL ?>/index.php?url=orders" class="btn btn-outline btn-sm">Clear</a>
-            <?php endif; ?>
+            <div class="orders-filter-group">
+                <label for="orderDate" class="orders-filter-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    Find by date
+                </label>
+                <input type="date" id="orderDate" name="order_date" class="form-control orders-filter-input" value="<?= htmlspecialchars($selectedOrderDate ?? '') ?>">
+            </div>
+            <div class="orders-filter-actions">
+                <button type="submit" class="btn btn-accent btn-sm">Apply</button>
+                <?php if (!empty($hasOrderDateFilter)): ?>
+                    <a href="<?= APP_URL ?>/index.php?url=orders" class="btn btn-outline btn-sm">Clear</a>
+                <?php endif; ?>
+            </div>
         </form>
 
         <div class="orders-toolbar-summary">
@@ -106,7 +133,6 @@ $visibleOrderCount = is_array($orders ?? null) ? count($orders) : 0;
                 }
             ?>
             <div class="order-card order-card--enhanced">
-                <div class="order-card-status-stripe order-card-status-stripe--<?= htmlspecialchars($order['status']) ?>"></div>
                 <div class="order-card-content">
                     <div class="order-card-header">
                         <div class="order-card-main">
@@ -138,10 +164,19 @@ $visibleOrderCount = is_array($orders ?? null) ? count($orders) : 0;
                                 </div>
                             </div>
                             <div class="order-card-meta">
-                                <span class="order-meta-item"><?= date('M d, Y', strtotime($order['created_at'])) ?></span>
-                                <span class="order-meta-item"><?= date('h:i A', strtotime($order['created_at'])) ?></span>
+                                <span class="orders-meta-chip">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                    <?= date('M d, Y', strtotime($order['created_at'])) ?>
+                                </span>
+                                <span class="orders-meta-chip">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    <?= date('h:i A', strtotime($order['created_at'])) ?>
+                                </span>
                                 <?php if (!empty($order['payment_method'])): ?>
-                                    <span class="order-meta-item">Method <?= htmlspecialchars(ucfirst((string) $order['payment_method'])) ?></span>
+                                    <span class="orders-meta-chip">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                                        <?= htmlspecialchars(ucfirst((string) $order['payment_method'])) ?>
+                                    </span>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -265,7 +300,7 @@ $visibleOrderCount = is_array($orders ?? null) ? count($orders) : 0;
 
 .cancel-modal {
     background: #fff;
-    border-radius: 16px;
+    border-radius: 4px;
     padding: 36px 32px 28px;
     max-width: 400px;
     width: 90%;
@@ -278,7 +313,7 @@ $visibleOrderCount = is_array($orders ?? null) ? count($orders) : 0;
     width: 72px;
     height: 72px;
     margin: 0 auto 16px;
-    border-radius: 50%;
+    border-radius: 4px;
     background: #FEE2E2;
     display: flex;
     align-items: center;
@@ -313,7 +348,7 @@ $visibleOrderCount = is_array($orders ?? null) ? count($orders) : 0;
     flex: 1;
     padding: 12px 20px;
     border: none;
-    border-radius: 10px;
+    border-radius: 4px;
     font-size: .9rem;
     font-weight: 600;
     cursor: pointer;
