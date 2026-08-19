@@ -2561,7 +2561,7 @@ body.admin-sidebar-collapsed .top-bar .sidebar-toggle-btn::before {
 }
 .inv-table-wrap .data-table {
     width: 100%;
-    min-width: 0;
+    min-width: 0 !important;
     table-layout: fixed;
     border-collapse: collapse;
 }

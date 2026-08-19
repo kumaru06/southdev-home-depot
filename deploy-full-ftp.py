@@ -7,9 +7,9 @@ import sys
 from pathlib import Path
 
 LOCAL_ROOT = Path(r"C:\xampp\htdocs\southdev-home-depot")
-REMOTE_ROOT = "public_html"
 ENV_DEPLOY = LOCAL_ROOT / ".env.deploy"
 ENV_PRODUCTION = LOCAL_ROOT / ".env.production"
+REMOTE_ROOT = None  # loaded from .env.deploy FTP_REMOTE_ROOT
 
 EXCLUDE_DIRS = {
     ".git",
@@ -110,9 +110,12 @@ def main() -> int:
     host = cfg.get("FTP_HOST")
     user = cfg.get("FTP_USER")
     password = cfg.get("FTP_PASS")
+    remote_root = cfg.get("FTP_REMOTE_ROOT", "public_html").strip("/")
     if not host or not user or not password:
         print("FTP_HOST, FTP_USER, FTP_PASS required in .env.deploy")
         return 1
+    global REMOTE_ROOT
+    REMOTE_ROOT = remote_root
 
     files = []
     for root, dirs, filenames in os.walk(LOCAL_ROOT):
@@ -138,11 +141,18 @@ def main() -> int:
     fail = 0
     dir_cache = set()
 
+    print(f"Connecting to {host}:21 ...")
+    sys.stdout.flush()
     try:
-        ftp = ftplib.FTP(host, timeout=180)
+        ftp = ftplib.FTP(timeout=30)
+        ftp.connect(host, 21)
+        print("Connected. Logging in...")
+        sys.stdout.flush()
         ftp.login(user, password)
         ftp.set_pasv(True)
         ftp.cwd("/")
+        print("Login OK.")
+        sys.stdout.flush()
     except Exception as e:
         print(f"FTP login failed: {e}")
         return 1
