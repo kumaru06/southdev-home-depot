@@ -218,7 +218,12 @@ if (empty($specPairs)) {
                     <label class="form-label">Cover Image</label>
                     <div style="display:flex; gap:.75rem; align-items:center;">
                         <div style="width:72px;height:72px;border:1px solid var(--neutral);border-radius:6px;overflow:hidden;background:var(--neutral);">
-                            <img id="edit_cover_preview" src="<?= APP_URL ?>/assets/uploads/<?= $product['image'] ?: 'placeholder.svg' ?>" alt="" style="width:100%;height:100%;object-fit:cover;">
+                            <?php
+                                $editCover = trim((string) ($product['image'] ?? ''));
+                                $editCoverOk = $editCover !== '' && is_file(UPLOADS_PATH . '/' . $editCover);
+                                $editCoverSrc = APP_URL . '/assets/uploads/' . ($editCoverOk ? $editCover : 'placeholder.svg');
+                            ?>
+                            <img id="edit_cover_preview" src="<?= htmlspecialchars($editCoverSrc) ?>" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.src='<?= APP_URL ?>/assets/uploads/placeholder.svg';">
                         </div>
                         <label for="edit_product_image" style="display:inline-flex; align-items:center; gap:.4rem; padding:.5rem 1rem; border:1.5px solid var(--border); border-radius:var(--radius-sm); background:var(--white); cursor:pointer; font-size:.875rem;">
                             <i data-lucide="upload" style="width:15px;height:15px;"></i> Choose Image

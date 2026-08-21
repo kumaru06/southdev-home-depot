@@ -316,11 +316,18 @@ class ProductController {
         if (!empty($cover['filename'])) {
             $data['image'] = $cover['filename'];
         } else {
+            // After gallery deletes, product_images is the source of truth.
+            // Do NOT keep a stale existing_image filename pointing at a deleted file.
             $syncedCover = $this->productModel->syncPrimaryImage($id);
             if ($syncedCover !== null) {
                 $data['image'] = $syncedCover;
-            } elseif (empty($data['image'])) {
-                $data['image'] = $existingProduct['image'] ?? null;
+            } else {
+                $candidate = trim((string) ($data['image'] ?? ''));
+                if ($candidate !== '' && is_file(UPLOADS_PATH . '/' . $candidate)) {
+                    $data['image'] = $candidate;
+                } else {
+                    $data['image'] = null;
+                }
             }
         }
 

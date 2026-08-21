@@ -254,10 +254,16 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                     <?php endif; ?>
                                     <td data-label="ID"><?= $product['id'] ?></td>
                                     <td data-label="Image">
+                                        <?php
+                                            $thumbFile = trim((string) ($product['image'] ?? ''));
+                                            $thumbOk = $thumbFile !== '' && is_file(UPLOADS_PATH . '/' . $thumbFile);
+                                            $thumbSrc = APP_URL . '/assets/uploads/' . ($thumbOk ? $thumbFile : 'placeholder.svg');
+                                        ?>
                                         <div style="width:48px;height:48px;border-radius:6px;overflow:hidden;border:1px solid var(--neutral);background:var(--neutral);">
-                                            <img src="<?= APP_URL ?>/assets/uploads/<?= $product['image'] ?: 'placeholder.svg' ?>"
+                                            <img src="<?= htmlspecialchars($thumbSrc) ?>"
                                                  alt="<?= htmlspecialchars($product['name']) ?>"
-                                                 style="width:100%;height:100%;object-fit:cover;">
+                                                 style="width:100%;height:100%;object-fit:cover;"
+                                                 onerror="this.onerror=null;this.src='<?= APP_URL ?>/assets/uploads/placeholder.svg';">
                                         </div>
                                     </td>
                                     <td data-label="Name">
@@ -307,7 +313,7 @@ require_once INCLUDES_PATH . '/sidebar.php';
                                                        'stock' => $s['stock'],
                                                    ];
                                                }, $sizesByProduct[$product['id']] ?? [])), ENT_QUOTES) ?>"
-                                               data-image="<?= APP_URL ?>/assets/uploads/<?= $product['image'] ?: 'placeholder.svg' ?>">
+                                               data-image="<?= htmlspecialchars($thumbSrc) ?>">
                                                 <i data-lucide="edit-2" style="width:15px;height:15px;"></i> Edit
                                             </a>
                                             <form action="<?= APP_URL ?>/index.php?url=admin/products/<?= $product['id'] ?>/delete"
@@ -562,6 +568,8 @@ require_once INCLUDES_PATH . '/sidebar.php';
     transform: translateY(26px) scale(.96);
     opacity: 0;
     transition: transform .32s cubic-bezier(.21, 1.02, .35, 1), opacity .26s ease;
+    /* Prevent descendant focus/scrollIntoView from scrolling this box */
+    overscroll-behavior: contain;
 }
 #productEditModal .modal-box form {
     display: flex;
@@ -733,6 +741,11 @@ require_once INCLUDES_PATH . '/sidebar.php';
     transform: translateY(-1px);
     box-shadow: 0 9px 24px rgba(249, 115, 22, .38);
 }
+/* Crop modal must become visible immediately — Cropper.js inits blank if parent is still visibility:hidden during CSS transition */
+#imageCropModal.modal-overlay {
+    transition: none;
+    z-index: 1200;
+}
 @media (max-width: 640px) {
     #productEditModal .modal-box { width: 100%; max-width: calc(100vw - 20px); border-radius: 16px; }
     #productEditModal .modal-body { padding: 18px; }
@@ -847,11 +860,11 @@ require_once INCLUDES_PATH . '/sidebar.php';
                     </div>
                     <div style="flex:1; min-width:150px;">
                         <label class="form-label">Cover Image</label>
-                        <label for="pe_image_input" class="pe-upload-btn">
+                        <button type="button" class="pe-upload-btn" id="pe_image_label">
                             <i data-lucide="upload" style="width:14px;height:14px;"></i> Replace Image
-                        </label>
+                        </button>
                         <span class="pe-upload-hint">JPG, PNG, or WebP — cropped square</span>
-                        <input type="file" name="image" id="pe_image_input" accept="image/jpeg,image/png,image/webp,image/gif" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;">
+                        <input type="file" name="image" id="pe_image_input" accept="image/jpeg,image/png,image/webp,image/gif" tabindex="-1" aria-hidden="true" style="position:fixed; left:-10000px; top:0; width:1px; height:1px; opacity:0;">
                     </div>
                 </div>
 
@@ -904,17 +917,121 @@ document.head.appendChild(cropperScript);
         waitForCropper(function(){
             var overlay = document.getElementById('imageCropModal');
             var img     = document.getElementById('cropperImage');
-            img.src = src;
+            if (!overlay || !img) return;
+
+            if (cropper) {
+                try { cropper.destroy(); } catch (e) {}
+                cropper = null;
+            }
+
+            // Must wait for the image to load before Cropper init,
+            // otherwise the crop modal opens as a blank white box over Edit.
+            var started = false;
+            function startCropper() {
+                if (started) return;
+                started = true;
+                img.onload = null;
+                img.onerror = null;
+
+                // Cropper breaks if parent overlay is still visibility:hidden / opacity:0
+                // (CSS transition on .modal-overlay). Force visible BEFORE init.
+                overlay.style.transition = 'none';
+                overlay.style.opacity = '1';
+                overlay.style.visibility = 'visible';
+                void overlay.offsetWidth;
+
+                try {
+                    cropper = new Cropper(img, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        autoCropArea: 1,
+                        responsive: true,
+                        background: false,
+                        ready: function () {
+                            try { cropper.resize(); } catch (e) {}
+                        }
+                    });
+                } catch (err) {
+                    console.error(err);
+                    closeCropModal();
+                    if (typeof showNotification === 'function') {
+                        showNotification('Could not open image cropper. Try another image.', 'error');
+                    } else {
+                        alert('Could not open image cropper. Try another image.');
+                    }
+                }
+            }
+            img.onload = function () { startCropper(); };
+            img.onerror = function () {
+                img.onload = null;
+                img.onerror = null;
+                closeCropModal();
+                if (typeof showNotification === 'function') {
+                    showNotification('Could not load selected image.', 'error');
+                } else {
+                    alert('Could not load selected image.');
+                }
+            };
+
             overlay.classList.add('active');
-            if(cropper){ try{ cropper.destroy(); }catch(e){} cropper=null; }
-            cropper = new Cropper(img, { aspectRatio:1, viewMode:1, autoCropArea:1 });
+            img.src = src;
+            if (img.complete && img.naturalWidth > 0) {
+                startCropper();
+            }
+        });
+    }
+
+    function resetEditModalScroll() {
+        var overlay = document.getElementById('productEditModal');
+        if (!overlay) return;
+        var box = overlay.querySelector('.modal-box');
+        var form = overlay.querySelector('form');
+        var body = overlay.querySelector('.modal-body');
+        if (overlay.scrollTop) overlay.scrollTop = 0;
+        if (box) box.scrollTop = 0;
+        if (form) form.scrollTop = 0;
+        if (body) body.scrollTop = 0;
+    }
+
+    // Keep Cover Image section in view when opening the file picker
+    var savedEditBodyScroll = 0;
+    function rememberEditBodyScroll() {
+        var body = document.querySelector('#productEditModal .modal-body');
+        savedEditBodyScroll = body ? body.scrollTop : 0;
+    }
+    function restoreEditBodyScroll() {
+        var body = document.querySelector('#productEditModal .modal-body');
+        if (!body) return;
+        body.scrollTop = savedEditBodyScroll;
+        requestAnimationFrame(function () {
+            body.scrollTop = savedEditBodyScroll;
         });
     }
 
     function closeCropModal(){
         var overlay = document.getElementById('imageCropModal');
-        overlay.classList.remove('active');
-        if(cropper){ try{ cropper.destroy(); }catch(e){} cropper=null; }
+        if (overlay) {
+            overlay.classList.remove('active');
+            overlay.style.transition = '';
+            overlay.style.opacity = '';
+            overlay.style.visibility = '';
+        }
+        if (cropper) {
+            try { cropper.destroy(); } catch (e) {}
+            cropper = null;
+        }
+        var img = document.getElementById('cropperImage');
+        if (img) {
+            img.onload = null;
+            img.onerror = null;
+            img.removeAttribute('src');
+        }
+        restoreEditBodyScroll();
+    }
+
+    function isCropModalOpen(){
+        var overlay = document.getElementById('imageCropModal');
+        return !!(overlay && overlay.classList.contains('active'));
     }
 
     // Apply / Cancel crop buttons
@@ -1273,8 +1390,10 @@ document.head.appendChild(cropperScript);
             document.getElementById('pe_desc').value        = this.dataset.desc    || '';
             document.getElementById('pe_category').value    = this.dataset.categoryId || '';
             document.getElementById('pe_quantity').value    = this.dataset.stock   || 0;
-            document.getElementById('pe_existing_image').value = image.replace(appUrl+'/assets/uploads/','');
-            document.getElementById('pe_image_preview').src = image;
+            var existingName = (image || '').replace(appUrl + '/assets/uploads/', '').split('?')[0];
+            if (!existingName || existingName === 'placeholder.svg') existingName = '';
+            document.getElementById('pe_existing_image').value = existingName;
+            document.getElementById('pe_image_preview').src = image || (appUrl + '/assets/uploads/placeholder.svg');
 
             if (peSpecRows) {
                 peSpecRows.innerHTML = '';
@@ -1315,18 +1434,33 @@ document.head.appendChild(cropperScript);
             form.action = appUrl+'/index.php?url=admin/products/'+id+'/update';
 
             editCroppedBlob = null; // reset any previous crop
-            document.getElementById('productEditModal').classList.add('active');
+            var editOverlay = document.getElementById('productEditModal');
+            editOverlay.classList.add('active');
+            resetEditModalScroll();
         });
     });
 
-    // Edit image input → open crop modal
+    // Edit image input → open crop modal (button click preserves scroll)
     var peInput = document.getElementById('pe_image_input');
-    if(peInput){
-        peInput.addEventListener('change', function(){
+    var peLabel = document.getElementById('pe_image_label');
+    if (peLabel && peInput) {
+        peLabel.addEventListener('click', function (e) {
+            e.preventDefault();
+            rememberEditBodyScroll();
+            peInput.click();
+            restoreEditBodyScroll();
+        });
+    }
+    if (peInput) {
+        peInput.addEventListener('focus', function () {
+            restoreEditBodyScroll();
+        });
+        peInput.addEventListener('change', function () {
             var f = this.files[0];
-            if(!f) return;
+            restoreEditBodyScroll();
+            if (!f) return;
             var reader = new FileReader();
-            reader.onload = function(ev){ openCropModal(ev.target.result, 'edit'); };
+            reader.onload = function (ev) { openCropModal(ev.target.result, 'edit'); };
             reader.readAsDataURL(f);
         });
     }
@@ -1458,23 +1592,28 @@ document.head.appendChild(cropperScript);
         });
     }
 
-    // Esc key closes the edit modal
+    // Esc: close crop first (don't wipe Edit Product behind it)
     document.addEventListener('keydown', function(e){
-        if(e.key === 'Escape') closeEditModal();
+        if (e.key !== 'Escape') return;
+        if (isCropModalOpen()) {
+            closeCropModal();
+            return;
+        }
+        closeEditModal();
     });
 })();
 </script>
 
-<!-- Image Crop Modal Markup -->
-<div id="imageCropModal" class="modal-overlay" style="display:flex; align-items:center; justify-content:center;">
-    <div class="modal-box" style="max-width:820px; width:90vw;">
+<!-- Image Crop Modal Markup (above Edit modal) -->
+<div id="imageCropModal" class="modal-overlay" style="display:flex; align-items:center; justify-content:center; z-index:1200;">
+    <div class="modal-box" style="max-width:820px; width:90vw; min-height:280px;">
         <div class="modal-header">
             <h3>Crop Image</h3>
-            <button type="button" class="modal-close" id="cropCancelBtn">&times;</button>
+            <button type="button" class="modal-close" id="cropCancelBtn" aria-label="Close crop">&times;</button>
         </div>
         <div class="modal-body" style="display:flex; flex-direction:column; gap:12px;">
-            <div style="max-height:68vh; overflow:auto;">
-                <img id="cropperImage" src="" alt="Cropper image" style="max-width:100%; display:block; margin:0 auto;">
+            <div style="max-height:68vh; overflow:auto; min-height:220px; background:#f8fafc;">
+                <img id="cropperImage" alt="Cropper image" style="max-width:100%; display:block; margin:0 auto;">
             </div>
             <div style="display:flex; gap:8px; justify-content:flex-end;">
                 <button type="button" class="btn btn-outline" id="cropCancelBtn2">Cancel</button>
