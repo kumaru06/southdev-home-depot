@@ -26,10 +26,13 @@ ServerSignature Off
 	Header always set X-Permitted-Cross-Domain-Policies "none"
 </IfModule>
 
-# ─── Force HTTPS in production ───
+# ─── Force HTTPS in production (skip localhost + private LAN IPs for XAMPP/mobile testing) ───
 RewriteCond %{HTTPS} off
 RewriteCond %{HTTP_HOST} !^localhost [NC]
 RewriteCond %{HTTP_HOST} !^127\.0\.0\.1 [NC]
+RewriteCond %{HTTP_HOST} !^192\.168\. [NC]
+RewriteCond %{HTTP_HOST} !^10\. [NC]
+RewriteCond %{HTTP_HOST} !^172\.(1[6-9]|2[0-9]|3[01])\. [NC]
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 # ─── URL Rewriting ───

@@ -62,9 +62,55 @@ function is_new_product(?string $createdAt, int $days = 7): bool {
 // Set timezone to Philippine Time (UTC+8)
 date_default_timezone_set(env('TIMEZONE', 'Asia/Manila'));
 
+/** True when running on XAMPP, localhost, or a private LAN IP (dev/testing). */
+function is_local_dev_environment(): bool {
+    $docRoot = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT'] ?? '');
+    if (strpos($docRoot, 'xampp') !== false) {
+        return true;
+    }
+    $host = preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '');
+    if ($host === 'localhost' || $host === '127.0.0.1') {
+        return true;
+    }
+    if (filter_var($host, FILTER_VALIDATE_IP)) {
+        return filter_var(
+            $host,
+            FILTER_VALIDATE_IP,
+            FILTER_FLAG_IPV4 | FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+        ) === false;
+    }
+    return false;
+}
+
+/** Subdirectory path when the app lives under htdocs (e.g. /southdev-home-depot). */
+function detect_app_base_path(): string {
+    $docRoot = rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT'] ?? ''), '/');
+    $projectRoot = rtrim(str_replace('\\', '/', dirname(__DIR__)), '/');
+    if ($docRoot !== '' && strncmp($projectRoot, $docRoot, strlen($docRoot)) === 0) {
+        $relative = substr($projectRoot, strlen($docRoot));
+        return $relative === '' ? '' : $relative;
+    }
+    $script = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '/index.php');
+    $dir = dirname($script);
+    return ($dir === '/' || $dir === '.') ? '' : $dir;
+}
+
+/** Build APP_URL from the current request on dev; use .env / production URL otherwise. */
+function resolve_app_url(): string {
+    if (is_local_dev_environment()) {
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        return rtrim($scheme . '://' . $host . detect_app_base_path(), '/');
+    }
+    $envUrl = trim((string) env('APP_URL', ''));
+    if ($envUrl !== '') {
+        return rtrim($envUrl, '/');
+    }
+    return 'https://southdevhomedepotdavao.com';
+}
+
 // Detect environment
-$is_local = in_array($_SERVER['SERVER_NAME'] ?? '', ['localhost', '127.0.0.1'])
-    || strpos($_SERVER['DOCUMENT_ROOT'] ?? '', 'xampp') !== false;
+$is_local = is_local_dev_environment();
 
 // Basic browser-side security headers. Keep CSP conservative to avoid breaking inline styles/scripts.
 if (!headers_sent()) {
@@ -98,9 +144,7 @@ session_start();
 // Application settings
 define('APP_NAME', env('APP_NAME', 'Southdev Home Depot'));
 define('APP_TAGLINE', env('APP_TAGLINE', 'Davao City\'s Premier Tiles & Hardware Supply'));
-define('APP_URL', env('APP_URL', $is_local 
-    ? 'http://localhost/southdev-home-depot' 
-    : 'https://southdevhomedepotdavao.com'));
+define('APP_URL', resolve_app_url());
 define('APP_VERSION', env('APP_VERSION', '1.0.0'));
 define('APP_LOCATION', env('APP_LOCATION', 'Davao City, Philippines'));
 define('APP_MAP_LAT', env('APP_MAP_LAT', ''));
@@ -218,12 +262,32 @@ function recaptcha_enabled(): bool {
     return RECAPTCHA_SITE_KEY !== '' && RECAPTCHA_SECRET_KEY !== '';
 }
 
+/** True when reCAPTCHA keys are configured and the widget should render. */
+function recaptcha_active(): bool {
+    if (!recaptcha_enabled()) {
+        return false;
+    }
+    $host = preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? '');
+    if ($host === 'localhost' || $host === '127.0.0.1') {
+        return true;
+    }
+    if (!filter_var($host, FILTER_VALIDATE_IP)) {
+        return true;
+    }
+    // Private LAN IP (192.168.x.x) — Google needs the IP in Admin Domains first.
+    // Set RECAPTCHA_ALLOW_LAN=true in .env after adding the IP (may take ~30 min to apply).
+    if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+        return (bool) env('RECAPTCHA_ALLOW_LAN', false);
+    }
+    return true;
+}
+
 /**
  * Verify Google reCAPTCHA v2 response.
  * Returns true when captcha is disabled (keys not set) so local/dev keeps working.
  */
 function verify_recaptcha(?string $response = null): bool {
-    if (!recaptcha_enabled()) {
+    if (!recaptcha_active()) {
         return true;
     }
 
@@ -258,7 +322,7 @@ function verify_recaptcha(?string $response = null): bool {
 
 /** Render the reCAPTCHA v2 checkbox widget (empty string if not configured). */
 function recaptcha_widget(string $extraClass = ''): string {
-    if (!recaptcha_enabled()) {
+    if (!recaptcha_active()) {
         return '';
     }
     $class = trim('g-recaptcha ' . $extraClass);

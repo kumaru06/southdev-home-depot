@@ -107,9 +107,21 @@
 
             .mobile-nav-extras {
                 flex-direction: column;
+                align-items: stretch;
             }
 
-            .mobile-nav-extras a {
+            .mobile-nav-extras > a {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .mobile-nav-extras__actions {
+                max-width: 168px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .mobile-nav-extras__actions a {
                 width: 100%;
             }
         }
@@ -481,7 +493,7 @@
             };
         }
     ?>
-    <?php if (recaptcha_enabled() && empty($_SESSION['user_id'])): ?>
+    <?php if (recaptcha_active() && empty($_SESSION['user_id'])): ?>
     <script>
         // Explicit rendering: auto-render fails for widgets inside hidden
         // containers (e.g. the login modal), so we render visible ones on load
@@ -492,7 +504,10 @@
                 if (el.dataset.widgetId !== undefined) return;
                 if (el.offsetParent === null) return; // still hidden, render later
                 try {
-                    el.dataset.widgetId = grecaptcha.render(el, { sitekey: el.getAttribute('data-sitekey') });
+                    el.dataset.widgetId = grecaptcha.render(el, {
+                        sitekey: el.getAttribute('data-sitekey'),
+                        size: 'normal'
+                    });
                 } catch (e) {}
             });
         };

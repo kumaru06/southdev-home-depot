@@ -97,7 +97,7 @@ foreach (['jpg', 'jpeg', 'png'] as $ext) {
                             </div>
                         </div>
 
-                        <?php if (recaptcha_enabled()): ?>
+                        <?php if (recaptcha_active()): ?>
                         <div class="admin-login-recaptcha">
                             <?= recaptcha_widget() ?>
                         </div>

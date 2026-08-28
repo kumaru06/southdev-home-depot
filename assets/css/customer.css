@@ -9311,10 +9311,8 @@ body:has(.pd-page) .site-header .main-nav {
 
 /* --- Mobile: Login modal --- */
 @media (max-width: 680px) {
-    .login-modal { width: 95%; max-width: 380px; margin: 12px; }
-    .login-modal-split { flex-direction: column; }
-    .login-modal-media { display: none; }
-    .login-modal-form-panel { padding: 24px 20px; }
+    .login-modal-split { grid-template-columns: 1fr !important; }
+    .login-modal-media { display: none !important; }
 }
 
 /* --- Mobile: Footer compact --- */
@@ -10576,7 +10574,7 @@ body:has(.pd-page) .site-header .main-nav {
         white-space: normal;
     }
 
-    /* Login modal: hide media panel earlier on phones */
+    /* Login modal: hide media panel on phones (details in style.css) */
     .login-modal-media {
         display: none;
     }
@@ -10584,8 +10582,6 @@ body:has(.pd-page) .site-header .main-nav {
         grid-template-columns: 1fr !important;
     }
 
-    /* Recaptcha scale on narrow forms */
-    .login-modal-recaptcha .g-recaptcha,
     .register-recaptcha .g-recaptcha,
     .admin-login-recaptcha .g-recaptcha {
         transform: scale(0.86);

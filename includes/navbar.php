@@ -114,9 +114,11 @@ try {
         </div>
     </div>
 
-    <nav class="main-nav">
+    <div class="mobile-nav-backdrop" data-mobile-nav-close aria-hidden="true"></div>
+
+    <nav class="main-nav" id="mainNav" aria-label="Main navigation">
         <div class="container">
-            <div class="mobile-search" style="display:none;">
+            <div class="mobile-search">
                 <form action="<?= APP_URL ?>/index.php" method="GET">
                     <input type="hidden" name="url" value="products/search">
                     <div class="input-icon-wrap">
@@ -198,63 +200,125 @@ try {
                         <a href="<?= APP_URL ?>/index.php?url=orders" class="mobile-auth-link">My Orders</a>
                     <?php endif; ?>
                 <?php else: ?>
-                    <a href="<?= APP_URL ?>/index.php?url=login" class="mobile-auth-link">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-                        Login
-                    </a>
-                    <a href="<?= APP_URL ?>/index.php?url=register" class="mobile-cart-link">Register</a>
+                    <div class="mobile-nav-extras__actions">
+                        <a href="<?= APP_URL ?>/index.php?url=login" class="mobile-auth-link">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                            Login
+                        </a>
+                        <a href="<?= APP_URL ?>/index.php?url=register" class="mobile-cart-link">Register</a>
+                    </div>
                 <?php endif; ?>
             </div>
         </div>
         <script>
-        // Mobile menu toggle
+        // Mobile menu — sidebar drawer (localhost preview; do not deploy without approval)
         document.addEventListener('DOMContentLoaded', function(){
             var header = document.querySelector('.site-header');
             var toggle = document.querySelector('.mobile-toggle');
             var mainNav = document.querySelector('.main-nav');
             var mobileSearch = document.querySelector('.mobile-search');
-            if(toggle && header){
-                toggle.addEventListener('click', function(){
-                    var expanded = this.getAttribute('aria-expanded') === 'true';
-                    this.setAttribute('aria-expanded', (!expanded).toString());
-                    header.classList.toggle('mobile-open');
-                    this.classList.toggle('open');                    // swap hamburger ↔ X
-                    this.innerHTML = expanded ? '&#9776;' : '&times;';                    // focus mobile search input after menu opens
-                    if(!expanded && mobileSearch){
-                        setTimeout(function(){
-                            var input = mobileSearch.querySelector('input[name="q"]');
-                            if(input) input.focus();
-                        }, 360);
-                    }
+            var backdrop = document.querySelector('.mobile-nav-backdrop');
+            var scrollLockY = 0;
+
+            function isMobileNav() {
+                return window.matchMedia('(max-width: 900px)').matches;
+            }
+
+            function setTopbarHeight() {
+                var topbar = document.querySelector('.site-header .topbar');
+                if (!topbar) return;
+                document.documentElement.style.setProperty('--mobile-topbar-h', topbar.offsetHeight + 'px');
+            }
+
+            function closeMobileNav() {
+                if (!header || !toggle) return;
+                header.classList.remove('mobile-open');
+                toggle.classList.remove('open');
+                toggle.setAttribute('aria-expanded', 'false');
+                toggle.innerHTML = '&#9776;';
+                document.body.classList.remove('mobile-nav-open');
+                document.body.style.top = '';
+                document.body.style.position = '';
+                document.body.style.width = '';
+                if (scrollLockY) window.scrollTo(0, scrollLockY);
+                scrollLockY = 0;
+                if (backdrop) backdrop.setAttribute('aria-hidden', 'true');
+                document.querySelectorAll('.menu-has-dropdown.open').forEach(function (dd) {
+                    dd.classList.remove('open');
                 });
             }
-            // make dropdowns clickable on mobile
-            document.querySelectorAll('.menu-has-dropdown > a').forEach(function(link){
-                link.addEventListener('click', function(e){
-                    if(window.innerWidth <= 900){
-                        e.preventDefault();
-                        var parent = this.parentElement;
-                        var wasOpen = parent.classList.contains('open');
-                        // close ALL open dropdowns first
-                        document.querySelectorAll('.menu-has-dropdown.open').forEach(function(dd){
-                            dd.classList.remove('open');
-                        });
-                        // toggle the clicked one (re-open if it wasn't already open)
-                        if(!wasOpen) parent.classList.add('open');
-                    }
+
+            function openMobileNav() {
+                if (!header || !toggle) return;
+                setTopbarHeight();
+                scrollLockY = window.scrollY || window.pageYOffset || 0;
+                document.body.style.top = '-' + scrollLockY + 'px';
+                document.body.style.position = 'fixed';
+                document.body.style.width = '100%';
+                header.classList.add('mobile-open');
+                toggle.classList.add('open');
+                toggle.setAttribute('aria-expanded', 'true');
+                toggle.innerHTML = '&times;';
+                document.body.classList.add('mobile-nav-open');
+                if (backdrop) backdrop.setAttribute('aria-hidden', 'false');
+                if (mobileSearch) {
+                    setTimeout(function () {
+                        var input = mobileSearch.querySelector('input[name="q"]');
+                        if (input) input.focus();
+                    }, 320);
+                }
+            }
+
+            if (toggle && header) {
+                toggle.addEventListener('click', function () {
+                    if (!isMobileNav()) return;
+                    var expanded = this.getAttribute('aria-expanded') === 'true';
+                    if (expanded) closeMobileNav();
+                    else openMobileNav();
                 });
+            }
+
+            if (backdrop) {
+                backdrop.addEventListener('click', closeMobileNav);
+            }
+
+            window.addEventListener('resize', function () {
+                setTopbarHeight();
+                if (!isMobileNav()) closeMobileNav();
+            });
+            setTopbarHeight();
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && header && header.classList.contains('mobile-open')) {
+                    closeMobileNav();
+                }
             });
 
-            // Close dropdowns when clicking non-dropdown menu links
-            document.querySelectorAll('.main-menu > li:not(.menu-has-dropdown) > a').forEach(function(link){
-                link.addEventListener('click', function(){
+            // Dropdown toggles on mobile — keep sidebar open, show categories
+            document.querySelectorAll('.menu-has-dropdown > a').forEach(function(link){
+                link.addEventListener('click', function(e){
+                    if(!isMobileNav()) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var parent = this.parentElement;
+                    var wasOpen = parent.classList.contains('open');
                     document.querySelectorAll('.menu-has-dropdown.open').forEach(function(dd){
                         dd.classList.remove('open');
                     });
+                    if(!wasOpen) parent.classList.add('open');
                 });
             });
 
-            
+            // Close sidebar only when navigating (not when opening a dropdown)
+            document.querySelectorAll('.main-menu a, .mobile-nav-extras a').forEach(function(link){
+                link.addEventListener('click', function(){
+                    if(!isMobileNav()) return;
+                    if (link.parentElement && link.parentElement.classList.contains('menu-has-dropdown')) {
+                        return;
+                    }
+                    closeMobileNav();
+                });
+            });
         });
         </script>
         <script>
@@ -495,9 +559,31 @@ try {
                         </div>
                     </div>
 
-                    <?php if (recaptcha_enabled()): ?>
+                    <?php if (recaptcha_active()): ?>
+                    <style>
+                    #loginModalForm .login-modal-recaptcha {
+                        display: flex !important;
+                        justify-content: center !important;
+                        align-items: center !important;
+                        width: 100% !important;
+                    }
+                    #loginModalForm .login-modal-recaptcha__slot {
+                        width: 304px !important;
+                        max-width: 100% !important;
+                        flex: 0 0 auto !important;
+                    }
+                    #loginModalForm .login-modal-recaptcha .g-recaptcha {
+                        width: 100% !important;
+                        position: static !important;
+                        left: auto !important;
+                        transform: none !important;
+                        margin: 0 !important;
+                    }
+                    </style>
                     <div class="login-modal-recaptcha">
-                        <?= recaptcha_widget() ?>
+                        <div class="login-modal-recaptcha__slot">
+                            <?= recaptcha_widget() ?>
+                        </div>
                     </div>
                     <?php endif; ?>
 

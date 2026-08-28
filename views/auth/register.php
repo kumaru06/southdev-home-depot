@@ -109,7 +109,7 @@ require_once INCLUDES_PATH . '/header.php';
                         </div>
                     </div>
 
-                    <?php if (recaptcha_enabled()): ?>
+                    <?php if (recaptcha_active()): ?>
                     <div class="register-recaptcha">
                         <?= recaptcha_widget() ?>
                     </div>
