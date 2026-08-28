@@ -50,7 +50,11 @@
 /* ---------- Reset & Base ---------- */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    max-width: 100%;
+}
 
 body {
     font-family: var(--font);
@@ -60,6 +64,9 @@ body {
     line-height: 1.65;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    max-width: 100%;
+    overscroll-behavior-x: none;
 }
 
 /* Keyboard focus (accessibility) */

@@ -102,15 +102,25 @@
         var prevBtn = root.querySelector('[data-pd-thumbs-prev]');
         var nextBtn = root.querySelector('[data-pd-thumbs-next]');
         var viewport = root.querySelector('.pd-thumbs-viewport');
-        var perPage = 4;
-        var offset = 0;
         var gap = 12;
 
+        root.style.maxWidth = '100%';
+        root.style.overflow = 'hidden';
+        if (viewport) {
+            viewport.style.minWidth = '0';
+        }
+
+        function perPage() {
+            if (window.matchMedia('(max-width: 360px)').matches) return 3;
+            return 4;
+        }
+
         function layoutThumbs() {
-            if (!viewport || !thumbs.length) return 0;
+            if (!viewport || !thumbs.length) return gap;
             var vpWidth = viewport.getBoundingClientRect().width;
-            var visible = Math.min(perPage, thumbs.length);
-            var thumbW = (vpWidth - gap * (visible - 1)) / visible;
+            if (vpWidth <= 0) return gap;
+            var visible = Math.min(perPage(), thumbs.length);
+            var thumbW = Math.max(44, (vpWidth - gap * (visible - 1)) / visible);
             thumbs.forEach(function (t) {
                 t.style.flexBasis = thumbW + 'px';
                 t.style.width = thumbW + 'px';
@@ -119,44 +129,48 @@
             return thumbW + gap;
         }
 
-        function maxOffset() {
-            return Math.max(0, thumbs.length - perPage);
-        }
-
-        function applyCarousel() {
-            if (!track) return;
-            var step = layoutThumbs();
-            if (thumbs.length <= perPage) {
-                track.style.transform = '';
-                if (prevBtn) prevBtn.disabled = true;
-                if (nextBtn) nextBtn.disabled = true;
+        function updateNavState() {
+            if (!viewport || !prevBtn || !nextBtn) return;
+            var maxScroll = viewport.scrollWidth - viewport.clientWidth;
+            if (maxScroll <= 2) {
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
                 return;
             }
-            track.style.transform = 'translateX(-' + (offset * step) + 'px)';
-            if (prevBtn) prevBtn.disabled = offset <= 0;
-            if (nextBtn) nextBtn.disabled = offset >= maxOffset();
+            prevBtn.disabled = viewport.scrollLeft <= 2;
+            nextBtn.disabled = viewport.scrollLeft >= maxScroll - 2;
         }
 
         function ensureVisible(index) {
-            if (thumbs.length <= perPage) return;
-            if (index < offset) offset = index;
-            else if (index > offset + perPage - 1) offset = index - (perPage - 1);
-            applyCarousel();
+            if (!viewport || !thumbs[index]) return;
+            thumbs[index].scrollIntoView({
+                behavior: 'smooth',
+                inline: 'nearest',
+                block: 'nearest'
+            });
         }
 
-        if (prevBtn && nextBtn) {
+        function refreshGallery() {
+            layoutThumbs();
+            if (track) track.style.transform = '';
+            updateNavState();
+        }
+
+        if (prevBtn && nextBtn && viewport) {
             prevBtn.addEventListener('click', function () {
-                offset = Math.max(0, offset - 1);
-                applyCarousel();
+                viewport.scrollBy({ left: -layoutThumbs(), behavior: 'smooth' });
             });
             nextBtn.addEventListener('click', function () {
-                offset = Math.min(maxOffset(), offset + 1);
-                applyCarousel();
+                viewport.scrollBy({ left: layoutThumbs(), behavior: 'smooth' });
             });
+            viewport.addEventListener('scroll', updateNavState, { passive: true });
         }
-        if (track) {
-            window.addEventListener('resize', applyCarousel);
-            applyCarousel();
+
+        if (viewport) {
+            window.addEventListener('resize', refreshGallery);
+            refreshGallery();
+            requestAnimationFrame(refreshGallery);
+            setTimeout(refreshGallery, 120);
         }
 
         thumbs.forEach(function (thumb, index) {

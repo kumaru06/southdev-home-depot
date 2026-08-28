@@ -68,9 +68,101 @@ if ($skuValue !== '' && !isset($specsTable['SKU'])) {
 ?>
 <style>
 body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
-/* Ensure text-fill inherits properly on non-webkit */
 @supports not (-webkit-background-clip: text) {
     .pd-info__title { background: none; color: var(--charcoal); }
+}
+
+/* Critical mobile fixes — inline so cache cannot serve stale external CSS */
+@media (max-width: 900px) {
+    html, body {
+        overflow-x: hidden !important;
+        max-width: 100% !important;
+        overscroll-behavior-x: none;
+    }
+    .pd-page,
+    .pd-page .container,
+    .pd-grid,
+    .pd-gallery,
+    .pd-info,
+    .pd-band,
+    .pd-related {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box;
+    }
+    .pd-grid {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 18px !important;
+    }
+    .pd-gallery__stage {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 0 !important;
+        aspect-ratio: 1 / 1;
+        max-height: min(88vw, 400px);
+        box-shadow: 0 4px 16px rgba(27,42,74,.08) !important;
+    }
+    .pd-gallery__img {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        max-height: min(88vw, 400px) !important;
+        object-fit: cover;
+    }
+    .pd-thumbs-wrap {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+    .pd-thumbs-viewport {
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scroll-snap-type: x proximity;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+        touch-action: pan-x;
+        min-width: 0 !important;
+    }
+    .pd-thumbs-viewport::-webkit-scrollbar { display: none; }
+    .pd-thumb.is-active,
+    .pd-thumb:hover {
+        transform: none !important;
+    }
+    .pd-info__title {
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+        hyphens: auto;
+    }
+    .pd-price-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        padding: 14px !important;
+    }
+    .pd-stock-badge {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        justify-content: center;
+        white-space: normal !important;
+    }
+    .pd-sizes__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+@media (max-width: 420px) {
+    .pd-sizes__grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}
+@media (hover: none) {
+    .pd-gallery:hover .pd-gallery__img:not(.pd-gallery__img--oos) {
+        transform: none !important;
+    }
 }
 </style>
 
