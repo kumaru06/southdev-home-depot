@@ -2554,6 +2554,24 @@ body:has(.pd-page) .site-header .main-nav {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
 }
+/* Scroll inside grid when many sizes (7+ = 4 rows in 2-col) */
+.pd-sizes__grid:has(.pd-size:nth-child(7)) {
+    max-height: min(280px, 42vh);
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(249, 115, 22, .35) transparent;
+    padding-right: 2px;
+}
+.pd-sizes__grid:has(.pd-size:nth-child(7))::-webkit-scrollbar {
+    width: 5px;
+}
+.pd-sizes__grid:has(.pd-size:nth-child(7))::-webkit-scrollbar-thumb {
+    background: rgba(249, 115, 22, .35);
+    border-radius: 999px;
+}
 .pd-size {
     display: flex;
     flex-direction: column;
@@ -2633,6 +2651,19 @@ body:has(.pd-page) .site-header .main-nav {
     overflow-wrap: anywhere;
 }
 .pd-size.is-oos .pd-size__stock { color: #dc2626; }
+
+@media (hover: none) {
+    .pd-size:hover,
+    .pd-size.is-selected {
+        transform: none;
+    }
+    .pd-size:hover {
+        box-shadow: 0 2px 8px rgba(27,42,74,.04);
+    }
+    .pd-size.is-selected {
+        box-shadow: 0 0 0 3px rgba(249,115,22,.12);
+    }
+}
 
 @media (max-width: 1100px) {
     .pd-sizes__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -9069,6 +9100,14 @@ body:has(.pd-page) .site-header .main-nav {
     .pd-size {
         min-width: 0;
         max-width: 100%;
+        padding: 9px 10px;
+        gap: 2px;
+    }
+    .pd-size__label { font-size: 11px; }
+    .pd-size__price { font-size: 12px; }
+    .pd-size__stock { font-size: 9px; }
+    .pd-sizes__grid:has(.pd-size:nth-child(7)) {
+        max-height: min(260px, 38vh);
     }
     .pd-price__amount {
         font-size: 1.75rem !important;
@@ -9206,7 +9245,11 @@ body:has(.pd-page) .site-header .main-nav {
         font-size: 1.2rem !important;
     }
     .pd-sizes__grid {
-        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 7px !important;
+    }
+    .pd-size {
+        padding: 8px 9px !important;
     }
     .pd-info__rating-text,
     .pd-description p,
