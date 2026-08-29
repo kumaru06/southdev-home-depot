@@ -532,6 +532,8 @@ p { color: var(--text-secondary); }
         margin-left: 0;
         z-index: 2;
     }
+    /* Drawer search — hidden on desktop; revealed inside the hamburger drawer at ≤900px */
+    .mobile-search { display: none; }
     .search-box {
         display: flex;
         align-items: center;

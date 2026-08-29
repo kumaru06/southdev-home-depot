@@ -41,7 +41,7 @@
     .product-detail { grid-template-columns: minmax(0, 1fr); gap: 24px; }
     .product-detail .product-gallery img { height: 350px; }
     .pd-grid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
-    .pd-gallery__img { height: 380px; }
+    .pd-gallery__img { height: auto; aspect-ratio: 1 / 1; }
     .pd-reviews__summary { flex-direction: column; gap: 20px; align-items: flex-start; }
     .pd-reviews__list { grid-template-columns: 1fr 1fr; }
     .stat-cards { grid-template-columns: repeat(2, 1fr); }
@@ -156,7 +156,7 @@
 
     .product-detail .product-gallery img { height: 250px; }
     .product-detail .product-meta .price-tag { font-size: 26px; }
-    .pd-gallery__img { height: 260px; }
+    .pd-gallery__img { height: auto; aspect-ratio: 1 / 1; }
     .pd-price { font-size: 28px; }
     .pd-info__title { font-size: 22px; }
     .pd-reviews__list { grid-template-columns: 1fr; }

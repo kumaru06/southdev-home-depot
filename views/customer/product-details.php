@@ -82,7 +82,6 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
     .pd-page,
     .pd-page .container,
     .pd-grid,
-    .pd-gallery,
     .pd-info,
     .pd-band,
     .pd-related {
@@ -97,20 +96,28 @@ body:has(.pd-page) .site-header .main-nav { margin-bottom: 0 !important; }
         grid-template-columns: minmax(0, 1fr) !important;
         gap: 18px !important;
     }
+    .pd-gallery {
+        max-width: min(100%, 480px) !important;
+        margin-inline: auto;
+    }
     .pd-gallery__stage {
         width: 100% !important;
         max-width: 100% !important;
         min-height: 0 !important;
-        aspect-ratio: 1 / 1;
-        max-height: min(88vw, 400px);
+        height: auto !important;
+        max-height: none !important;
         box-shadow: 0 4px 16px rgba(27,42,74,.08) !important;
     }
     .pd-gallery__img {
+        position: relative !important;
+        inset: auto !important;
         width: 100% !important;
-        max-width: 100% !important;
-        height: 100% !important;
-        max-height: min(88vw, 400px) !important;
+        max-width: none !important;
+        height: auto !important;
+        max-height: none !important;
+        aspect-ratio: 1 / 1;
         object-fit: cover;
+        object-position: center;
     }
     .pd-thumbs-wrap {
         width: 100% !important;
