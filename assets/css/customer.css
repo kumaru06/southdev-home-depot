@@ -1127,8 +1127,9 @@ body:not(.admin-layout) .form-control {
 /* Category tag overlay on product image — "New" badge (first 7 days) */
 .product-new-tag {
     position: absolute;
-    top: 12px;
+    top: auto;
     left: 12px;
+    bottom: 12px;
     padding: 4px 10px;
     border-radius: 4px;
     font-size: 11px;
@@ -1141,8 +1142,9 @@ body:not(.admin-layout) .form-control {
 }
 
 .products-reveal-sync .product-new-tag {
-    top: 12px;
+    top: auto;
     left: 12px;
+    bottom: 12px;
     padding: 4px 9px;
     border-radius: 4px;
     font-size: 10px;
@@ -1991,23 +1993,9 @@ body:has(.pd-page) .site-header .main-nav {
     min-height: 0;
     border-radius: 4px;
     overflow: hidden;
-    background: linear-gradient(145deg, #ffffff 0%, #f6f8fb 50%, #edf0f5 100%);
+    background: #f4f6f9;
     border: 1px solid rgba(232,236,241,.7);
-    box-shadow:
-        0 0 0 1px rgba(255,255,255,.9) inset,
-        0 2px 4px rgba(255,255,255,.6) inset,
-        0 24px 64px rgba(27,42,74,.10),
-        0 8px 24px rgba(27,42,74,.06);
-}
-/* Inner glow ring */
-.pd-gallery__stage::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(145deg, rgba(255,255,255,.5) 0%, transparent 60%);
-    pointer-events: none;
-    z-index: 1;
+    box-shadow: 0 8px 24px rgba(27,42,74,.08);
 }
 .pd-gallery__img {
     position: relative;
@@ -2051,11 +2039,12 @@ body:has(.pd-page) .site-header .main-nav {
 .pd-gallery__oos-overlay i,
 .pd-gallery__oos-overlay svg { width: 36px; height: 36px; }
 
-/* NEW badge — floating + animated */
+/* NEW badge — bottom-left so it does not cover the photo watermark/logo */
 .pd-gallery__badge {
     position: absolute;
-    top: 20px;
-    left: 20px;
+    top: auto;
+    left: 16px;
+    bottom: 16px;
     padding: 7px 16px;
     border-radius: 4px;
     font-size: 10px;
@@ -2125,7 +2114,8 @@ body:has(.pd-page) .site-header .main-nav {
     align-items: stretch;
     gap: 12px;
     width: max-content;
-    min-width: 100%;
+    min-width: 0;
+    justify-content: flex-start;
 }
 .pd-thumbs-nav {
     flex: 0 0 36px;
@@ -8952,8 +8942,9 @@ body:has(.pd-page) .site-header .main-nav {
     .product-new-tag {
         font-size: 9px;
         padding: 3px 8px;
-        top: 8px;
+        top: auto;
         left: 8px;
+        bottom: 8px;
         border-radius: 4px;
     }
     .product-category-tag {

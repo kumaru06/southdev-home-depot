@@ -119,9 +119,12 @@
             if (!viewport || !thumbs.length) return gap;
             var vpWidth = viewport.getBoundingClientRect().width;
             if (vpWidth <= 0) return gap;
-            var visible = Math.min(perPage(), thumbs.length);
-            var thumbW = Math.max(44, (vpWidth - gap * (visible - 1)) / visible);
+            /* Always size like a full 4-up row so 1–2 images stay the same as 4. */
+            var slots = perPage();
+            var thumbW = Math.max(44, (vpWidth - gap * (slots - 1)) / slots);
             thumbs.forEach(function (t) {
+                t.style.flexGrow = '0';
+                t.style.flexShrink = '0';
                 t.style.flexBasis = thumbW + 'px';
                 t.style.width = thumbW + 'px';
                 t.style.maxWidth = thumbW + 'px';
