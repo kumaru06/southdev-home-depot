@@ -252,17 +252,31 @@ $actionMeta = [
 .log-row-clickable { cursor: pointer; transition: background .12s; }
 .log-row-clickable:hover { background: #fff8f3 !important; }
 .ld-overlay {
-    display: none;
+    display: flex;
     position: fixed; inset: 0; z-index: 9999;
-    background: rgba(0,0,0,.5);
+    background: rgba(15, 23, 42, .45);
     align-items: center; justify-content: center;
-    backdrop-filter: blur(3px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .22s ease, visibility .22s ease;
 }
-.ld-overlay.open { display: flex; }
+.ld-overlay.open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
 .ld-box {
     background: #fff; border-radius: 14px;
     padding: 1.5rem; width: 90%; max-width: 520px;
     box-shadow: 0 12px 48px rgba(0,0,0,.22);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity .22s ease, transform .22s ease;
+}
+.ld-overlay.open .ld-box {
+    opacity: 1;
+    transform: translateY(0);
 }
 .ld-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:.85rem; }
 .ld-header h3 { margin:0; font-size:1rem; display:flex; align-items:center; gap:8px; }
